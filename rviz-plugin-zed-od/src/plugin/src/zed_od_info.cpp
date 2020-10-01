@@ -289,16 +289,16 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 }
 
 void ZedOdInfo::calculateColor() {
-    quint8 r = (mLabelId+3)*752335;
-    quint8 g = (mLabelId+7)*4653523;
-    quint8 b = (mLabelId+13)*2351366;
+    quint8 r = (mLabelId+1)*30;
+    quint8 g = (mLabelId+1)*60;
+    quint8 b = (mLabelId+1)*120;
 
     mColor.r = static_cast<float>(r)/255.f;
     mColor.g = static_cast<float>(g)/255.f;;
     mColor.b = static_cast<float>(b)/255.f;;
     mColor.a = mAlpha;
 
-    std::cout << "RGB: " << (int)r << "," << (int)g << "," << (int)b << " (" << mColor.r << "," << mColor.g << "," << mColor.b << ")" << std::endl;
+    //std::cout << "RGB: " << (int)r << "," << (int)g << "," << (int)b << " (" << mColor.r << "," << mColor.g << "," << mColor.b << ")" << std::endl;
 }
 
 void ZedOdInfo::updateAlpha(float alpha) {

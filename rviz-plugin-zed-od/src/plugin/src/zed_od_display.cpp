@@ -79,15 +79,20 @@ void ZedOdDisplay::processMessage(zed_interfaces::msg::ObjectsStamped::ConstShar
     scene_node_->setPosition(position);
     scene_node_->setOrientation(orientation);
 
-    invalidateObjs();
+    if( msg->objects.size()==0 ) {
+        mObjUpdated.clear();
+        mObjects.clear();
+    } else {
+        invalidateObjs();
 
-    for( auto object: msg->objects ) {
-        createOrUpdateObject(object);
+        for( auto object: msg->objects ) {
+            createOrUpdateObject(object);
+        }
+
+        removeNotValidObjs();
+
+        mPropShowSkeleton->setHidden(!msg->objects[0].skeleton_available);
     }
-
-    removeNotValidObjs();
-
-    mPropShowSkeleton->setHidden(!msg->objects[0].skeleton_available);
 }
 
 void ZedOdDisplay::createOrUpdateObject(zed_interfaces::msg::Object& obj) {
