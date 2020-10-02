@@ -1,71 +1,47 @@
 ![](./images/Picto+STEREOLABS_Black.jpg)
 
-# Stereolabs ZED Camera - ROS Tutorials and Examples
+# Stereolabs ZED Camera - ROS2 Tutorials and Examples
 
-This package is a collection of examples and tutorials to illustrate how to better use the ZED cameras in the ROS framework
+This package is a collection of examples and tutorials to illustrate how to better use the ZED cameras in the ROS2 framework
 
-[More information](https://www.stereolabs.com/documentation/guides/using-zed-with-ros/introduction.html)
+[More information](https://www.stereolabs.com/docs/ros2/)
 
 ## Getting started
 
-- First, be sure to have installed the main ROS package to integrate the ZED cameras in the ROS framework: [zed-ros-wrapper](https://github.com/stereolabs/zed-ros-wrapper/)
-- [Install](#build-the-program) the Tutorials package
+- First, be sure to have installed the main ROS2 package to integrate the ZED cameras in the ROS2 framework: [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper/)
+- [Install](#build-the-package) the Tutorials package
 - Read the online documentation for [More information](https://www.stereolabs.com/documentation/guides/using-zed-with-ros/introduction.html)
 
 ### Prerequisites
 
-- Ubuntu 16.04 or newer (Ubuntu 18.04 recommended)
+- Ubuntu 18.04
 - [ZED SDK **≥ 3.0**](https://www.stereolabs.com/developers/) and its dependency [CUDA](https://developer.nvidia.com/cuda-downloads)
-- [ROS Kinetic](http://wiki.ros.org/kinetic/Installation/Ubuntu) or [ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) (recommended)
+- [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/Linux-Development-Setup/)
 
-### Build the program
+### Build the package
 
-The `zed-ros-examples` repository is a collection of catkin packages. They depend on the following ROS packages:
-
-   - catkin
-   - zed_wrapper
-   - sensor_msgs
-   - roscpp
-   - nav_msgs
-   - geometry_msgs
-   - ar_track_alvar
-   - ar_track_alvar_msgs
-   - nodelet
-   - depthimage_to_laserscan
-   - rtabmap
-   - rtabmap_ros
-   - rviz_imu_plugin
-   - rviz
-   - plotjuggler
+The `zed-ros-examples` repository is a collection of [colcon](http://design.ros2.org/articles/build_tool.html) packages. 
 
 Open a terminal, clone the repository, update the dependencies and build the packages:
 
-    $ cd ~/catkin_ws/src
-    $ git clone https://github.com/stereolabs/zed-ros-examples.git
+    $ cd ~/ros2_ws/src/ #use your current ros2 workspace folder
+    $ git clone https://github.com/stereolabs/zed-ros2-examples.git
     $ cd ../
     $ rosdep install --from-paths src --ignore-src -r -y
-    $ catkin_make -DCMAKE_BUILD_TYPE=Release
-    $ source ./devel/setup.bash
+    $ colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
+    $ source ~/.bashrc
 
 ## Run the tutorials and examples
 
 ### Rviz visualization examples
 
- - Example launch files to start a preconfigured instance of Rviz displaying all the ZED Wrapper node information: [zed_display_rviz](https://github.com/stereolabs/zed-ros-examples/tree/master/zed_display_rviz/README.md)
+ - Example launch files to start a preconfigured instance of Rviz displaying all the ZED Wrapper node information: [zed_display_rviz2](https://github.com/stereolabs/zed-ros2-examples/tree/master/zed_display_rviz2)
 
 ### Tutorials
 
  - [Image subscription tutorial](https://github.com/stereolabs/zed-ros-examples/tree/master/tutorials/zed_video_sub_tutorial/README.md)
  - [Depth subscription tutorial](https://github.com/stereolabs/zed-ros-examples/tree/master/tutorials/zed_depth_sub_tutorial/README.md)
- - [Tracking subscription tutorial](https://github.com/stereolabs/zed-ros-examples/tree/master/tutorials/zed_tracking_sub_tutorial/README.md) 
- - [Sensors data subscription tutorial](https://github.com/stereolabs/zed-ros-examples/blob/master/tutorials/zed_sensors_sub_tutorial/README.md) 
- - [Object detection subscription tutorial](https://github.com/stereolabs/zed-ros-examples/blob/master/tutorials/zed_obj_det_sub_tutorial/README.md) 
 
-### Examples
-
- - [AR Track Alvar example](https://github.com/stereolabs/zed-ros-examples/tree/master/examples/zed_ar_track_alvar_example/README.md) 
- - [Nodelet example (point cloud to laser scan)](https://github.com/stereolabs/zed-ros-examples/tree/master/examples/zed_nodelet_example/README.md) 
- - [RTABmap example](https://github.com/stereolabs/zed-ros-examples/tree/master/examples/zed_rtabmap_example/README.md) 
 
 
 
