@@ -11,6 +11,9 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
+# Remove FindOpenGL warning
+cmake_policy(SET CMP0072 NEW)
+
 # Tests currently only run on OS X @ OSRF jenkins
 # Enable on Linux by providing a display, enable on Windows via EnableDisplayTests=True
 option(EnableDisplayTests "EnableDisplayTests")
