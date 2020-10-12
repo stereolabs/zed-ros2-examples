@@ -35,14 +35,14 @@ rclcpp::Node::SharedPtr g_node = nullptr;
 
 void imageRightRectifiedCallback(const sensor_msgs::msg::Image::SharedPtr msg) {
     RCLCPP_INFO(g_node->get_logger(),
-                "[%u.%u] Right Rectified image received from ZED - Size: %dx%d - Timestamp: ",
+                "Right Rectified image received from ZED\tSize: %dx%d - Timestamp: %u.%u sec ",
                 msg->width, msg->height,
                 msg->header.stamp.sec,msg->header.stamp.nanosec);
 }
 
 void imageLeftRectifiedCallback(const sensor_msgs::msg::Image::SharedPtr msg) {
     RCLCPP_INFO(g_node->get_logger(),
-                "[%u.%u] Left Rectified image received from ZED - Size: %dx%d - Timestamp: ",
+                "Left  Rectified image received from ZED\tSize: %dx%d - Timestamp: %u.%u sec ",
                 msg->width, msg->height,
                 msg->header.stamp.sec,msg->header.stamp.nanosec);
 }
@@ -50,31 +50,37 @@ void imageLeftRectifiedCallback(const sensor_msgs::msg::Image::SharedPtr msg) {
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
 
+    // Create the node
     g_node = rclcpp::Node::make_shared("zed_video_tutorial");
 
-    // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
     /* Note: it is very important to use a QOS profile for the subscriber that is compatible
      * with the QOS profile of the publisher.
-     * The ZED component node uses a "rmw_qos_profile_sensor_data" profile for depth data,
-     * so reliability is "BEST_EFFORT" and durability is "VOLATILE".
-     * To be able to receive the subscribed topic the subscriber must use the
-     * same parameters, so setting the QOS to "rmw_qos_profile_sensor_data" as the publisher
-     * is the better solution.
+     * The ZED component node uses a QoS profile with reliability set as "BEST_EFFORT"
+     * and durability set as "VOLATILE".
+     * To be able to receive the subscribed topic the subscriber must use compatible
+     * parameters.
      */
+
+    // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
     rclcpp::QoS video_qos(10);
     video_qos.keep_last(10);
     video_qos.best_effort();
     video_qos.durability_volatile();
 
+    // Create right image subscriber
     auto right_sub = g_node->create_subscription<sensor_msgs::msg::Image>(
-                "right_image", 10, imageRightRectifiedCallback );
+                "right_image", video_qos, imageRightRectifiedCallback );
 
+    // Create left image subscriber
     auto left_sub = g_node->create_subscription<sensor_msgs::msg::Image>
-            ("left_image", 10, imageLeftRectifiedCallback );
+            ("left_image", video_qos, imageLeftRectifiedCallback );
 
+    // Let the node run
     rclcpp::spin(g_node);
+
+    // Shutdown when the node is stopped using Ctrl+C
     rclcpp::shutdown();
 
     return 0;

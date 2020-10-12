@@ -31,15 +31,15 @@ include_directories(
 )
 
 ## Build
-add_executable(zed_video_tutorial src/zed_video_sub_tutorial.cpp)
-ament_target_dependencies(zed_video_tutorial
+add_executable(zed_tutorial_video src/zed_video_sub_tutorial.cpp)
+ament_target_dependencies(zed_tutorial_video
   rclcpp
   sensor_msgs
 )
 
 # Install executable
 install(
-    TARGETS zed_video_tutorial
+    TARGETS zed_tutorial_video
     DESTINATION lib/${PROJECT_NAME}
 )
 
