@@ -74,16 +74,22 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 
         mPivotSceneNode->setVisible(mShowLabel);
     }
+
+    // Check if position is valid
     Ogre::Vector3 pos;
     pos[0] = obj.position[0];
     pos[1] = obj.position[1];
     pos[2] = obj.position[2];
+    if( pos.isNaN() ) {
+        return;
+    }
+
     mPivot->setPosition(pos);
+    //std::cout << "pivot: " << pos[0] << "," << pos[1] << ","  << pos[2] << std::endl;
     // <---- Pivot and Label
 
 
     // ----> Bounding Box
-
     if(create) {
         std::string nodeStr = std::string("BBoxes") + std::to_string(mObjIdx);
         mBBoxSceneNode = mSceneNode->createChildSceneNode(nodeStr.c_str());
@@ -95,6 +101,7 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
         pos[0] = corner.kp[0];
         pos[1] = corner.kp[1];
         pos[2] = corner.kp[2];
+        //std::cout << "[" << i << "] corner: " << pos[0] << "," << pos[1] << ","  << pos[2] << std::endl;
 
         shapePtr sphere;
         if(create) {
@@ -109,7 +116,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
         } else {
             sphere = mBBoxCorners[i];
         }
-        sphere->setPosition(pos);
+        if( !pos.isNaN() ) {
+            sphere->setPosition(pos);
+        }
     }
 
     for( int i=0; i<4; i++) {
@@ -249,7 +258,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
                 sphere->setPosition(Ogre::Vector3(0,0,0));
             } else {
                 sphere->setScale(Ogre::Vector3(mJointRadius/2.f,mJointRadius/2.f,mJointRadius/2.f));
-                sphere->setPosition(pos);
+                if( !pos.isNaN() ) {
+                    sphere->setPosition(pos);
+                }
             }
         }
 

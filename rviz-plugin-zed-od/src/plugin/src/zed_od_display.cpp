@@ -76,6 +76,9 @@ void ZedOdDisplay::processMessage(zed_interfaces::msg::ObjectsStamped::ConstShar
     }
     setTransformOk();
 
+    if(position.isNaN() || orientation.isNaN())
+        return;
+
     scene_node_->setPosition(position);
     scene_node_->setOrientation(orientation);
 
@@ -98,6 +101,9 @@ void ZedOdDisplay::processMessage(zed_interfaces::msg::ObjectsStamped::ConstShar
 void ZedOdDisplay::createOrUpdateObject(zed_interfaces::msg::Object& obj) {
     int16_t id = obj.label_id;
     if(id==-1) {
+        return;
+    }
+    if(qIsNaN(obj.position[0]) || qIsNaN(obj.position[1]) || qIsNaN(obj.position[2])) {
         return;
     }
 
