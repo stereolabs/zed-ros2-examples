@@ -34,7 +34,7 @@ class MinimalDepthSubscriber : public rclcpp::Node {
 
         /* Note: it is very important to use a QOS profile for the subscriber that is compatible
          * with the QOS profile of the publisher.
-         * The ZED component node uses a QoS profile with reliability set as "BEST_EFFORT"
+         * The ZED component node uses a default QoS profile with reliability set as "RELIABLE"
          * and durability set as "VOLATILE".
          * To be able to receive the subscribed topic the subscriber must use compatible
          * parameters.
@@ -49,7 +49,7 @@ class MinimalDepthSubscriber : public rclcpp::Node {
 
         // Create depth map subscriber
         mDepthSub = create_subscription<sensor_msgs::msg::Image>(
-                   "depth",depth_qos,
+                   "depth", depth_qos,
                    std::bind(&MinimalDepthSubscriber::depthCallback, this, _1) );
     }
 

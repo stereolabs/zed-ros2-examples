@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
 
     /* Note: it is very important to use a QOS profile for the subscriber that is compatible
      * with the QOS profile of the publisher.
-     * The ZED component node uses a QoS profile with reliability set as "BEST_EFFORT"
+     * The ZED component node uses a default QoS profile with reliability set as "RELIABLE"
      * and durability set as "VOLATILE".
      * To be able to receive the subscribed topic the subscriber must use compatible
      * parameters.
@@ -74,8 +74,8 @@ int main(int argc, char* argv[]) {
                 "right_image", video_qos, imageRightRectifiedCallback );
 
     // Create left image subscriber
-    auto left_sub = g_node->create_subscription<sensor_msgs::msg::Image>
-            ("left_image", video_qos, imageLeftRectifiedCallback );
+    auto left_sub = g_node->create_subscription<sensor_msgs::msg::Image>(
+                "left_image", video_qos, imageLeftRectifiedCallback );
 
     // Let the node run
     rclcpp::spin(g_node);
