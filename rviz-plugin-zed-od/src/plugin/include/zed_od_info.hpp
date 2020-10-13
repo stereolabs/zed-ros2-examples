@@ -77,8 +77,8 @@ private:
     int16_t mLabelId;
 
     const float mTextSize = 2.0;
-    const float mJointRadius = 0.05;
-    const float mLineSize = 0.0075;
+    const float mJointRadius = 0.1;
+    const float mLineSize = 0.02;
 
     // Unique identifier for each object
     static uint64_t mObjIdx;
