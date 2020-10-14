@@ -24,6 +24,27 @@ ZedOdDisplay::ZedOdDisplay() {
     mPropShowBBox = new rviz_common::properties::BoolProperty( "Show Bounding Boxes", true,
                                                                "Enable/Disable Bounding boxes visualization",
                                                                this, SLOT(updateShowBBox()));
+
+    mPropLinkSize = new rviz_common::properties::FloatProperty( "Link Size", 0.05f,
+                                                             "Line size of the bounding box edges and skeleton links",
+                                                             this, SLOT(updateLinkSize()));
+
+    mPropLinkSize->setMin(0.01);
+    mPropAlpha->setMax(1.0);
+
+    mPropJointRadius = new rviz_common::properties::FloatProperty( "Joint Radius", 0.1f,
+                                                             "Radius of the bounding box corners and skeleton joints",
+                                                             this, SLOT(updateJointRadius()));
+
+    mPropLinkSize->setMin(0.01);
+    mPropLinkSize->setMax(1.0);
+
+    mPropLabelScale = new rviz_common::properties::FloatProperty( "Label Scale", 5.f,
+                                                             "Scale of the label",
+                                                             this, SLOT(updateLabelScale()));
+
+    mPropLabelScale->setMin(0.5);
+    mPropLabelScale->setMax(15.0);
 }
 
 ZedOdDisplay::~ZedOdDisplay() {
@@ -117,6 +138,9 @@ void ZedOdDisplay::createOrUpdateObject(zed_interfaces::msg::Object& obj) {
         updateShowLabel();
         updateShowBBox();
         updateShowSkeleton();
+        updateLinkSize();
+        updateJointRadius();
+        updateLabelScale();
     } else {
         if(it->second) {
             it->second->updateInfo(obj);
@@ -153,6 +177,30 @@ void ZedOdDisplay::updateShowBBox() {
 
     for(auto const& obj : mObjects) {
         obj.second->updateShowBBox(show);
+    }
+}
+
+void ZedOdDisplay::updateLinkSize() {
+    float val = mPropLinkSize->getFloat();
+
+    for(auto const& obj : mObjects) {
+        obj.second->updateLinkSize(val);
+    }
+}
+
+void ZedOdDisplay::updateJointRadius() {
+    float val = mPropJointRadius->getFloat();
+
+    for(auto const& obj : mObjects) {
+        obj.second->updateJointRadius(val);
+    }
+}
+
+void ZedOdDisplay::updateLabelScale() {
+    float val = mPropLabelScale->getFloat();
+
+    for(auto const& obj : mObjects) {
+        obj.second->updateLabelScale(val);
     }
 }
 

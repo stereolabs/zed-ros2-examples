@@ -42,6 +42,9 @@ public:
     void updateInfo(zed_interfaces::msg::Object& obj);
     void updateShowBBox(bool show);
     void updateShowSkeleton(bool show);
+    void updateLinkSize(float newval);
+    void updateJointRadius(float newval);
+    void updateLabelScale(float newval);
 
 protected:
     void calculateColor();
@@ -59,7 +62,8 @@ private:
     std::vector<linePtr> mSkelLinks;
 
     float mAlpha = 0.75f;
-    Ogre::ColourValue mColor;
+    Ogre::ColourValue mColorBBox;
+    Ogre::ColourValue mColorSkel;
 
     Ogre::SceneManager* mSceneManager=nullptr;
     Ogre::SceneNode* mParentNode=nullptr;
@@ -76,9 +80,12 @@ private:
 
     int16_t mLabelId;
 
-    const float mTextSize = 2.0;
-    const float mJointRadius = 0.1;
-    const float mLineSize = 0.02;
+    float mLabelScale = 2.5;
+    float mJointRadius = 0.1;
+    float mLinkSize = 0.05;
+
+    const float mSkelScale = 0.5f;
+    const int mSkelColOffset = 50;
 
     // Unique identifier for each object
     static uint64_t mObjIdx;

@@ -51,8 +51,13 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 
     // Create node
     if(create) {
-        mObjName = std::to_string(obj.label_id);
-        mObjName += "-"+obj.label;
+        if(obj.skeleton_available) {
+            mObjName = "Person-";
+            mObjName += std::to_string(obj.label_id);
+        } else {
+            mObjName = std::to_string(obj.label_id);
+            mObjName += "-"+obj.label;
+        }
 
         std::string nodeStr = mObjName+std::to_string(mObjIdx);
         mSceneNode = mParentNode->createChildSceneNode(nodeStr.c_str());
@@ -63,11 +68,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
         std::string nodeStr = std::string("Pivot") + std::to_string(mObjIdx);
         mPivotSceneNode = mSceneNode->createChildSceneNode(nodeStr.c_str());
 
-        mLabel = std::make_shared<rviz_rendering::MovableText>(mObjName,"Liberation Sans",mTextSize);
+        mLabel = std::make_shared<rviz_rendering::MovableText>(mObjName,"Liberation Sans",mLabelScale);
         mLabel->setTextAlignment(rviz_rendering::MovableText::H_CENTER, rviz_rendering::MovableText::V_CENTER);
 
         mPivot = std::make_shared<rviz_rendering::Shape>(rviz_rendering::Shape::Sphere,mSceneManager,mPivotSceneNode);
-        mPivot->setColor(mColor);
+        mPivot->setColor(mColorBBox);
         mPivot->setScale(Ogre::Vector3(0.02,0.02,0.02));
 
         mPivot->getRootNode()->attachObject(mLabel.get());
@@ -111,7 +116,7 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
             scale[1] = mJointRadius;
             scale[2] = mJointRadius;
             sphere->setScale(scale);
-            sphere->setColor(mColor);
+            sphere->setColor(mColorBBox);
             mBBoxCorners.push_back(sphere);
         } else {
             sphere = mBBoxCorners[i];
@@ -127,9 +132,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 
         if(create) {
             line = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager,mBBoxSceneNode);
-            line->setColor(mColor.r,mColor.g,mColor.b,mColor.a);
+            line->setColor(mColorBBox.r,mColorBBox.g,mColorBBox.b,mColorBBox.a);
             if(mShowBBox) {
-                line->setLineWidth(mLineSize);
+                line->setLineWidth(mLinkSize);
             } else {
                 line->setLineWidth(0.f);
             }
@@ -160,9 +165,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 
         if(create) {
             line = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager,mBBoxSceneNode);
-            line->setColor(mColor.r,mColor.g,mColor.b,mColor.a);
+            line->setColor(mColorBBox.r,mColorBBox.g,mColorBBox.b,mColorBBox.a);
             if(mShowBBox) {
-                line->setLineWidth(mLineSize);
+                line->setLineWidth(mLinkSize);
             } else {
                 line->setLineWidth(0.f);
             }
@@ -193,9 +198,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 
         if(create) {
             line = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager,mBBoxSceneNode);
-            line->setColor(mColor.r,mColor.g,mColor.b,mColor.a);
+            line->setColor(mColorBBox.r,mColorBBox.g,mColorBBox.b,mColorBBox.a);
             if(mShowBBox) {
-                line->setLineWidth(mLineSize);
+                line->setLineWidth(mLinkSize);
             } else {
                 line->setLineWidth(0.f);
             }
@@ -243,11 +248,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
             if(create) {
                 sphere = std::make_shared<rviz_rendering::Shape>(rviz_rendering::Shape::Sphere,mSceneManager,mSkelSceneNode);
                 Ogre::Vector3 scale;
-                scale[0] = mJointRadius/2.f;
-                scale[1] = mJointRadius/2.f;
-                scale[2] = mJointRadius/2.f;
+                scale[0] = mJointRadius*mSkelScale;
+                scale[1] = mJointRadius*mSkelScale;
+                scale[2] = mJointRadius*mSkelScale;
                 sphere->setScale(scale);
-                sphere->setColor(mColor);
+                sphere->setColor(mColorSkel);
                 mSkelJoints.push_back(sphere);
             } else {
                 sphere = mSkelJoints[i];
@@ -257,7 +262,7 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
                 sphere->setScale(Ogre::Vector3(0,0,0));
                 sphere->setPosition(Ogre::Vector3(0,0,0));
             } else {
-                sphere->setScale(Ogre::Vector3(mJointRadius/2.f,mJointRadius/2.f,mJointRadius/2.f));
+                sphere->setScale(Ogre::Vector3(mJointRadius*mSkelScale,mJointRadius*mSkelScale,mJointRadius*mSkelScale));
                 if( !pos.isNaN() ) {
                     sphere->setPosition(pos);
                 }
@@ -270,8 +275,8 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 
             if(create) {
                 link = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager,mSkelSceneNode);
-                link->setColor(mColor.r,mColor.g,mColor.b,mColor.a);
-                link->setLineWidth(mLineSize/2.f);
+                link->setColor(mColorSkel.r,mColorSkel.g,mColorSkel.b,mColorSkel.a);
+                link->setLineWidth(mLinkSize*mSkelScale);
                 mSkelLinks.push_back(link);
             } else {
                 link = mSkelLinks[idx];
@@ -289,7 +294,7 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
             if (qIsNaN(start[0]) || qIsNaN(end[0]) || !mShowSkel) {
                 link->setLineWidth(0.f);
             } else {
-                link->setLineWidth(mLineSize/2.f);
+                link->setLineWidth(mLinkSize*mSkelScale);
                 link->clear();
                 link->addPoint(start);
                 link->addPoint(end);
@@ -300,14 +305,19 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
 }
 
 void ZedOdInfo::calculateColor() {
-    quint8 r = (mLabelId+1)*30;
-    quint8 g = (mLabelId+1)*60;
-    quint8 b = (mLabelId+1)*120;
+    quint8 r = (mLabelId+2)*30;
+    quint8 g = (mLabelId+2)*60;
+    quint8 b = (mLabelId+2)*120;
 
-    mColor.r = static_cast<float>(r)/255.f;
-    mColor.g = static_cast<float>(g)/255.f;;
-    mColor.b = static_cast<float>(b)/255.f;;
-    mColor.a = mAlpha;
+    mColorBBox.r = static_cast<float>(r)/255.f;
+    mColorBBox.g = static_cast<float>(g)/255.f;;
+    mColorBBox.b = static_cast<float>(b)/255.f;;
+    mColorBBox.a = mAlpha;
+
+    mColorSkel.r = static_cast<float>(r+2*mSkelColOffset)/255.f;
+    mColorSkel.g = static_cast<float>(g+mSkelColOffset)/255.f;;
+    mColorSkel.b = static_cast<float>(b-mSkelColOffset)/255.f;;
+    mColorSkel.a = mAlpha;
 
     //std::cout << "RGB: " << (int)r << "," << (int)g << "," << (int)b << " (" << mColor.r << "," << mColor.g << "," << mColor.b << ")" << std::endl;
 }
@@ -318,12 +328,60 @@ void ZedOdInfo::updateAlpha(float alpha) {
     calculateColor();
 
     for( auto sphere : mBBoxCorners ) {
-        sphere->setColor(mColor);
+        sphere->setColor(mColorBBox);
     }
 
     for( auto line : mBBoxLines ) {
-        line->setColor(mColor.r,mColor.g,mColor.b,mColor.a);
+        line->setColor(mColorBBox.r,mColorBBox.g,mColorBBox.b,mColorBBox.a);
     }
+
+    for( auto sphere : mSkelJoints ) {
+        sphere->setColor(mColorSkel.r,mColorSkel.g,mColorSkel.b,mColorSkel.a);
+    }
+
+    for( auto line : mSkelLinks ) {
+        line->setColor(mColorSkel.r,mColorSkel.g,mColorSkel.b,mColorSkel.a);
+    }
+}
+
+void ZedOdInfo::updateLinkSize(float newval) {
+    mLinkSize = newval;
+
+    for( auto line : mBBoxLines ) {
+        line->setLineWidth(mLinkSize);
+    }
+
+    for( auto line : mSkelLinks ) {
+        line->setLineWidth(mLinkSize*mSkelScale);
+    }
+}
+
+void ZedOdInfo::updateJointRadius(float newval) {
+    mJointRadius = newval;
+
+    Ogre::Vector3 scale_bbox;
+    scale_bbox[0] = mJointRadius;
+    scale_bbox[1] = mJointRadius;
+    scale_bbox[2] = mJointRadius;
+
+    Ogre::Vector3 scale_skel;
+    scale_skel[0] = mJointRadius*mSkelScale;
+    scale_skel[1] = mJointRadius*mSkelScale;
+    scale_skel[2] = mJointRadius*mSkelScale;
+
+    for( auto sphere : mBBoxCorners ) {
+        sphere->setScale(scale_bbox);
+    }
+
+    for( auto sphere : mSkelJoints ) {
+        sphere->setScale(scale_skel);
+    }
+}
+
+void ZedOdInfo::updateLabelScale(float newval) {
+    mLabelScale = newval;
+
+    mLabel->setCharacterHeight(mLabelScale);
 }
 
 void ZedOdInfo::updateShowLabel(bool show) {

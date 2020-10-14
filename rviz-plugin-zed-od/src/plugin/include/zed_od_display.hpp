@@ -21,7 +21,7 @@ namespace displays
 typedef std::shared_ptr<ZedOdInfo> objectPtr;
 
 class ZED_OD_PLUGIN_PUBLIC ZedOdDisplay : public
-  rviz_common::MessageFilterDisplay<zed_interfaces::msg::ObjectsStamped> {
+        rviz_common::MessageFilterDisplay<zed_interfaces::msg::ObjectsStamped> {
     Q_OBJECT
 
 public:
@@ -38,25 +38,30 @@ private:
     void removeNotValidObjs();
 
 private slots:
-    void updateLineSize();
     void updateShowSkeleton();
     void updateShowLabel();
     void updateAlpha();
     void updateShowBBox();
+    void updateLinkSize();
+    void updateJointRadius();
+    void updateLabelScale();
 
 protected:
-  /** @brief Overridden from MessageFilterDisplay to get arrow/axes visibility correct. */
-  void onEnable() override;
-  void onDisable() override;
+    /** @brief Overridden from MessageFilterDisplay to get arrow/axes visibility correct. */
+    void onEnable() override;
+    void onDisable() override;
 
 private:
-  rviz_common::properties::FloatProperty* mPropAlpha;
-  rviz_common::properties::BoolProperty* mPropShowSkeleton;
-  rviz_common::properties::BoolProperty* mPropShowLabel;
-  rviz_common::properties::BoolProperty* mPropShowBBox;
+    rviz_common::properties::FloatProperty* mPropAlpha;
+    rviz_common::properties::BoolProperty* mPropShowSkeleton;
+    rviz_common::properties::BoolProperty* mPropShowLabel;
+    rviz_common::properties::BoolProperty* mPropShowBBox;
+    rviz_common::properties::FloatProperty* mPropLinkSize;
+    rviz_common::properties::FloatProperty* mPropJointRadius;
+    rviz_common::properties::FloatProperty* mPropLabelScale;
 
-  std::map<int16_t,objectPtr> mObjects;
-  std::map<int16_t,bool> mObjUpdated;
+    std::map<int16_t,objectPtr> mObjects;
+    std::map<int16_t,bool> mObjUpdated;
 };
 
 } // namespace displays
