@@ -57,6 +57,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object &obj) {
         } else {
             mObjName = std::to_string(obj.label_id);
             mObjName += "-"+obj.label;
+            if(obj.sublabel != obj.label) {
+                mObjName += " [";
+                mObjName += obj.sublabel;
+                mObjName += "]";
+            }
         }
 
         std::string nodeStr = mObjName+std::to_string(mObjIdx);
