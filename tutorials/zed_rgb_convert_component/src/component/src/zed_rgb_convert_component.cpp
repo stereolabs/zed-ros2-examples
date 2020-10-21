@@ -55,22 +55,22 @@ ZedRgbCvtComponent::ZedRgbCvtComponent(const rclcpp::NodeOptions &options)
     RCLCPP_INFO_STREAM( get_logger(), "Subscribed on topic: " << mSubBgra.getInfoTopic());
 }
 
-ZedRgbCvtComponent::~ZedRgbCvtComponent() {
-}
-
 void ZedRgbCvtComponent::camera_callback(const sensor_msgs::msg::Image::ConstSharedPtr& img,
                                          const sensor_msgs::msg::CameraInfo::ConstSharedPtr& cam_info)
 {
+    // Check for correct input image encoding
     if(img->encoding!=sensor_msgs::image_encodings::BGRA8) {
         RCLCPP_ERROR(get_logger(), "The input topic image requires 'BGRA8' encoding");
         exit(EXIT_FAILURE);
     }
 
+    // Convert BGRA to BGR using OpenCV
     cv::Mat bgra(img->height,img->width,CV_8UC4,(void*)(&img->data[0]));
     cv::Mat bgr;
 
     cv::cvtColor(bgra,bgr,cv::COLOR_BGRA2BGR);
 
+    // Create the output message and copy coverted data
     std::shared_ptr<sensor_msgs::msg::Image> out_bgr = std::make_shared<sensor_msgs::msg::Image>();
 
     out_bgr->header.stamp = img->header.stamp;
@@ -89,6 +89,7 @@ void ZedRgbCvtComponent::camera_callback(const sensor_msgs::msg::Image::ConstSha
     out_bgr->encoding = sensor_msgs::image_encodings::BGR8;
     memcpy((char*)(&out_bgr->data[0]), &bgr.data[0], size);
 
+    // Publish the new image message coupled with camera info from the original message
     mPubBgr.publish( out_bgr, cam_info);
 }
 

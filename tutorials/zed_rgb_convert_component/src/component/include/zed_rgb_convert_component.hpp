@@ -15,10 +15,6 @@
 
 namespace stereolabs {
 
-// ----> Typedefs to simplify declarations
-
-// <---- Typedefs to simplify declarations
-
 class ZedRgbCvtComponent : public rclcpp::Node
 {
 
@@ -26,7 +22,7 @@ public:
     ZED_CVT_COMPONENT_PUBLIC
     explicit ZedRgbCvtComponent(const rclcpp::NodeOptions & options);
 
-    virtual ~ZedRgbCvtComponent();
+    virtual ~ZedRgbCvtComponent(){}
 
 protected:
     void camera_callback(const sensor_msgs::msg::Image::ConstSharedPtr& img,
