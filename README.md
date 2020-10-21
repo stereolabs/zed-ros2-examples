@@ -40,7 +40,7 @@ Open a terminal, clone the repository, update the dependencies and build the pac
 ### Tutorials
 
  - [Image subscription tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_video_tutorial)
- - [Depth subscription tutorial]https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_depth_tutorial)
+ - [Depth subscription tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_depth_tutorial)
  - [Pose/Odometry subscription tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_pose_tutorial)
  - [ROS2 Composition + BGRA2BGR conversion tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_rgb_convert)
 
