@@ -1,8 +1,7 @@
-# Stereolabs ZED Camera - ROS2 Display package
+# Stereolabs ZED Camera - ROS2 Object Detection Plugin
 
 This package lets you visualize in the [ROS2 RViz application](https://github.com/ros2/rviz/tree/eloquent) all the
-possible information that can be acquired using a Stereolabs camera.
-The package provides the launch files for ZED, ZED Mini and ZED 2 camera models.
+information provided by the Object Detection module of the ZED SDK used together with a ZED2 camera.
 
 **Note:** The main package [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper)
 is required to correctly execute the ROS node to acquire data from a Stereolabs 3D camera.
@@ -30,20 +29,11 @@ Install the [zed-ros2-examples](https://github.com/stereolabs/zed-ros2-examples)
 
 ### Execution
 
-If you own a ZED camera launch:
-
-    $ ros2 launch zed_display_rviz2 display_zed.launch.py
-
-If you own a ZED Mini camera launch:
-
-    $ ros2 launch zed_display_rviz2 display_zedm.launch.py
-
-If you own a ZED 2 camera launch:
+Available only if you own a ZED 2 camera:
 
     $ ros2 launch zed_display_rviz2 display_zed2.launch.py
 
-![ZED rendering on Rviz](images/depthcloud-RGB.jpg)
-![ZED rendering on Rviz](images/ZEDM-Rviz.jpg)
-![ZED rendering on Rviz](images/ZED-Rviz.jpg)
+![Object Detection parameters](images/rviz2_od_params.jpg)
+![Bounding boxes and Skeleton visualization](images/ZEDM-Rviz.jpg)
 
-[Detailed information](https://www.stereolabs.com/docs/ros2/rviz2/)
+[Detailed information](https://www.stereolabs.com/docs/ros2/object-detection/)
