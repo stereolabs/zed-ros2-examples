@@ -62,7 +62,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
-find_package(zed_components REQUIRED)
+find_package(zed_components)
 
 ###############################################################################
 #Add all files in subdirectories of the project in

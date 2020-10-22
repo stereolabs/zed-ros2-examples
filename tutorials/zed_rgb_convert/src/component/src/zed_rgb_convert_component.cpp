@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-﻿#include "zed_rgb_convert_component.hpp"
+#include "zed_rgb_convert_component.hpp"
 
 #include <opencv2/opencv.hpp>
 
