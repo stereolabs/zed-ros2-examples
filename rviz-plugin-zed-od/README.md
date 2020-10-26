@@ -16,7 +16,7 @@ is required to correctly execute the ROS node to acquire data from a Stereolabs 
 
    - Ubuntu 18.04 or newer (Ubuntu 18 recommended)
    - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.3 or later
-   - [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/Linux-Development-Setup/)
+   - [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/)
 
 ### Installation
 
@@ -33,7 +33,7 @@ Available only if you own a ZED 2 camera:
 
     $ ros2 launch zed_display_rviz2 display_zed2.launch.py
 
-![Object Detection parameters](images/rviz2_od_params.jpg)
-![Bounding boxes and Skeleton visualization](images/ZEDM-Rviz.jpg)
+![Object Detection parameters](images/rviz2_od_params.png)
+![Bounding boxes and Skeleton visualization](images/rviz2_od_result.png)
 
 [Detailed information](https://www.stereolabs.com/docs/ros2/object-detection/)
