@@ -14,9 +14,9 @@ This package is a collection of examples and tutorials to illustrate how to bett
 
 ### Prerequisites
 
-- Ubuntu 18.04
+- Ubuntu 20.04
 - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.3 or later
-- [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/Linux-Development-Setup/)
+- [ROS2 ROS 2 Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
 
 ### Build the package
 

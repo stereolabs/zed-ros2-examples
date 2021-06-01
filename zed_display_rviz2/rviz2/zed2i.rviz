@@ -5,15 +5,18 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /RobotModel1/Description Topic1
+        - /Video1/RGB Image1
         - /Video1/RGB Image1/Topic1
+        - /Video1/Stereo1
         - /Video1/Stereo1/Topic1
+        - /Depth1
         - /Depth1/Depth Map1/Topic1
+        - /Depth1/Loc. Point Cloud1
         - /Position1/TF1
         - /Position1/TF1/Frames1
         - /Position1/Pose1/Topic1
         - /Position1/Pose Path1/Topic1
         - /Position1/Odom Path1/Topic1
-        - /Mapping1
         - /Mapping1/Map Point Cloud1
         - /Mapping1/Map Point Cloud1/Topic1
         - /Objects1/ZedOdDisplay1
@@ -67,7 +70,7 @@ Visualization Manager:
         Durability Policy: Transient Local
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /zed2/robot_description
+        Value: /zed2i/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -79,24 +82,24 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_camera_center:
+        zed2i_camera_center:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        zed2_left_camera_frame:
+        zed2i_left_camera_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_left_camera_optical_frame:
+        zed2i_left_camera_optical_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_right_camera_frame:
+        zed2i_right_camera_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_right_camera_optical_frame:
+        zed2i_right_camera_optical_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -117,7 +120,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/rgb/image_rect_color
+            Value: /zed2i/zed_node/rgb/image_rect_color
           Value: true
           Visibility:
             Depth:
@@ -162,7 +165,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/stereo/image_rect_color
+            Value: /zed2i/zed_node/stereo/image_rect_color
           Value: true
       Enabled: true
       Name: Video
@@ -180,7 +183,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/depth/depth_registered
+            Value: /zed2i/zed_node/depth/depth_registered
           Value: true
         - Class: rviz_default_plugins/Image
           Enabled: false
@@ -194,9 +197,9 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/confidence/confidence_map
+            Value: /zed2i/zed_node/confidence/confidence_map
           Value: false
-        - Alpha: 1
+        - Alpha: 0.8999999761581421
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
             Max Value: 10
@@ -225,7 +228,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/point_cloud/cloud_registered
+            Value: /zed2i/zed_node/point_cloud/cloud_registered
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -244,15 +247,17 @@ Visualization Manager:
               Value: true
             odom:
               Value: true
-            zed2_camera_center:
+            zed2i_camera_center:
+              Value: true
+            zed2i_imu_link:
               Value: false
-            zed2_left_camera_frame:
+            zed2i_left_camera_frame:
               Value: false
-            zed2_left_camera_optical_frame:
+            zed2i_left_camera_optical_frame:
               Value: false
-            zed2_right_camera_frame:
+            zed2i_right_camera_frame:
               Value: false
-            zed2_right_camera_optical_frame:
+            zed2i_right_camera_optical_frame:
               Value: false
           Marker Scale: 0.30000001192092896
           Name: TF
@@ -263,12 +268,14 @@ Visualization Manager:
             map:
               odom:
                 base_link:
-                  zed2_camera_center:
-                    zed2_left_camera_frame:
-                      zed2_left_camera_optical_frame:
+                  zed2i_camera_center:
+                    zed2i_left_camera_frame:
+                      zed2i_imu_link:
                         {}
-                    zed2_right_camera_frame:
-                      zed2_right_camera_optical_frame:
+                      zed2i_left_camera_optical_frame:
+                        {}
+                    zed2i_right_camera_frame:
+                      zed2i_right_camera_optical_frame:
                         {}
           Update Interval: 0.20000000298023224
           Value: true
@@ -289,7 +296,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/pose
+            Value: /zed2i/zed_node/pose
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -316,7 +323,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/path_map
+            Value: /zed2i/zed_node/path_map
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -343,7 +350,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/path_odom
+            Value: /zed2i/zed_node/path_odom
           Value: true
       Enabled: true
       Name: Position
@@ -378,7 +385,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/mapping/fused_cloud
+            Value: /zed2i/zed_node/mapping/fused_cloud
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -400,7 +407,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/obj_det/objects
+            Value: /zed2i/zed_node/obj_det/objects
           Transparency: 0.25
           Value: true
       Enabled: true
@@ -436,7 +443,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/atm_press
+            Value: /zed2i/zed_node/atm_press
           Use Fixed Frame: true
           Use rainbow: true
           Value: false
@@ -469,7 +476,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/temperature/imu
+            Value: /zed2i/zed_node/temperature/imu
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -502,7 +509,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/temperature/left
+            Value: /zed2i/zed_node/temperature/left
           Use Fixed Frame: true
           Use rainbow: true
           Value: false
@@ -535,7 +542,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Best Effort
-            Value: /zed2/zed_node/temperature/right
+            Value: /zed2i/zed_node/temperature/right
           Use Fixed Frame: true
           Use rainbow: true
           Value: false
@@ -584,25 +591,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.204319715499878
+      Distance: 1.8912545442581177
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.14924755692481995
-        Y: 0.45568764209747314
-        Z: 0.5177127122879028
+        X: 0.10039034485816956
+        Y: 0.16059167683124542
+        Z: -0.002230255864560604
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.11539816111326218
+      Pitch: 0.305397629737854
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.955400228500366
+      Yaw: 3.1385838985443115
     Saved: ~
 Window Geometry:
   Confidence:
@@ -614,7 +621,7 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000019f000003a2fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b000003a2000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec0000015100000001000001cc000003a2fc0200000007fb0000001200520047004200200049006d006100670065010000003b000000e70000002800fffffffb00000012004400650070007400680020004d006100700100000128000000e70000002800fffffffb0000000c00530074006500720065006f0100000215000000a60000002800fffffffb000000140043006f006e0066006900640065006e00630065000000032f000000b70000002800fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007301000002c10000011c000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000003d1000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000015b000003a2fc020000000bfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b000003a2000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec00000151fb0000000a0049006d0061006700650100000312000000cb000000000000000000000001000001cc000003a2fc0200000007fb0000001200520047004200200049006d006100670065010000003b000000e70000002800fffffffb00000012004400650070007400680020004d006100700100000128000000e70000002800fffffffb0000000c00530074006500720065006f0100000215000000a60000002800fffffffb000000140043006f006e0066006900640065006e00630065000000032f000000b70000002800fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007301000002c10000011c000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d0065010000000000000450000000000000000000000415000003a200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   RGB Image:
     collapsed: false
   Selection:

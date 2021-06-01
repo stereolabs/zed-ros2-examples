@@ -48,9 +48,9 @@ def generate_launch_description():
     # Robot State Publisher node
     rsp_node = Node(
         package='robot_state_publisher',
-        node_namespace="/"+camera_name,
-        node_executable='robot_state_publisher',
-        node_name=camera_name+'_state_publisher',
+        namespace="/"+camera_name,
+        executable='robot_state_publisher',
+        name=camera_name+'_state_publisher',
         output='screen',
         arguments=[urdf],
     )
@@ -58,8 +58,8 @@ def generate_launch_description():
     zed_node_comp = ComposableNode(
         package='zed_components',
         node_plugin='stereolabs::ZedCamera',
-        node_namespace='/'+camera_name,
-        node_name='zed_node',
+        namespace='/'+camera_name,
+        name='zed_node',
         parameters=[
             config_common,  # Common parameters
             config_camera,  # Camera related parameters
@@ -69,8 +69,8 @@ def generate_launch_description():
     zed_cvt_node_comp = ComposableNode(
         package='zed_rgb_convert_component',
         node_plugin='stereolabs::ZedRgbCvtComponent',
-        node_namespace='/'+camera_name,
-        node_name='zed_cvt_node',
+        namespace='/'+camera_name,
+        name='zed_cvt_node',
         remappings=[
             ('/'+camera_name+"/zed_image_4ch", '/'+camera_name+"/zed_node/rgb/image_rect_color"),
             ('/'+camera_name+"/camera_info", '/'+camera_name+"/zed_node/rgb/camera_info")
@@ -80,10 +80,10 @@ def generate_launch_description():
     """Generate launch description with multiple components."""
     container = ComposableNodeContainer(
         package='rclcpp_components',
-        node_namespace="/"+camera_name,
-        node_name='zed_container',
+        namespace="/"+camera_name,
+        name='zed_container',
         output='screen',
-        node_executable='component_container',
+        executable='component_container',
         composable_node_descriptions=[
             zed_node_comp,
             zed_cvt_node_comp,

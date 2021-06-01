@@ -43,9 +43,9 @@ def generate_launch_description():
     # Robot State Publisher node
     rsp_node = Node(
         package='robot_state_publisher',
-        node_namespace="/"+camera_name,
-        node_executable='robot_state_publisher',
-        node_name=camera_name+'_state_publisher',
+        namespace="/"+camera_name,
+        executable='robot_state_publisher',
+        name=camera_name+'_state_publisher',
         output='screen',
         arguments=[urdf],
     )
@@ -53,8 +53,8 @@ def generate_launch_description():
     # ZED node using manual composition
     zed_node = Node(
         package='zed_rgb_convert',
-        node_namespace="/"+camera_name,
-        node_executable='zed_rgb_convert',
+        namespace="/"+camera_name,
+        executable='zed_rgb_convert',
         output='screen',
         parameters=[
             config_common,  # Common parameters
