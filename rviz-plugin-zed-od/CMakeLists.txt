@@ -125,7 +125,13 @@ ament_target_dependencies(rviz_plugin_zed_od
 )
 
 ament_export_include_directories(include)
-ament_export_targets(rviz_plugin_zed_od HAS_LIBRARY_TARGET)
+
+if($ENV{ROS_DISTRO} STREQUAL "eloquent")
+  ament_export_interfaces(rviz_plugin_zed_od HAS_LIBRARY_TARGET)
+else()
+  ament_export_targets(rviz_plugin_zed_od HAS_LIBRARY_TARGET)
+endif()
+
 ament_export_dependencies(
   Qt5
   rviz_common
