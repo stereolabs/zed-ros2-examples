@@ -17,7 +17,7 @@ is required to correctly execute the ROS node to acquire data from a Stereolabs 
 
    - Ubuntu 18.04 or newer (Ubuntu 18 recommended)
    - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.3 or later
-   - [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/Linux-Development-Setup/)
+   - [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/)
 
 ### Installation
 
