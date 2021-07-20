@@ -1,0 +1,42 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "/opt/ros/foxy/include/**",
+                    "/usr/include/**",
+                    "/usr/local/zed/include/**",
+                    "${workspaceFolder}"
+                ]
+            },
+            "includePath": [
+                "/opt/ros/noetic/include/**",
+                "/usr/include/**",
+                "/usr/local/zed/include/**"
+            ],
+            "name": "ROS",
+            "macFrameworkPath": [],
+            "compilerArgs": [],
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64",
+            "compilerPath": "/usr/bin/clang"
+        },
+        {
+            "name": "ROS2",
+            "includePath": [
+                "/opt/ros/foxy/include/**",
+                "/usr/include/**",
+                "/usr/local/zed/include/**",
+                "/home/walter/devel/ros2_ws/build/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}

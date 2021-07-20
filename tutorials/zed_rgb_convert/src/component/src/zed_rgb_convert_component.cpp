@@ -31,11 +31,6 @@
 using namespace std::chrono_literals;
 using namespace std::placeholders;
 
-#ifndef TIMER_ELAPSED
-#define TIMER_ELAPSED double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()
-#endif
-
-
 namespace stereolabs {
 
 
