@@ -31,9 +31,9 @@
 #include <rcutils/logging_macros.h>
 
 
-#include <image_transport/image_transport.h>
-#include <image_transport/camera_publisher.h>
-#include <image_transport/camera_subscriber.h>
+#include <image_transport/image_transport.hpp>
+#include <image_transport/camera_publisher.hpp>
+#include <image_transport/camera_subscriber.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 

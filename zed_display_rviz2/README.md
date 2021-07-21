@@ -1,6 +1,6 @@
 # Stereolabs ZED Camera - ROS2 Display package
 
-This package lets you visualize in the [ROS2 RViz application](https://github.com/ros2/rviz/tree/eloquent) all the
+This package lets you visualize in the [ROS2 RViz application](https://github.com/ros2/rviz/tree/foxy) all the
 possible information that can be acquired using a Stereolabs camera.
 The package provides the launch files for ZED, ZED Mini and ZED 2 camera models.
 
@@ -15,9 +15,9 @@ is required to correctly execute the ROS node to acquire data from a Stereolabs 
 
 ### Prerequisites
 
-   - Ubuntu 18.04 or newer (Ubuntu 18 recommended)
-   - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.3 or later
-   - [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/)
+   - Ubuntu 20.04
+   - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.5 or later
+   - [ROS2 ROS 2 Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
 
 ### Installation
 

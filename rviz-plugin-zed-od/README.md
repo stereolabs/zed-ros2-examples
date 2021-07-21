@@ -1,6 +1,6 @@
 # Stereolabs ZED Camera - ROS2 Object Detection Plugin
 
-This package lets you visualize in the [ROS2 RViz application](https://github.com/ros2/rviz/tree/eloquent) all the
+This package lets you visualize in the [ROS2 RViz application](https://github.com/ros2/rviz/tree/foxy) all the
 information provided by the Object Detection module of the ZED SDK used together with a ZED2 camera.
 
 **Note:** The main package [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper)
@@ -14,9 +14,9 @@ is required to correctly execute the ROS node to acquire data from a Stereolabs 
 
 ### Prerequisites
 
-   - Ubuntu 18.04 or newer (Ubuntu 18 recommended)
+   - Ubuntu 20.04
    - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.3 or later
-   - [ROS2 Eloquent Elusor](https://index.ros.org/doc/ros2/Installation/Eloquent/)
+   - [ROS2 ROS 2 Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
 
 ### Installation
 

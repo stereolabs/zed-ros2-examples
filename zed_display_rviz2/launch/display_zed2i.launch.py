@@ -23,10 +23,10 @@ def generate_launch_description():
     #  - 'zedm' for "ZED mini" camera
     #  - 'zed2' for "ZED2" camera
     #  - 'zed2i' for "ZED2i" camera
-    camera_model = 'zedm'
+    camera_model = 'zed2i'
 
     # Camera name. Can be different from camera model, used to distinguish camera in multi-camera systems
-    camera_name = 'zedm'
+    camera_name = 'zed2i'
 
     # Rviz2 Configurations to be loaded by ZED Node
     config_rviz2 = os.path.join(

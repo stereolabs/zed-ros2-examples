@@ -41,7 +41,11 @@ int main(int argc, char * argv[])
     // With this version, all callbacks will be called from within this thread (the main one).
     rclcpp::executors::MultiThreadedExecutor exec;
     rclcpp::NodeOptions options;
-    options.use_intra_process_comms(false);
+
+    // Cannot be set to `true` because intraprocess communication is allowed only 
+    // if all the topics published by the ZED node use the QoS settings with
+    // volatile durability and this is not true. 
+    options.use_intra_process_comms(false); 
 
     // Add ZedCamera node
     auto zed_node = std::make_shared<stereolabs::ZedCamera>(options);

@@ -141,7 +141,7 @@ rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedRgbCv
 set(node_plugins "${node_plugins}stereolabs::ZedRgbCvtComponent;$<TARGET_FILE:zed_rgb_convert_component>\n")
 
 # Install components
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}_component
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
