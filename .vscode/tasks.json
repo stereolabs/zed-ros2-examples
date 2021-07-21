@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "colcon",
+			"args": [
+				"--workspace",
+				"/home/walter/devel/ros2_ws/src/zed-ros2-examples",
+				"build"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"label": "colcon: build"
+		}
+	]
+}
