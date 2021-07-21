@@ -3,6 +3,7 @@ import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+from launch.substitutions import Command
 
 
 def generate_launch_description():
@@ -18,10 +19,10 @@ def generate_launch_description():
     # Camera name
     camera_name = 'zed2'
 
-    # URDF file to be loaded by Robot State Publisher
-    urdf = os.path.join(
+    # URDF/xacro file to be loaded by the Robot State Publisher node
+    xacro_path = os.path.join(
         get_package_share_directory('zed_wrapper'),
-        'urdf', camera_model + '.urdf'
+        'urdf', 'zed_descr.urdf.xacro'
     )
 
     # ZED Configurations to be loaded by ZED Node
@@ -43,17 +44,24 @@ def generate_launch_description():
     # Robot State Publisher node
     rsp_node = Node(
         package='robot_state_publisher',
-        namespace="/"+camera_name,
+        namespace=camera_name,
         executable='robot_state_publisher',
-        name=camera_name+'_state_publisher',
+        name='zed_state_publisher',
         output='screen',
-        arguments=[urdf],
+        parameters=[{
+            'robot_description': Command(
+                [
+                    'xacro', ' ', xacro_path, ' ',
+                    'camera_name:=', camera_name, ' ',
+                    'camera_model:=', camera_model
+                ])
+        }]
     )
 
     # ZED node using manual composition
     zed_node = Node(
         package='zed_rgb_convert',
-        namespace="/"+camera_name,
+        namespace=camera_name,
         executable='zed_rgb_convert',
         output='screen',
         parameters=[

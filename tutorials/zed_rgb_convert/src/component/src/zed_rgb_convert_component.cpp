@@ -61,7 +61,7 @@ ZedRgbCvtComponent::ZedRgbCvtComponent(const rclcpp::NodeOptions &options)
     // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
     mVideoQos.keep_last(10);
-    mVideoQos.best_effort();
+    mVideoQos.reliable();
     mVideoQos.durability_volatile();
 
     // Create camera pusblisher for converted image topic
