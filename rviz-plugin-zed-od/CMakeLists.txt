@@ -149,9 +149,9 @@ install(
   INCLUDES DESTINATION include
 )
 
-install(
-  DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
-  DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/
+install(DIRECTORY  
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/
   DESTINATION include/${PROJECT_NAME}/
 )
 
