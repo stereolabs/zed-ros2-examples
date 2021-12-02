@@ -13,9 +13,9 @@ Panels:
         - /Position1/Pose1/Topic1
         - /Position1/Pose Path1/Topic1
         - /Position1/Odom Path1/Topic1
-        - /Mapping1
         - /Mapping1/Map Point Cloud1
         - /Mapping1/Map Point Cloud1/Topic1
+        - /Objects1
         - /Objects1/ZedOdDisplay1
         - /Objects1/ZedOdDisplay1/Topic1
         - /Sensors1/IMU Temperature1/Topic1
@@ -79,6 +79,14 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        zed2_baro_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        zed2_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         zed2_camera_center:
           Alpha: 1
           Show Axes: false
@@ -92,11 +100,23 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        zed2_mag_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         zed2_right_camera_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
         zed2_right_camera_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        zed2_temp_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        zed2_temp_right_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -244,15 +264,27 @@ Visualization Manager:
               Value: true
             odom:
               Value: true
+            zed2_baro_link:
+              Value: false
+            zed2_base_link:
+              Value: true
             zed2_camera_center:
+              Value: false
+            zed2_imu_link:
               Value: false
             zed2_left_camera_frame:
               Value: false
             zed2_left_camera_optical_frame:
               Value: false
+            zed2_mag_link:
+              Value: false
             zed2_right_camera_frame:
               Value: false
             zed2_right_camera_optical_frame:
+              Value: false
+            zed2_temp_left_link:
+              Value: false
+            zed2_temp_right_link:
               Value: false
           Marker Scale: 0.30000001192092896
           Name: TF
@@ -263,13 +295,24 @@ Visualization Manager:
             map:
               odom:
                 base_link:
-                  zed2_camera_center:
-                    zed2_left_camera_frame:
-                      zed2_left_camera_optical_frame:
+                  zed2_base_link:
+                    zed2_camera_center:
+                      zed2_baro_link:
                         {}
-                    zed2_right_camera_frame:
-                      zed2_right_camera_optical_frame:
+                      zed2_left_camera_frame:
+                        zed2_imu_link:
+                          {}
+                        zed2_left_camera_optical_frame:
+                          {}
+                        zed2_temp_left_link:
+                          {}
+                      zed2_mag_link:
                         {}
+                      zed2_right_camera_frame:
+                        zed2_right_camera_optical_frame:
+                          {}
+                        zed2_temp_right_link:
+                          {}
           Update Interval: 0.20000000298023224
           Value: true
         - Alpha: 0.75
@@ -388,9 +431,9 @@ Visualization Manager:
       Displays:
         - Class: rviz_plugin_zed_od/ZedOdDisplay
           Enabled: true
-          Joint Radius: 0.07500000298023224
-          Label Scale: 3.5
-          Link Size: 0.05000000074505806
+          Joint Radius: 0.05000000074505806
+          Label Scale: 5
+          Link Size: 0.02500000037252903
           Name: ZedOdDisplay
           Show Bounding Boxes: true
           Show Labels: true
@@ -584,25 +627,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.204319715499878
+      Distance: 2.348249673843384
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.14924755692481995
-        Y: 0.45568764209747314
-        Z: 0.5177127122879028
+        X: 0.2046116441488266
+        Y: 0.18603581190109253
+        Z: 0.2968088984489441
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.11539816111326218
+      Pitch: 0.2703983187675476
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.955400228500366
+      Yaw: 2.135394334793091
     Saved: ~
 Window Geometry:
   Confidence:
