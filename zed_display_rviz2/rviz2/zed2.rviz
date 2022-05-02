@@ -8,14 +8,16 @@ Panels:
         - /Video1/RGB Image1/Topic1
         - /Video1/Stereo1/Topic1
         - /Depth1/Depth Map1/Topic1
+        - /Depth1/Loc. Point Cloud1
         - /Position1/TF1
         - /Position1/TF1/Frames1
         - /Position1/Pose1/Topic1
         - /Position1/Pose Path1/Topic1
         - /Position1/Odom Path1/Topic1
-        - /Mapping1/Map Point Cloud1
         - /Mapping1/Map Point Cloud1/Topic1
-        - /Objects1
+        - /Mapping1/Planes1
+        - /Mapping1/Planes1/Topic1
+        - /Mapping1/Planes1/Namespaces1
         - /Objects1/ZedOdDisplay1
         - /Objects1/ZedOdDisplay1/Topic1
         - /Sensors1/IMU Temperature1/Topic1
@@ -148,6 +150,7 @@ Visualization Manager:
             Grid: false
             Mapping:
               Map Point Cloud: true
+              Planes: true
               Value: true
             Objects:
               Value: true
@@ -216,7 +219,7 @@ Visualization Manager:
             Reliability Policy: Best Effort
             Value: /zed2/zed_node/confidence/confidence_map
           Value: false
-        - Alpha: 1
+        - Alpha: 0.699999988079071
           Autocompute Intensity Bounds: true
           Autocompute Value Bounds:
             Max Value: 10
@@ -237,7 +240,7 @@ Visualization Manager:
           Name: Loc. Point Cloud
           Position Transformer: XYZ
           Selectable: true
-          Size (Pixels): 3
+          Size (Pixels): 2
           Size (m): 0.009999999776482582
           Style: Points
           Topic:
@@ -424,6 +427,19 @@ Visualization Manager:
             Value: /zed2/zed_node/mapping/fused_cloud
           Use Fixed Frame: true
           Use rainbow: true
+          Value: true
+        - Class: rviz_default_plugins/Marker
+          Enabled: true
+          Name: Planes
+          Namespaces:
+            plane_hit_points: true
+            plane_meshes: true
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /zed2/plane_marker
           Value: true
       Enabled: true
       Name: Mapping
@@ -642,10 +658,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2703983187675476
+      Pitch: 0.28539833426475525
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.135394334793091
+      Yaw: 2.980398416519165
     Saved: ~
 Window Geometry:
   Confidence:
@@ -670,4 +686,4 @@ Window Geometry:
     collapsed: false
   Width: 1864
   X: 56
-  Y: 27
+  Y: 430
