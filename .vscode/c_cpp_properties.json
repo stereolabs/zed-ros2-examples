@@ -29,7 +29,8 @@
                 "/opt/ros/foxy/include/**",
                 "/usr/include/**",
                 "/usr/local/zed/include/**",
-                "/home/walter/devel/ros2_ws/build/**"
+                "/home/walter/devel/ros2_ws/build/**",
+                "./**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

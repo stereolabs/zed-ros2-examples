@@ -25,7 +25,7 @@ add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
 
 ## Sources
 set(SRC_CONT src/topic_benchmark_container.cpp)
-set(SRC_COMP src/component/src/topic_benchmark.cpp)
+set(SRC_COMP src/component/src/topic_benchmark_component.cpp)
 
 ## Build
 add_executable(${PROJECT_NAME} ${SRC_CONT} ${SRC_COMP})
@@ -37,8 +37,8 @@ ament_target_dependencies(${PROJECT_NAME}
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE
-  include
-  src/component/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
 )
 
 # Install executable
