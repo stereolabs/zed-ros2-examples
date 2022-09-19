@@ -25,7 +25,7 @@ void TopicBenchmarkComponent::init()
 
   if (!mTopicAvailable.load())
   {
-    mTopicTimer = create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(500),
+    mTopicTimer = create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(500)),
                                     std::bind(&TopicBenchmarkComponent::updateTopicInfo, this));
   }
 }
@@ -83,13 +83,14 @@ void TopicBenchmarkComponent::updateTopicInfo()
       for (const auto& topic_type : mTopicTypes)
       {
         mTopicAvailable.store(true);
-        RCLCPP_INFO_STREAM(get_logger(), "Found topic: " << mTopicName << "of type: ");
+        RCLCPP_INFO_STREAM(get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
+        
       }
     }
   }
 
   if (!mTopicAvailable.load())
-    RCLCPP_INFO_STREAM(get_logger(), "Waiting for topic '" << mTopicName << "' to be published.");
+    RCLCPP_INFO_STREAM_ONCE(get_logger(), "Waiting for topic '" << mTopicName << "' to be published...");
   else
   {
     if (mTopicTimer)

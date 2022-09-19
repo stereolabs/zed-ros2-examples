@@ -23,7 +23,7 @@
  ********************************************************************************/
 
 #include <rclcpp/rclcpp.hpp>
-#include "topic_benchmark_container.hpp""
+#include "topic_benchmark_component.hpp"
 
 int main(int argc, char * argv[])
 {

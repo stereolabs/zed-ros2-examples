@@ -15,6 +15,7 @@ endif()
 # dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 
 ###############################################################################
 # Add all files in subdirectories of the project in
@@ -31,12 +32,13 @@ set(SRC_COMP src/component/src/topic_benchmark_component.cpp)
 add_executable(${PROJECT_NAME} ${SRC_CONT} ${SRC_COMP})
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
+  rclcpp_components
 )
 
 ## Includes
 target_include_directories(
   ${PROJECT_NAME}
-  PRIVATE
+  PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
 )
