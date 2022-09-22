@@ -1,15 +1,16 @@
 #include "topic_benchmark_component.hpp"
 
-#ifdef FOUND_HUMBLE
-
 #include <rcutils/logging_macros.h>
 #include <rclcpp/time.hpp>
+#include <rclcpp/qos_overriding_options.hpp>
 #include <chrono>
+
+using namespace std::placeholders;
 
 namespace stereolabs
 {
 TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions& options)
-  : rclcpp::Node("topic_benchmark", options), mSubQos(1)
+  : rclcpp::Node("topic_benchmark", options)
 {
   mTopicAvailable.store(false);
   init();
@@ -33,11 +34,14 @@ void TopicBenchmarkComponent::init()
 }
 
 template <typename T>
-void TopicBenchmarkComponent::getParam(std::string paramName, T defValue, T& outVal, std::string log_info)
+void TopicBenchmarkComponent::getParam(std::string paramName, T defValue, T& outVal, std::string log_info, bool dynamic)
 {
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.read_only = !dynamic;
+
   try
   {
-    declare_parameter(paramName, rclcpp::ParameterValue(defValue));
+    declare_parameter(paramName, rclcpp::ParameterValue(defValue),descriptor);
   }
   catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException& ex)
   {
@@ -61,12 +65,13 @@ void TopicBenchmarkComponent::getParameters()
 {
   RCLCPP_INFO(get_logger(), "***** Benchmark parameters *****");
 
-  getParam("topic_name", DEFAULT_TOPIC_NAME, mTopicName, "Topic name: ");
+  getParam("topic_name", DEFAULT_TOPIC_NAME, mTopicName, "* Topic name: ");
   if (mTopicName == DEFAULT_TOPIC_NAME)
   {
     RCLCPP_WARN(get_logger(), "Please remap the parameter 'topic_name' with the name of the parameter to benchmark.");
   }
   getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
+
 }
 
 void TopicBenchmarkComponent::updateTopicInfo()
@@ -77,16 +82,24 @@ void TopicBenchmarkComponent::updateTopicInfo()
   for (const auto& topic_it : topic_infos)
   {
     std::string topic_name = topic_it.first;
-    mTopicTypes = topic_it.second;
+
+    std::vector<std::string> topicTypes = topic_it.second;
 
     if (topic_name == mTopicName)
     {
       // iterate over all topic types
-      for (const auto& topic_type : mTopicTypes)
+      for (const auto& topic_type : topicTypes)
       {
         mTopicAvailable.store(true);
         RCLCPP_INFO_STREAM(get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
         
+        std::shared_ptr<rclcpp::GenericSubscription> sub = 
+          create_generic_subscription(mTopicName,
+          topic_type,
+          rclcpp::SensorDataQoS(),
+          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1));
+
+        mSubMap[topic_type] = sub;
       }
     }
   }
@@ -100,6 +113,11 @@ void TopicBenchmarkComponent::updateTopicInfo()
   }
 }
 
+void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg)
+{
+  RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
+}
+
 }  // namespace stereolabs
 
 #include "rclcpp_components/register_node_macro.hpp"
@@ -109,4 +127,3 @@ void TopicBenchmarkComponent::updateTopicInfo()
 // when its library is being loaded into a running process.
 RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::TopicBenchmarkComponent)
 
-#endif

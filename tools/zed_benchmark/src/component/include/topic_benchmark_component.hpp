@@ -25,14 +25,15 @@
 #ifndef TOPIC_BENCHMARK_HPP
 #define TOPIC_BENCHMARK_HPP
 
-#ifdef FOUND_HUMBLE
-
 #include <atomic>
 
 #include "visibility_control.h"
 
 #include <rclcpp/rclcpp.hpp>
 #include <rcutils/logging_macros.h>
+
+#include <rclcpp/generic_subscription.hpp> // Not available before ROS2 Humble
+#include <rclcpp/serialized_message.hpp>
 
 #define DEFAULT_TOPIC_NAME std::string("topic_name")
 
@@ -50,31 +51,31 @@ protected:
 
   // ----> Node Parameters
   template <typename T>
-  void getParam(std::string paramName, T defValue, T& outVal, std::string log_info = std::string());
+  void getParam(std::string paramName, T defValue, T& outVal, std::string log_info = std::string(), bool dynamic=false);
 
   void getParameters();
   // ----> Node Parameters
 
   void updateTopicInfo();  ///< Update the information to subscribe to the topic under benchmarking
 
+  void topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg);
+
 private:
   double mSubFreqTot;  ///< Total of subscriber receiving frequency for average computation
   double mSubFreqBw;   ///< Average topic bandwidth (topic_size x avg_freq)
 
-  std::vector<std::string> mTopicTypes;  ///< Types of the benchmarked topics (retrieved runtime)
   rclcpp::TimerBase::SharedPtr mTopicTimer;
 
   // Parameters
   std::string mTopicName = DEFAULT_TOPIC_NAME;  ///< Name of the benchmarked topic
   int mWinSize = 15;                            ///< Window size for frequency average
 
-  // QoS parameters
-  rclcpp::QoS mSubQos;  ///< Subscriber QoS profile
-
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
+
+  // Topic subscriptions
+  std::map<std::string, std::shared_ptr<rclcpp::GenericSubscription>> mSubMap;
 };
 }  // namespace stereolabs
 
 #endif
 
-#endif
