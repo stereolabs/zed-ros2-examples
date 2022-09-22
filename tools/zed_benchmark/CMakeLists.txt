@@ -31,10 +31,10 @@ if(ROS2_FOUND)
         message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
     else()
-        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not supported. This package will not be compiled.")
+        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not supported. This package will not be installed.")
     endif()
 else()
-    message("*** WARNING *** ROS2 distro is unknown. This package will not be compiled.")
+    message("*** WARNING *** ROS2 distro is unknown. This package will not be installed.")
 endif()
 ################################################
 
@@ -86,6 +86,9 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
+
+  ament_package()
+  
 endif()
 
-ament_package()
+
