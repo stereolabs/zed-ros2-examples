@@ -25,6 +25,8 @@
 #ifndef TOPIC_BENCHMARK_HPP
 #define TOPIC_BENCHMARK_HPP
 
+#ifdef FOUND_HUMBLE
+
 #include <atomic>
 
 #include "visibility_control.h"
@@ -72,5 +74,7 @@ private:
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
 };
 }  // namespace stereolabs
+
+#endif
 
 #endif

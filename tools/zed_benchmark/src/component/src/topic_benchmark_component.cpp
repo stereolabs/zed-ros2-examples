@@ -1,5 +1,7 @@
 #include "topic_benchmark_component.hpp"
 
+#ifdef FOUND_HUMBLE
+
 #include <rcutils/logging_macros.h>
 #include <rclcpp/time.hpp>
 #include <chrono>
@@ -106,3 +108,5 @@ void TopicBenchmarkComponent::updateTopicInfo()
 // This acts as a sort of entry point, allowing the component to be discoverable
 // when its library is being loaded into a running process.
 RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::TopicBenchmarkComponent)
+
+#endif

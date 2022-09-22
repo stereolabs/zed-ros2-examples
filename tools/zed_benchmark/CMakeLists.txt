@@ -2,52 +2,90 @@ cmake_minimum_required(VERSION 3.10)
 
 project(topic_benchmark)
 
-# if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
-IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE Release)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+################################################
+# Check the ROS2 version
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+set(ROS2_FOUND FALSE)
+if(DEFINED ENV{ROS_DISTRO})
+    set(FOUND_ROS2_DISTRO $ENV{ROS_DISTRO})
+    set(ROS2_FOUND TRUE)
+    message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
+else()
+    message("* ROS2 distro variable not set. Trying to figure it out...")
+    set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;rolling")
+    set(ROS2_FOUND FALSE)
+    foreach(distro ${ROS2_DISTROS})
+        if(NOT ROS2_FOUND)
+            find_path(RCLCPP_H rclcpp.hpp PATHS /opt/ros/${distro}/include/rclcpp)
+            if(RCLCPP_H)
+                message("* Found ROS2 ${distro}")
+                set(FOUND_ROS2_DISTRO ${distro})
+                set(ROS2_FOUND TRUE)
+            endif()
+        endif()        
+    endforeach()    
+endif(DEFINED ENV{ROS_DISTRO})
+
+if(ROS2_FOUND)
+    if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+        message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_HUMBLE)
+    else()
+        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not supported. This package will not be compiled.")
+    endif()
+else()
+    message("*** WARNING *** ROS2 distro is unknown. This package will not be compiled.")
 endif()
+################################################
 
-# dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
+if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+  # if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
+  IF(NOT CMAKE_BUILD_TYPE)
+      SET(CMAKE_BUILD_TYPE Release)
+  ENDIF(NOT CMAKE_BUILD_TYPE)
 
-###############################################################################
-# Add all files in subdirectories of the project in
-# a dummy_target so qtcreator have access to all files
-FILE(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
-add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
-###############################################################################
+  # Default to C++14
+  if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 14)
+  endif()
 
-## Sources
-set(SRC_CONT src/topic_benchmark_container.cpp)
-set(SRC_COMP src/component/src/topic_benchmark_component.cpp)
+  # dependencies
+  find_package(ament_cmake REQUIRED)
+  find_package(rclcpp REQUIRED)
+  find_package(rclcpp_components REQUIRED)
 
-## Build
-add_executable(${PROJECT_NAME} ${SRC_CONT} ${SRC_COMP})
-ament_target_dependencies(${PROJECT_NAME}
-  rclcpp
-  rclcpp_components
-)
+  ###############################################################################
+  # Add all files in subdirectories of the project in
+  # a dummy_target so qtcreator have access to all files
+  FILE(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
+  add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
+  ###############################################################################
 
-## Includes
-target_include_directories(
-  ${PROJECT_NAME}
-  PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
-)
+  ## Sources
+  set(SRC_CONT src/topic_benchmark_container.cpp)
+  set(SRC_COMP src/component/src/topic_benchmark_component.cpp)
 
-# Install executable
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+  ## Build
+  add_executable(${PROJECT_NAME} ${SRC_CONT} ${SRC_COMP})
+  ament_target_dependencies(${PROJECT_NAME}
+    rclcpp
+    rclcpp_components
+  )
+
+  ## Includes
+  target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
+  )
+
+  # Install executable
+  install(TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION lib/${PROJECT_NAME}
+  )
+endif()
 
 ament_package()
