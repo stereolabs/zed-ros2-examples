@@ -4,6 +4,7 @@
 #include <rclcpp/time.hpp>
 #include <rclcpp/qos_overriding_options.hpp>
 #include <chrono>
+#include <iostream>
 
 using namespace std::placeholders;
 
@@ -25,6 +26,8 @@ TopicBenchmarkComponent::~TopicBenchmarkComponent()
 void TopicBenchmarkComponent::init()
 {
   getParameters();
+
+  RCLCPP_INFO(get_logger(), "*** START BENCHMARK ***");
 
   if (!mTopicAvailable.load())
   {
@@ -71,6 +74,7 @@ void TopicBenchmarkComponent::getParameters()
     RCLCPP_WARN(get_logger(), "Please remap the parameter 'topic_name' with the name of the parameter to benchmark.");
   }
   getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
+  mAvgFreq.setNewSize(mWinSize);
 
 }
 
@@ -94,10 +98,12 @@ void TopicBenchmarkComponent::updateTopicInfo()
         RCLCPP_INFO_STREAM(get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
         
         std::shared_ptr<rclcpp::GenericSubscription> sub = 
-          create_generic_subscription(mTopicName,
-          topic_type,
-          rclcpp::SensorDataQoS(),
-          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1));
+          create_generic_subscription(
+            mTopicName,
+            topic_type,
+            rclcpp::SensorDataQoS(),
+            std::bind(&TopicBenchmarkComponent::topicCallback, this, _1)
+          );
 
         mSubMap[topic_type] = sub;
       }
@@ -115,7 +121,27 @@ void TopicBenchmarkComponent::updateTopicInfo()
 
 void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg)
 {
-  RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
+  //RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
+  if(mFirstValue)
+  {
+    mLastRecTime = std::chrono::steady_clock::now(); // Set the start time point
+    mFirstValue = false;
+    return;
+  }
+
+  auto now = std::chrono::steady_clock::now();
+  double elapsed_usec = std::chrono::duration_cast<std::chrono::microseconds>(now - mLastRecTime).count();
+  mLastRecTime = now;
+
+  double freq = 1e6/elapsed_usec;
+  double avg_freq = mAvgFreq.addValue(freq);
+
+  static double bw_scale = 8./(1024.*1024.);
+   
+  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount << " - Freq: " << freq << " Hz (Avg: " << avg_freq << " Hz)"
+  " - Bandwidth: " << freq*bw_scale*msg->size() << " Mbps (Avg: " << bw_scale*avg_freq*msg->size() << " Mbps)" << std::flush;
+
+  //std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
 }
 
 }  // namespace stereolabs

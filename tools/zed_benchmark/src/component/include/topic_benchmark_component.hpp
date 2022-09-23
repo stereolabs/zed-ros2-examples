@@ -35,6 +35,8 @@
 #include <rclcpp/generic_subscription.hpp> // Not available before ROS2 Humble
 #include <rclcpp/serialized_message.hpp>
 
+#include "winavg.hpp"
+
 #define DEFAULT_TOPIC_NAME std::string("topic_name")
 
 namespace stereolabs
@@ -60,6 +62,8 @@ protected:
 
   void topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg);
 
+  
+
 private:
   double mSubFreqTot;  ///< Total of subscriber receiving frequency for average computation
   double mSubFreqBw;   ///< Average topic bandwidth (topic_size x avg_freq)
@@ -68,12 +72,21 @@ private:
 
   // Parameters
   std::string mTopicName = DEFAULT_TOPIC_NAME;  ///< Name of the benchmarked topic
-  int mWinSize = 15;                            ///< Window size for frequency average
+  int mWinSize = 100;                            ///< Window size for frequency average
 
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
+  bool mFirstValue=true;
 
   // Topic subscriptions
   std::map<std::string, std::shared_ptr<rclcpp::GenericSubscription>> mSubMap;
+
+  // Average values
+  WinAvg mAvgFreq;
+
+  // Time measuring
+  std::chrono::steady_clock::time_point mLastRecTime;
+
+  uint64_t mTopicCount=0;
 };
 }  // namespace stereolabs
 

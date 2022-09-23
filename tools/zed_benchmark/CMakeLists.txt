@@ -63,7 +63,9 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
 
   ## Sources
   set(SRC_CONT src/topic_benchmark_container.cpp)
-  set(SRC_COMP src/component/src/topic_benchmark_component.cpp)
+  set(SRC_COMP 
+    src/component/src/topic_benchmark_component.cpp
+    src/component/src/winavg.cpp)
 
   ## Build
   add_executable(${PROJECT_NAME} ${SRC_CONT} ${SRC_COMP})
