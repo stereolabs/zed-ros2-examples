@@ -45,15 +45,17 @@ class TopicBenchmarkComponent : public rclcpp::Node
 {
 public:
   TOPIC_BENCHMARK_PUBLIC
-  TopicBenchmarkComponent(const rclcpp::NodeOptions& options);
+  TopicBenchmarkComponent(const rclcpp::NodeOptions & options);
   virtual ~TopicBenchmarkComponent();
 
 protected:
   void init();
 
   // ----> Node Parameters
-  template <typename T>
-  void getParam(std::string paramName, T defValue, T& outVal, std::string log_info = std::string(), bool dynamic=false);
+  template<typename T>
+  void getParam(
+    std::string paramName, T defValue, T & outVal,
+    std::string log_info = std::string(), bool dynamic = false);
 
   void getParameters();
   // ----> Node Parameters
@@ -61,8 +63,6 @@ protected:
   void updateTopicInfo();  ///< Update the information to subscribe to the topic under benchmarking
 
   void topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg);
-
-  
 
 private:
   double mSubFreqTot;  ///< Total of subscriber receiving frequency for average computation
@@ -75,7 +75,7 @@ private:
   int mWinSize = 100;                            ///< Window size for frequency average
 
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
-  bool mFirstValue=true;
+  bool mFirstValue = true;
 
   // Topic subscriptions
   std::map<std::string, std::shared_ptr<rclcpp::GenericSubscription>> mSubMap;
@@ -86,9 +86,8 @@ private:
   // Time measuring
   std::chrono::steady_clock::time_point mLastRecTime;
 
-  uint64_t mTopicCount=0;
+  uint64_t mTopicCount = 0;
 };
 }  // namespace stereolabs
 
 #endif
-

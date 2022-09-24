@@ -53,6 +53,9 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   find_package(ament_cmake REQUIRED)
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
+  find_package(builtin_interfaces REQUIRED)
+  find_package(rosidl_default_generators REQUIRED)
+  find_package(std_msgs REQUIRED)
 
   ###############################################################################
   # Add all files in subdirectories of the project in
@@ -60,6 +63,16 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   FILE(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
   add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
   ###############################################################################
+
+  ## Custom messages
+  set(MSG_FILES
+    "msg/BenchmarkStatsStamped.msg"
+  )
+  
+  rosidl_generate_interfaces(${PROJECT_NAME}_interface    
+    ${MSG_FILES}
+    DEPENDENCIES builtin_interfaces std_msgs 
+  )
 
   ## Sources
   set(SRC_CONT src/topic_benchmark_container.cpp)
@@ -89,6 +102,7 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
     RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
 
+  ament_export_dependencies(rosidl_default_runtime)
   ament_package()
   
 endif()
