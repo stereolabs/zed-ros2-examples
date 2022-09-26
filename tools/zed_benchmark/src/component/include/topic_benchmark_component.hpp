@@ -35,6 +35,8 @@
 #include <rclcpp/generic_subscription.hpp> // Not available before ROS2 Humble
 #include <rclcpp/serialized_message.hpp>
 
+#include "winavg.hpp"
+
 #define DEFAULT_TOPIC_NAME std::string("topic_name")
 
 namespace stereolabs
@@ -43,15 +45,17 @@ class TopicBenchmarkComponent : public rclcpp::Node
 {
 public:
   TOPIC_BENCHMARK_PUBLIC
-  TopicBenchmarkComponent(const rclcpp::NodeOptions& options);
+  TopicBenchmarkComponent(const rclcpp::NodeOptions & options);
   virtual ~TopicBenchmarkComponent();
 
 protected:
   void init();
 
   // ----> Node Parameters
-  template <typename T>
-  void getParam(std::string paramName, T defValue, T& outVal, std::string log_info = std::string(), bool dynamic=false);
+  template<typename T>
+  void getParam(
+    std::string paramName, T defValue, T & outVal,
+    std::string log_info = std::string(), bool dynamic = false);
 
   void getParameters();
   // ----> Node Parameters
@@ -68,14 +72,22 @@ private:
 
   // Parameters
   std::string mTopicName = DEFAULT_TOPIC_NAME;  ///< Name of the benchmarked topic
-  int mWinSize = 15;                            ///< Window size for frequency average
+  int mWinSize = 100;                            ///< Window size for frequency average
 
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
+  bool mFirstValue = true;
 
   // Topic subscriptions
   std::map<std::string, std::shared_ptr<rclcpp::GenericSubscription>> mSubMap;
+
+  // Average values
+  WinAvg mAvgFreq;
+
+  // Time measuring
+  std::chrono::steady_clock::time_point mLastRecTime;
+
+  uint64_t mTopicCount = 0;
 };
 }  // namespace stereolabs
 
 #endif
-

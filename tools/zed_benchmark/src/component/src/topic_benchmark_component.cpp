@@ -4,13 +4,14 @@
 #include <rclcpp/time.hpp>
 #include <rclcpp/qos_overriding_options.hpp>
 #include <chrono>
+#include <iostream>
 
 using namespace std::placeholders;
 
 namespace stereolabs
 {
-TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions& options)
-  : rclcpp::Node("topic_benchmark", options)
+TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions & options)
+: rclcpp::Node("topic_benchmark", options)
 {
   mTopicAvailable.store(false);
   init();
@@ -18,45 +19,46 @@ TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions& opti
 
 TopicBenchmarkComponent::~TopicBenchmarkComponent()
 {
-  if (mTopicTimer)
+  if (mTopicTimer) {
     mTopicTimer->cancel();
+  }
 }
 
 void TopicBenchmarkComponent::init()
 {
   getParameters();
 
-  if (!mTopicAvailable.load())
-  {
-    mTopicTimer = create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(500)),
-                                    std::bind(&TopicBenchmarkComponent::updateTopicInfo, this));
+  RCLCPP_INFO(get_logger(), "*** START BENCHMARK ***");
+
+  if (!mTopicAvailable.load()) {
+    mTopicTimer = create_wall_timer(
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(500)),
+      std::bind(&TopicBenchmarkComponent::updateTopicInfo, this));
   }
 }
 
-template <typename T>
-void TopicBenchmarkComponent::getParam(std::string paramName, T defValue, T& outVal, std::string log_info, bool dynamic)
+template<typename T>
+void TopicBenchmarkComponent::getParam(
+  std::string paramName, T defValue, T & outVal,
+  std::string log_info, bool dynamic)
 {
   rcl_interfaces::msg::ParameterDescriptor descriptor;
   descriptor.read_only = !dynamic;
 
-  try
-  {
-    declare_parameter(paramName, rclcpp::ParameterValue(defValue),descriptor);
-  }
-  catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException& ex)
-  {
+  try {
+    declare_parameter(paramName, rclcpp::ParameterValue(defValue), descriptor);
+  } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException & ex) {
     RCLCPP_DEBUG_STREAM(get_logger(), "Exception: " << ex.what());
   }
 
-  if (!get_parameter(paramName, outVal))
-  {
-    RCLCPP_WARN_STREAM(get_logger(), "The parameter '"
-                                         << paramName << "' is not available or is not valid, using the default value: "
-                                         << defValue);
+  if (!get_parameter(paramName, outVal)) {
+    RCLCPP_WARN_STREAM(
+      get_logger(), "The parameter '"
+        << paramName << "' is not available or is not valid, using the default value: "
+        << defValue);
   }
 
-  if (!log_info.empty())
-  {
+  if (!log_info.empty()) {
     RCLCPP_INFO_STREAM(get_logger(), log_info << outVal);
   }
 }
@@ -66,11 +68,13 @@ void TopicBenchmarkComponent::getParameters()
   RCLCPP_INFO(get_logger(), "***** Benchmark parameters *****");
 
   getParam("topic_name", DEFAULT_TOPIC_NAME, mTopicName, "* Topic name: ");
-  if (mTopicName == DEFAULT_TOPIC_NAME)
-  {
-    RCLCPP_WARN(get_logger(), "Please remap the parameter 'topic_name' with the name of the parameter to benchmark.");
+  if (mTopicName == DEFAULT_TOPIC_NAME) {
+    RCLCPP_WARN(
+      get_logger(),
+      "Please remap the parameter 'topic_name' with the name of the parameter to benchmark.");
   }
   getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
+  mAvgFreq.setNewSize(mWinSize);
 
 }
 
@@ -79,43 +83,66 @@ void TopicBenchmarkComponent::updateTopicInfo()
   mTopicAvailable.store(false);
 
   std::map<std::string, std::vector<std::string>> topic_infos = this->get_topic_names_and_types();
-  for (const auto& topic_it : topic_infos)
-  {
+  for (const auto & topic_it : topic_infos) {
     std::string topic_name = topic_it.first;
 
     std::vector<std::string> topicTypes = topic_it.second;
 
-    if (topic_name == mTopicName)
-    {
+    if (topic_name == mTopicName) {
       // iterate over all topic types
-      for (const auto& topic_type : topicTypes)
-      {
+      for (const auto & topic_type : topicTypes) {
         mTopicAvailable.store(true);
-        RCLCPP_INFO_STREAM(get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
-        
-        std::shared_ptr<rclcpp::GenericSubscription> sub = 
-          create_generic_subscription(mTopicName,
+        RCLCPP_INFO_STREAM(
+          get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
+
+        std::shared_ptr<rclcpp::GenericSubscription> sub =
+          create_generic_subscription(
+          mTopicName,
           topic_type,
           rclcpp::SensorDataQoS(),
-          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1));
+          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1)
+          );
 
         mSubMap[topic_type] = sub;
       }
     }
   }
 
-  if (!mTopicAvailable.load())
-    RCLCPP_INFO_STREAM_ONCE(get_logger(), "Waiting for topic '" << mTopicName << "' to be published...");
-  else
-  {
-    if (mTopicTimer)
+  if (!mTopicAvailable.load()) {
+    RCLCPP_INFO_STREAM_ONCE(
+      get_logger(), "Waiting for topic '" << mTopicName << "' to be published...");
+  } else {
+    if (mTopicTimer) {
       mTopicTimer->cancel();
+    }
   }
 }
 
 void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg)
 {
-  RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
+  //RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
+  if (mFirstValue) {
+    mLastRecTime = std::chrono::steady_clock::now(); // Set the start time point
+    mFirstValue = false;
+    return;
+  }
+
+  auto now = std::chrono::steady_clock::now();
+  double elapsed_usec =
+    std::chrono::duration_cast<std::chrono::microseconds>(now - mLastRecTime).count();
+  mLastRecTime = now;
+
+  double freq = 1e6 / elapsed_usec;
+  double avg_freq = mAvgFreq.addValue(freq);
+
+  static double bw_scale = 8. / (1024. * 1024.);
+
+  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount << " - Freq: " <<
+    freq << " Hz (Avg: " << avg_freq << " Hz)"
+    " - Bandwidth: " << freq * bw_scale * msg->size() << " Mbps (Avg: " <<
+    bw_scale * avg_freq * msg->size() << " Mbps)" << std::flush;
+
+  //std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
 }
 
 }  // namespace stereolabs
@@ -126,4 +153,3 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
 // This acts as a sort of entry point, allowing the component to be discoverable
 // when its library is being loaded into a running process.
 RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::TopicBenchmarkComponent)
-
