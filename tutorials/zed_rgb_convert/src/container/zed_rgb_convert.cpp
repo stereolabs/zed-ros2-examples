@@ -42,10 +42,8 @@ int main(int argc, char * argv[])
     rclcpp::executors::MultiThreadedExecutor exec;
     rclcpp::NodeOptions options;
 
-    // Cannot be set to `true` because intraprocess communication is allowed only 
-    // if all the topics published by the ZED node use the QoS settings with
-    // volatile durability and this is not true. 
-    options.use_intra_process_comms(false); 
+    // Enable intraprocess communication
+    options.use_intra_process_comms(true); 
 
     // Add ZedCamera node
     auto zed_node = std::make_shared<stereolabs::ZedCamera>(options);
