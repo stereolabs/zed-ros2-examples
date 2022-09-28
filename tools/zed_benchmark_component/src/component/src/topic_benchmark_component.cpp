@@ -147,7 +147,7 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
   static double bw_scale = 8. / (1024. * 1024.);
 
   double bw = freq * bw_scale * msg->size();
-  double bw_avg = bw_scale * avg_freq * msg->size();
+  double bw_avg = avg_freq * bw_scale * msg->size();
 
   std::cout << '\r' << std::fixed << std::setprecision(
     2) << "#" << ++mTopicCount << " - Freq: " <<

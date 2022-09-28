@@ -74,7 +74,7 @@ private:
 
   // Parameters
   std::string mTopicName = DEFAULT_TOPIC_NAME;  ///< Name of the benchmarked topic
-  int mWinSize = 100;                            ///< Window size for frequency average
+  int mWinSize = 300;                            ///< Window size for frequency average
 
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
   bool mFirstValue = true;
