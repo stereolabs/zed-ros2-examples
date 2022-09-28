@@ -60,7 +60,7 @@ Visualization Manager:
         Depth: 1
         Durability Policy: Transient Local
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /zed/robot_description
       Enabled: true
       Links:
@@ -389,7 +389,7 @@ Visualization Manager:
             Depth: 5
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Reliable
+            Reliability Policy: Best Effort
             Value: /zed/plane_marker
           Value: true
       Enabled: true
@@ -413,14 +413,14 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /initialpose
     - Class: rviz_default_plugins/SetGoal
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /goal_pose
     - Class: rviz_default_plugins/PublishPoint
       Single click: true
@@ -428,7 +428,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /clicked_point
   Transformation:
     Current:
