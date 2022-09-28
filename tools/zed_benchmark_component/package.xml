@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!-- Package format 3 according to http://www.ros.org/reps/rep-0149.html -->
 <package format="3">
-	<name>zed_topic_benchmark</name>
+	<name>zed_topic_benchmark_component</name>
 	<version>0.1.0</version>
 	<description> This package contains tools to test the performance of the ZED ROS2 Wrapper </description>
 	<maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
@@ -10,12 +10,10 @@
 	<url type="repository">https://github.com/stereolabs/zed-ros2-wrapper</url>
 	<url type="bugtracker">https://github.com/stereolabs/zed-ros2-wrapper/issues</url>
 	<buildtool_depend>ament_cmake</buildtool_depend>
-	<build_depend>zed_topic_benchmark_component</build_depend>
+	<build_depend>zed_topic_benchmark_interfaces</build_depend>
 	<build_depend>rclcpp</build_depend>
-	<build_depend>rclcpp_components</build_depend>
-	<exec_depend>zed_topic_benchmark_component</exec_depend>
+	<exec_depend>zed_topic_benchmark_interfaces</exec_depend>
 	<exec_depend>rclcpp</exec_depend>
-	<exec_depend>rclcpp_components</exec_depend>
 	<export>
 		<build_type>ament_cmake</build_type>
 	</export>

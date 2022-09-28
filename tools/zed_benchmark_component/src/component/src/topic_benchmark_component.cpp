@@ -3,6 +3,7 @@
 #include <rcutils/logging_macros.h>
 #include <rclcpp/time.hpp>
 #include <rclcpp/qos_overriding_options.hpp>
+#include <rclcpp/qos.hpp>
 #include <chrono>
 #include <iostream>
 
@@ -14,7 +15,13 @@ TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions & opt
 : rclcpp::Node("topic_benchmark", options)
 {
   mTopicAvailable.store(false);
+
   init();
+
+  std::string pub_topic_name = /*std::string("~/") + */mTopicName + std::string("_stats");
+  mPub = create_publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>(
+    pub_topic_name,rclcpp::SensorDataQoS());
+  RCLCPP_INFO_STREAM(get_logger(), "Advertised on topic: " << mPub->get_topic_name());
 }
 
 TopicBenchmarkComponent::~TopicBenchmarkComponent()
@@ -80,9 +87,11 @@ void TopicBenchmarkComponent::getParameters()
 
 void TopicBenchmarkComponent::updateTopicInfo()
 {
-  mTopicAvailable.store(false);
+  mTopicAvailable.store(
+    false);
 
-  std::map<std::string, std::vector<std::string>> topic_infos = this->get_topic_names_and_types();
+  std::map<std::string,
+    std::vector<std::string>> topic_infos = this->get_topic_names_and_types();
   for (const auto & topic_it : topic_infos) {
     std::string topic_name = topic_it.first;
 
@@ -122,7 +131,7 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
 {
   //RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
   if (mFirstValue) {
-    mLastRecTime = std::chrono::steady_clock::now(); // Set the start time point
+    mLastRecTime = std::chrono::steady_clock::now();       // Set the start time point
     mFirstValue = false;
     return;
   }
@@ -137,15 +146,30 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
 
   static double bw_scale = 8. / (1024. * 1024.);
 
-  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount << " - Freq: " <<
+  double bw = freq * bw_scale * msg->size();
+  double bw_avg = bw_scale * avg_freq * msg->size();
+
+  std::cout << '\r' << std::fixed << std::setprecision(
+    2) << "#" << ++mTopicCount << " - Freq: " <<
     freq << " Hz (Avg: " << avg_freq << " Hz)"
-    " - Bandwidth: " << freq * bw_scale * msg->size() << " Mbps (Avg: " <<
-    bw_scale * avg_freq * msg->size() << " Mbps)" << std::flush;
+    " - Bandwidth: " << bw  << " Mbps (Avg: " << bw_avg
+            << " Mbps)" << std::flush;
 
   //std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
+
+  std::unique_ptr<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped> stat_msg =
+    std::make_unique<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>();
+
+  stat_msg->header.stamp = get_clock()->now();
+  stat_msg->topic_freq = freq;
+  stat_msg->topic_avg_freq = avg_freq;
+  stat_msg->topic_bw = bw;
+  stat_msg->topic_avg_bw = bw_avg;
+
+  mPub->publish(std::move(stat_msg));
 }
 
-}  // namespace stereolabs
+}     // namespace stereolabs
 
 #include "rclcpp_components/register_node_macro.hpp"
 

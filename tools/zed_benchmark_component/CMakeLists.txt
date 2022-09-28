@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(zed_topic_benchmark)
+project(zed_topic_benchmark_component)
 
 ################################################
 # Check the ROS2 version
@@ -53,13 +53,13 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   set(DEPENDENCIES 
     rclcpp
     rclcpp_components
-    zed_topic_benchmark_component
+    zed_topic_benchmark_interfaces
   )
 
   find_package(ament_cmake REQUIRED)
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
-  find_package(zed_topic_benchmark_component REQUIRED)
+  find_package(zed_topic_benchmark_interfaces REQUIRED)
 
   ###############################################################################
   # Add all files in subdirectories of the project in
@@ -68,22 +68,45 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
   ###############################################################################
 
-   ## Sources
-  set(SRC_CONT src/topic_benchmark_container.cpp)
+  ## Sources
+  set(SRC_COMP 
+    src/component/src/topic_benchmark_component.cpp
+    src/component/src/winavg.cpp)
 
-    ## Build
-  add_executable(${PROJECT_NAME} ${SRC_CONT})
+  add_library(${PROJECT_NAME} SHARED 
+    ${SRC_COMP}
+  )
+  target_compile_definitions(${PROJECT_NAME}
+    PRIVATE "COMPOSITION_BUILDING_DLL"
+  )
   ament_target_dependencies(${PROJECT_NAME}
-    ${DEPENDENCIES}  
+    ${DEPENDENCIES}
   )
 
-  # Install executable
+  target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/component/include>
+    $<INSTALL_INTERFACE:include>
+  )
+
+  rclcpp_components_register_nodes(${PROJECT_NAME} "stereolabs::TopicBenchmarkComponent")
+  set(node_plugins "${node_plugins}stereolabs::TopicBenchmarkComponent;$<TARGET_FILE:${PROJECT_NAME}>\n")
+
   install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
 
+  install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
+    DESTINATION include/${PROJECT_NAME}
+  )
+
+  ament_export_include_directories(include)
+  ament_export_libraries(${PROJECT_NAME})
+  ament_export_dependencies(${DEPENDENCIES})
   ament_package()
   
 endif()

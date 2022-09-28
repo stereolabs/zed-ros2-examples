@@ -23,7 +23,7 @@
  ********************************************************************************/
 
 #include <rclcpp/rclcpp.hpp>
-#include "topic_benchmark_component.hpp"
+#include "zed_topic_benchmark_component/topic_benchmark_component.hpp"
 
 int main(int argc, char * argv[])
 {

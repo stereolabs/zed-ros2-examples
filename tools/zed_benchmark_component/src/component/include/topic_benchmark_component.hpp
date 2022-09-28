@@ -35,6 +35,8 @@
 #include <rclcpp/generic_subscription.hpp> // Not available before ROS2 Humble
 #include <rclcpp/serialized_message.hpp>
 
+#include "zed_topic_benchmark_interfaces/msg/benchmark_stats_stamped.hpp"
+
 #include "winavg.hpp"
 
 #define DEFAULT_TOPIC_NAME std::string("topic_name")
@@ -86,6 +88,8 @@ private:
   // Time measuring
   std::chrono::steady_clock::time_point mLastRecTime;
 
+  // Stats message publisher
+  std::shared_ptr<rclcpp::Publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>> mPub;
   uint64_t mTopicCount = 0;
 };
 }  // namespace stereolabs
