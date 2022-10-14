@@ -27,7 +27,7 @@ private:
     size_t mWinSize;
 
     std::deque<double> mVals; // The values in the queue used to calculate the windowed average
-    double mSumVals; // The updated sum of the values in the queue
+    double mSumVals=0.0; // The updated sum of the values in the queue
 
     std::mutex mQueueMux;
 };

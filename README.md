@@ -45,6 +45,12 @@ Open a terminal, clone the repository, update the dependencies and build the pac
  - [Pose/Odometry subscription tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_pose_tutorial)
  - [ROS2 Composition + BGRA2BGR conversion tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_rgb_convert)
 
+ ## Tools
+
+* **ZED Benchmark tool**: used to test topics and get statistics on frequency and bandwidth to be plotted.
+
+ 
+
 
 
 

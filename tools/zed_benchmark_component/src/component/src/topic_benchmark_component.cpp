@@ -18,9 +18,9 @@ TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions & opt
 
   init();
 
-  std::string pub_topic_name = /*std::string("~/") + */mTopicName + std::string("_stats");
+  std::string pub_topic_name = /*std::string("~/") + */ mTopicName + std::string("_stats");
   mPub = create_publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>(
-    pub_topic_name,rclcpp::SensorDataQoS());
+    pub_topic_name, rclcpp::SensorDataQoS());
   RCLCPP_INFO_STREAM(get_logger(), "Advertised on topic: " << mPub->get_topic_name());
 }
 
@@ -130,10 +130,12 @@ void TopicBenchmarkComponent::updateTopicInfo()
 
 void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg)
 {
+  static bool first = true; 
+
   //RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
-  if (mFirstValue) {
+  if (first) {
     mLastRecTime = std::chrono::steady_clock::now();       // Set the start time point
-    mFirstValue = false;
+    first = false;
     return;
   }
 
@@ -150,11 +152,9 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
   double bw = freq * bw_scale * msg->size();
   double bw_avg = avg_freq * bw_scale * msg->size();
 
-  std::cout << '\r' << std::fixed << std::setprecision(
-    2) << "#" << ++mTopicCount << " - Freq: " <<
-    freq << " Hz (Avg: " << avg_freq << " Hz)"
-    " - Bandwidth: " << bw  << " Mbps (Avg: " << bw_avg
-            << " Mbps)" << std::flush;
+  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount << " - Freq: " <<
+    freq << " Hz (Avg: " << avg_freq << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
+            << " Mbps) - Msg size: " << msg->size()/(1024.*1024.) << " MB" << std::flush;
 
   //std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
 

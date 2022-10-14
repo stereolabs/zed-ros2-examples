@@ -1,11 +1,14 @@
 #include "winavg.hpp"
 
-namespace stereolabs 
+#include <iostream>
+
+namespace stereolabs
 {
 
 WinAvg::WinAvg(size_t win_size)
 {
-    mWinSize = win_size;
+  mWinSize = win_size;
+  mSumVals = 0.0;
 }
 
 WinAvg::~WinAvg()
@@ -14,42 +17,44 @@ WinAvg::~WinAvg()
 
 double WinAvg::setNewSize(size_t win_size)
 {
-    std::lock_guard<std::mutex> guard(mQueueMux);
+  std::lock_guard<std::mutex> guard(mQueueMux);
 
-    mWinSize = win_size;
-    while(mVals.size()>mWinSize)
-    {
-        double val = mVals.back();
-        mVals.pop_back(); 
-        mSumVals-=val;       
-    }
+  mWinSize = win_size;
+  while (mVals.size() > mWinSize) {
+    double val = mVals.back();
+    mVals.pop_back();
+    mSumVals -= val;
+  }
 
-    return mSumVals/mVals.size();
+  return mSumVals / mVals.size();
 }
 
 double WinAvg::addValue(double val)
 {
-    std::lock_guard<std::mutex> guard(mQueueMux);
-    if(mVals.size()==mWinSize)
-    {
-        double val = mVals.back();
-        mVals.pop_back(); 
-        mSumVals-=val;  
-    }
+  std::lock_guard<std::mutex> guard(mQueueMux);
+  if (mVals.size() == mWinSize) {
+    double older = mVals.back();
+    mVals.pop_back();
+    mSumVals -= older;
+  }
 
-    mVals.push_front(val);
-    mSumVals+=val;
+  mVals.push_front(val);
+  mSumVals += val;
 
-    return mSumVals/mVals.size();
+  auto avg = mSumVals / mVals.size();
+
+  //std::cout << "New val: " << val << " - Size: " << mVals.size() << " - Sum: " << mSumVals << " - Avg: " << avg << std::endl;
+
+  return avg;
 }
 
 double WinAvg::getAvg()
 {
-    std::lock_guard<std::mutex> guard(mQueueMux);
-    
-    double avg = mSumVals/mVals.size();
+  std::lock_guard<std::mutex> guard(mQueueMux);
 
-    return avg;
+  double avg = mSumVals / mVals.size();
+
+  return avg;
 }
 
 }
