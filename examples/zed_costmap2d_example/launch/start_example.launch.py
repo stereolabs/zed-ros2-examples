@@ -14,10 +14,10 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     # Start the Nav2 nodes when the ZED node is ready
-    nav2_node_delay = 7.0
+    nav2_node_delay = 10.0
 
     # Start Rviz when the ZED Node is ready
-    rviz_node_delay = nav2_node_delay + 2.0
+    rviz_node_delay = nav2_node_delay + 5.0
 
     # Launch configuration variables (can be changed by CLI command)
 
@@ -47,7 +47,7 @@ def generate_launch_description():
 
     #############################################################################
     # Rviz2 variables
-    launch_rviz2 = LaunchConfiguration('rviz2')
+    #launch_rviz2 = LaunchConfiguration('rviz2')
     #############################################################################
 
     #############################################################################
@@ -107,10 +107,10 @@ def generate_launch_description():
 
     #############################################################################
     # Rviz2 Launch arguments
-    declare_rviz2_cmd = DeclareLaunchArgument(
-        'rviz2',
-        default_value='True',
-        description='Whether run Rviz2 for data visualization')
+    #declare_rviz2_cmd = DeclareLaunchArgument(
+    #    'rviz2',
+    #    default_value='True',
+    #    description='Whether run Rviz2 for data visualization')
     #############################################################################
 
     #############################################################################
@@ -146,7 +146,7 @@ def generate_launch_description():
         launch_arguments={
             'params_file': nav2_params_file,
             'declare_bt_xml_cmd': default_bt_xml_filename,
-            'slam': 'True',
+            'slam': 'False',
             'map': map_file
         }.items()
     )
@@ -164,9 +164,9 @@ def generate_launch_description():
 
     rviz2_node = Node(
         package='rviz2',
-        namespace='zed2i',
+        #namespace='zed2i',
         executable='rviz2',
-        name='example_rviz2',
+        name='rviz2',
         output='screen',
         arguments=[["-d"], [config_rviz2]],
         #condition=IfCondition(launch_rviz2)
@@ -182,7 +182,8 @@ def generate_launch_description():
 
     delayed_rviz_node = TimerAction(
         period=rviz_node_delay,
-        actions=[rviz2_node]
+        actions=[rviz2_node],
+        #condition=IfCondition(launch_rviz2)
     )
     #############################################################################
 
