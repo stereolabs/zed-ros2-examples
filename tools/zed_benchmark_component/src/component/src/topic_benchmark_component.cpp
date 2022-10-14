@@ -78,7 +78,8 @@ void TopicBenchmarkComponent::getParameters()
   if (mTopicName == DEFAULT_TOPIC_NAME) {
     RCLCPP_WARN(
       get_logger(),
-      "Please remap the parameter 'topic_name' with the name of the parameter to benchmark.");
+      "Please remap the parameter 'topic_name' with the name of the parameter to benchmark.\n"
+      "e.g. 'ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=/zed2i/zed_node/rgb/image_rect_color'");
   }
   getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
   mAvgFreq.setNewSize(mWinSize);
