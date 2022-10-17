@@ -50,7 +50,7 @@ add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY config launch params
+install(DIRECTORY config launch params maps
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()

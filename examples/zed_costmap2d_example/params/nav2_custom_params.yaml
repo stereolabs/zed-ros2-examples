@@ -186,15 +186,15 @@ global_costmap:
         map_subscribe_transient_local: True
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: False
+        enabled: True
         observation_sources: pointcloud
         footprint_clearing_enabled: true
         max_obstacle_height: 1.0
         combination_method: 1
         pointcloud:
           topic: /zed2i/zed_node/point_cloud/cloud_registered
-          obstacle_max_range: 5.0
-          obstacle_min_range: 0.5
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.2
           raytrace_max_range: 10.0
           raytrace_min_range: 0.0
           max_obstacle_height: 1.0
@@ -305,7 +305,7 @@ local_costmap:
 map_server:
   ros__parameters:
     use_sim_time: False
-    yaml_filename: "turtlebot3_world.yaml"
+    yaml_filename: "map.yaml"
 
 map_saver:
   ros__parameters:

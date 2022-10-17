@@ -107,7 +107,7 @@ def generate_launch_description():
 
     #############################################################################
     # Rviz2 Launch arguments
-    #declare_rviz2_cmd = DeclareLaunchArgument(
+    # declare_rviz2_cmd = DeclareLaunchArgument(
     #    'rviz2',
     #    default_value='True',
     #    description='Whether run Rviz2 for data visualization')
@@ -136,7 +136,7 @@ def generate_launch_description():
     # Nav2 bringup
 
     map_file = os.path.join(get_package_share_directory(
-        'zed_costmap2d_example'), 'map', 'empty.yaml')
+        'zed_costmap2d_example'), 'maps', 'map.yaml')
 
     nav2_launch = IncludeLaunchDescription(
         launch_description_source=PythonLaunchDescriptionSource([
@@ -164,12 +164,12 @@ def generate_launch_description():
 
     rviz2_node = Node(
         package='rviz2',
-        #namespace='zed2i',
+        # namespace='zed2i',
         executable='rviz2',
         name='rviz2',
         output='screen',
         arguments=[["-d"], [config_rviz2]],
-        #condition=IfCondition(launch_rviz2)
+        # condition=IfCondition(launch_rviz2)
     )
     #############################################################################
 
@@ -183,7 +183,7 @@ def generate_launch_description():
     delayed_rviz_node = TimerAction(
         period=rviz_node_delay,
         actions=[rviz2_node],
-        #condition=IfCondition(launch_rviz2)
+        # condition=IfCondition(launch_rviz2)
     )
     #############################################################################
 
