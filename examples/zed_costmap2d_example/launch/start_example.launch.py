@@ -41,8 +41,8 @@ def generate_launch_description():
 
     #############################################################################
     # Nav2 variables
-    nav2_params_file = LaunchConfiguration('params_file')
-    default_bt_xml_filename = LaunchConfiguration('default_bt_xml_filename')
+    nav2_params_file = LaunchConfiguration('nav2_params_file')
+    default_bt_xml_filename = LaunchConfiguration('nav2_bt_xml_file')
     #############################################################################
 
     #############################################################################
@@ -56,7 +56,7 @@ def generate_launch_description():
         'svo_path',
         # 'live' used as patch for launch files not allowing empty strings as default parameters
         default_value='live',
-        description='Path to an input SVO file. Note: overrides the parameter `general.svo_file` in `common.yaml`.')
+        description='Full path to an input SVO file. Note: overrides the parameter `general.svo_file` in `common.yaml`.')
 
     declare_cam_pos_x = DeclareLaunchArgument(
         'cam_pos_x',
@@ -92,13 +92,13 @@ def generate_launch_description():
     #############################################################################
     # Nav2 Launch arguments
     declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
+        'nav2_params_file',
         default_value=os.path.join(get_package_share_directory(
             'zed_costmap2d_example'), 'params', 'nav2_custom_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_bt_xml_cmd = DeclareLaunchArgument(
-        'default_bt_xml_filename',
+        'nav2_bt_xml_file',
         default_value=os.path.join(
             get_package_share_directory('nav2_bt_navigator'),
             'behavior_trees', 'navigate_w_replanning_distance.xml'),

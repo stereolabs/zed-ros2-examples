@@ -166,24 +166,29 @@ controller_server_rclcpp_node:
 global_costmap:
   global_costmap:
     ros__parameters:
-      height: 10
-      width: 10
+      height: 20
+      width: 30
       origin_x: -5.0
-      origin_y: -5.0
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      origin_y: -14.0
+      update_frequency: 2.0
+      publish_frequency: 2.0
       global_frame: map
+      map_topic: /map
       static_map: true
       robot_base_frame: base_link
       use_sim_time: False
-      robot_radius: 0.1
-      resolution: 0.05
+      robot_radius: 0.15
+      resolution: 0.1
       track_unknown_space: true
-      always_send_full_costmap: True      
+      always_send_full_costmap: true      
       plugins: ["static_layer","obstacle_layer","stvl_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: True
+        map_subscribe_transient_local: true
+        enabled: true
+        subscribe_to_updates: true
+        transform_tolerance: 1.0
+        map_topic: /map
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -191,6 +196,7 @@ global_costmap:
         footprint_clearing_enabled: true
         max_obstacle_height: 1.0
         combination_method: 1
+        transform_tolerance: 1.0
         pointcloud:
           topic: /zed2i/zed_node/point_cloud/cloud_registered
           obstacle_max_range: 10.0
@@ -216,10 +222,10 @@ global_costmap:
         combination_method: 1
         origin_z: 0.0
         publish_voxel_map: true
-        transform_tolerance: 0.5
         mapping_mode: false
         map_save_duration: 60.0
         observation_sources: pointcloud
+        transform_tolerance: 1.0
         pointcloud:
           data_type: PointCloud2
           topic: /zed2i/zed_node/point_cloud/cloud_registered
@@ -274,10 +280,10 @@ local_costmap:
         combination_method: 1
         origin_z: 0.0
         publish_voxel_map: true
-        transform_tolerance: 0.5
         mapping_mode: false
         map_save_duration: 60.0
         observation_sources: pointcloud
+        transform_tolerance: 1.0
         pointcloud:
           data_type: PointCloud2
           topic: /zed2i/zed_node/point_cloud/cloud_registered
@@ -299,8 +305,8 @@ local_costmap:
           model_type: 0
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 35.0
-        inflation_radius: 0.25
+        cost_scaling_factor: 0.75
+        inflation_radius: 0.3
 
 map_server:
   ros__parameters:

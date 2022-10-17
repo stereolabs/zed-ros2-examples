@@ -16,7 +16,9 @@ Panels:
         - /Mapping1
         - /Mapping1/Planes1/Topic1
         - /Mapping1/Planes1/Namespaces1
+        - /Mapping1/Global Costmap1
         - /Mapping1/Global Costmap1/Topic1
+        - /Mapping1/Global Costmap1/Update Topic1
         - /Mapping1/Local Costmap1/Topic1
       Splitter Ratio: 0.6057971119880676
     Tree Height: 363
@@ -589,7 +591,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Fixed Frame: map
-    Frame Rate: 15
+    Frame Rate: 30
   Name: root
   Tools:
     - Class: rviz_default_plugins/Interact
