@@ -74,10 +74,9 @@ private:
 
   // Parameters
   std::string mTopicName = DEFAULT_TOPIC_NAME;  ///< Name of the benchmarked topic
-  int mWinSize = 300;                            ///< Window size for frequency average
+  int mWinSize = 500;                            ///< Window size for frequency average
 
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
-  bool mFirstValue = true;
 
   // Topic subscriptions
   std::map<std::string, std::shared_ptr<rclcpp::GenericSubscription>> mSubMap;
@@ -89,7 +88,8 @@ private:
   std::chrono::steady_clock::time_point mLastRecTime;
 
   // Stats message publisher
-  std::shared_ptr<rclcpp::Publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>> mPub;
+  std::shared_ptr<rclcpp::Publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>>
+  mPub;
   uint64_t mTopicCount = 0;
 };
 }  // namespace stereolabs
