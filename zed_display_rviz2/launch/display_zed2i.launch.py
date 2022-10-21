@@ -6,7 +6,7 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -131,6 +131,17 @@ def generate_launch_description():
         # Add nodes to LaunchDescription
         ld.add_action(zed_wrapper_launch)
 
-    ld.add_action(rviz2_node)
+        # Start Rviz when the ZED Node is ready
+        rviz_node_delay = 10.0
+
+        delayed_rviz_node = TimerAction(
+            period=rviz_node_delay,
+            actions=[rviz2_node]
+        )
+
+        ld.add_action(delayed_rviz_node)
+
+    else:
+        ld.add_action(rviz2_node)
 
     return ld
