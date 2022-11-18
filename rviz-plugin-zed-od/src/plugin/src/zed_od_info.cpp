@@ -319,8 +319,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         sphere->setScale(Ogre::Vector3(0, 0, 0));
         sphere->setPosition(Ogre::Vector3(0, 0, 0));
       } else {
-        sphere->setScale(Ogre::Vector3(
-          mJointRadius * mSkelScale, mJointRadius * mSkelScale, mJointRadius * mSkelScale));
+        sphere->setScale(
+          Ogre::Vector3(
+            mJointRadius * mSkelScale, mJointRadius * mSkelScale, mJointRadius * mSkelScale));
         if (!pos.isNaN()) {
           sphere->setPosition(pos);
         }

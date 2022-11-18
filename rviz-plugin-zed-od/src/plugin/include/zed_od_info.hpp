@@ -17,13 +17,14 @@
 
 #include <QObject>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include <rviz_rendering/objects/billboard_line.hpp>
 #include <rviz_rendering/objects/movable_text.hpp>
 #include <rviz_rendering/objects/object.hpp>
 #include <rviz_rendering/objects/shape.hpp>
-#include <string>
-#include <utility>
-#include <vector>
 #include <zed_interfaces/msg/objects_stamped.hpp>
 
 #include "visibility_control.hpp"
@@ -106,7 +107,8 @@ private:
   static uint64_t mObjIdx;
 };
 
-enum class BODY_PARTS_18 {
+enum class BODY_PARTS_18
+{
   NOSE = 0,
   NECK = 1,
   RIGHT_SHOULDER = 2,
@@ -128,7 +130,8 @@ enum class BODY_PARTS_18 {
   LAST = 18
 };
 
-enum class BODY_PARTS_34 {
+enum class BODY_PARTS_34
+{
   PELVIS = 0,
   NAVAL_SPINE = 1,
   CHEST_SPINE = 2,

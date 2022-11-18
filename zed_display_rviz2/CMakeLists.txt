@@ -65,7 +65,7 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(DIRECTORY 
+install(DIRECTORY
   rviz2
   DESTINATION share/${PROJECT_NAME}
 )

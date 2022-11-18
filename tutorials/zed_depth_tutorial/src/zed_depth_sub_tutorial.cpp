@@ -24,7 +24,8 @@ using namespace std::placeholders;
 class MinimalDepthSubscriber : public rclcpp::Node
 {
 public:
-  MinimalDepthSubscriber() : Node("zed_depth_tutorial")
+  MinimalDepthSubscriber()
+  : Node("zed_depth_tutorial")
   {
     /* Note: it is very important to use a QOS profile for the subscriber that is compatible
          * with the QOS profile of the publisher.

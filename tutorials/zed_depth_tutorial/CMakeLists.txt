@@ -76,7 +76,7 @@ include_directories(
     ${sensor_msgs_INCLUDE_DIRS}
 )
 
-## Build 
+## Build
 add_executable(zed_tutorial_depth src/zed_depth_sub_tutorial.cpp)
 ament_target_dependencies(zed_tutorial_depth
   rclcpp

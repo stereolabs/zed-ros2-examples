@@ -62,13 +62,13 @@ ZedOdDisplay::ZedOdDisplay()
 
 ZedOdDisplay::~ZedOdDisplay() {}
 
-void ZedOdDisplay::onInitialize() { MFDClass::onInitialize(); }
+void ZedOdDisplay::onInitialize() {MFDClass::onInitialize();}
 
-void ZedOdDisplay::reset() { MFDClass::reset(); }
+void ZedOdDisplay::reset() {MFDClass::reset();}
 
-void ZedOdDisplay::onEnable() { MFDClass::onEnable(); }
+void ZedOdDisplay::onEnable() {MFDClass::onEnable();}
 
-void ZedOdDisplay::onDisable() { MFDClass::onDisable(); }
+void ZedOdDisplay::onDisable() {MFDClass::onDisable();}
 
 void ZedOdDisplay::invalidateObjs()
 {

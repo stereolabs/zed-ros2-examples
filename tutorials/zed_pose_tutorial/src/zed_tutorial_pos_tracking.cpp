@@ -31,7 +31,8 @@ using namespace std::placeholders;
 class MinimalPoseOdomSubscriber : public rclcpp::Node
 {
 public:
-  MinimalPoseOdomSubscriber() : Node("zed_odom_pose_tutorial")
+  MinimalPoseOdomSubscriber()
+  : Node("zed_odom_pose_tutorial")
   {
     /* Note: it is very important to use a QOS profile for the subscriber that is compatible
          * with the QOS profile of the publisher.

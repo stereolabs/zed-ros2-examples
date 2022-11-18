@@ -41,7 +41,7 @@ protected:
   void init();
 
   // ----> Node Parameters
-  template <typename T>
+  template<typename T>
   void getParam(
     std::string paramName, T defValue, T & outVal, std::string log_info = std::string(),
     bool dynamic = false);
@@ -64,7 +64,7 @@ private:
   int mWinSize = 500;                           ///< Window size for frequency average
 
   std::atomic<bool>
-    mTopicAvailable;  ///< Indicate if the benchmarked topic is published by other nodes
+  mTopicAvailable;    ///< Indicate if the benchmarked topic is published by other nodes
 
   // Topic subscriptions
   std::map<std::string, std::shared_ptr<rclcpp::GenericSubscription>> mSubMap;
@@ -77,7 +77,7 @@ private:
 
   // Stats message publisher
   std::shared_ptr<rclcpp::Publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>>
-    mPub;
+  mPub;
   uint64_t mTopicCount = 0;
 };
 }  // namespace stereolabs

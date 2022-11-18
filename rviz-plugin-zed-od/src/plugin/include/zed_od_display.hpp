@@ -33,7 +33,7 @@ namespace displays
 typedef std::shared_ptr<ZedOdInfo> objectPtr;
 
 class ZED_OD_PLUGIN_PUBLIC ZedOdDisplay
-: public rviz_common::MessageFilterDisplay<zed_interfaces::msg::ObjectsStamped>
+  : public rviz_common::MessageFilterDisplay<zed_interfaces::msg::ObjectsStamped>
 {
   Q_OBJECT
 

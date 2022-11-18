@@ -75,7 +75,7 @@ set(MSG_FILES
 set(SRV_FILES
 )
 
-rosidl_generate_interfaces(${PROJECT_NAME}    
+rosidl_generate_interfaces(${PROJECT_NAME}
     ${MSG_FILES}
     ${SRV_FILES}
     DEPENDENCIES builtin_interfaces std_msgs

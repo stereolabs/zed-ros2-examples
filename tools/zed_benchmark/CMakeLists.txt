@@ -62,7 +62,7 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
   find_package(zed_topic_benchmark_component REQUIRED)
-  
+
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
@@ -75,13 +75,13 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
   ###############################################################################
 
-   ## Sources
+  ## Sources
   set(SRC_CONT src/topic_benchmark_container.cpp)
 
-    ## Build
+  ## Build
   add_executable(${PROJECT_NAME} ${SRC_CONT})
   ament_target_dependencies(${PROJECT_NAME}
-    ${DEPENDENCIES}  
+    ${DEPENDENCIES}
   )
 
   # Install executable
