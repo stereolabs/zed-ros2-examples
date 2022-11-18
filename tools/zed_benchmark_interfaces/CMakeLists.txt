@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(zed_topic_benchmark_interfaces)
 
+## Generate symbols for IDE indexer
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ################################################
 # Check the ROS2 version
 
@@ -21,14 +24,14 @@ else()
                 set(FOUND_ROS2_DISTRO ${distro})
                 set(ROS2_FOUND TRUE)
             endif()
-        endif()        
-    endforeach()    
-endif(DEFINED ENV{ROS_DISTRO})
+        endif()
+    endforeach()
+endif()
 
 if(ROS2_FOUND)
     if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
         message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_FOXY)    
+        add_definitions(-DFOUND_FOXY)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
@@ -53,10 +56,15 @@ find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 ###############################################################################
 # Add all files in subdirectories of the project in
 # a dummy_target so qtcreator have access to all files
-FILE(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
+file(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${extra_files})
 ###############################################################################
 

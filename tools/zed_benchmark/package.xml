@@ -5,7 +5,7 @@
 	<version>0.1.0</version>
 	<description> This package contains tools to test the performance of the ZED ROS2 Wrapper </description>
 	<maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
-	<license>MIT</license>
+	<license>Apache License 2.0</license>
 	<url type="website">https://www.stereolabs.com/</url>
 	<url type="repository">https://github.com/stereolabs/zed-ros2-wrapper</url>
 	<url type="bugtracker">https://github.com/stereolabs/zed-ros2-wrapper/issues</url>
@@ -16,6 +16,9 @@
 	<exec_depend>zed_topic_benchmark_component</exec_depend>
 	<exec_depend>rclcpp</exec_depend>
 	<exec_depend>rclcpp_components</exec_depend>
+	<test_depend>ament_lint_auto</test_depend>
+	<test_depend>ament_lint_common</test_depend>
+	<test_depend>ament_cmake_clang_format</test_depend>
 	<export>
 		<build_type>ament_cmake</build_type>
 	</export>

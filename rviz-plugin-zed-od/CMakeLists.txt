@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(rviz_plugin_zed_od)
 
+## Generate symbols for IDE indexer
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ################################################
 # Check the ROS2 version
 
@@ -21,14 +24,14 @@ else()
                 set(FOUND_ROS2_DISTRO ${distro})
                 set(ROS2_FOUND TRUE)
             endif()
-        endif()        
-    endforeach()    
-endif(DEFINED ENV{ROS_DISTRO})
+        endif()
+    endforeach()
+endif()
 
 if(ROS2_FOUND)
     if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
         message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_FOXY)    
+        add_definitions(-DFOUND_FOXY)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
@@ -98,10 +101,15 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets Test)
 
 find_package(zed_interfaces REQUIRED)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 ###############################################################################
 #Add all files in subdirectories of the project in
 # a dummy_target so qtcreator have access to all files
-FILE(GLOB_RECURSE all_files ${CMAKE_SOURCE_DIR}/*)
+file(GLOB_RECURSE all_files ${CMAKE_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 
 ###############################################################################
@@ -112,12 +120,12 @@ include_directories(
 )
 ###############################################################################
 # SOURCES
-set(PLUGIN_SRC 
+set(PLUGIN_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_display.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_info.cpp
 )
 
-set(PLUGIN_INC 
+set(PLUGIN_INC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/include/visibility_control.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_display.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_info.hpp
@@ -188,7 +196,7 @@ install(
   INCLUDES DESTINATION include
 )
 
-install(DIRECTORY  
+install(DIRECTORY
   ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
   ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/
   DESTINATION include/${PROJECT_NAME}/

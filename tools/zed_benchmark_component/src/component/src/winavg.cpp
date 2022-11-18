@@ -11,9 +11,7 @@ WinAvg::WinAvg(size_t win_size)
   mSumVals = 0.0;
 }
 
-WinAvg::~WinAvg()
-{
-}
+WinAvg::~WinAvg() {}
 
 double WinAvg::setNewSize(size_t win_size)
 {
@@ -57,4 +55,4 @@ double WinAvg::getAvg()
   return avg;
 }
 
-}
+}  // namespace stereolabs

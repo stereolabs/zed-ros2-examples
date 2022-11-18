@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
-
 project(zed_topic_benchmark)
+
+## Generate symbols for IDE indexer
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 ################################################
 # Check the ROS2 version
@@ -22,9 +24,9 @@ else()
                 set(FOUND_ROS2_DISTRO ${distro})
                 set(ROS2_FOUND TRUE)
             endif()
-        endif()        
-    endforeach()    
-endif(DEFINED ENV{ROS_DISTRO})
+        endif()
+    endforeach()
+endif()
 
 if(ROS2_FOUND)
     if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
@@ -40,9 +42,9 @@ endif()
 
 if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   # if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
-  IF(NOT CMAKE_BUILD_TYPE)
-      SET(CMAKE_BUILD_TYPE Release)
-  ENDIF(NOT CMAKE_BUILD_TYPE)
+  if(NOT CMAKE_BUILD_TYPE)
+      set(CMAKE_BUILD_TYPE Release)
+  endif()
 
   # Default to C++14
   if(NOT CMAKE_CXX_STANDARD)
@@ -50,7 +52,7 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   endif()
 
   # dependencies
-  set(DEPENDENCIES 
+  set(DEPENDENCIES
     rclcpp
     rclcpp_components
     zed_topic_benchmark_component
@@ -60,11 +62,16 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
   find_package(zed_topic_benchmark_component REQUIRED)
+  
+  if(BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    ament_lint_auto_find_test_dependencies()
+  endif()
 
   ###############################################################################
   # Add all files in subdirectories of the project in
   # a dummy_target so qtcreator have access to all files
-  FILE(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
+  file(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
   add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
   ###############################################################################
 
