@@ -72,7 +72,8 @@ void ZedRgbCvtComponent::camera_callback(
   }
 
   // Convert BGRA to BGR using OpenCV
-  cv::Mat bgra(img->height, img->width, CV_8UC4, reinterpret_cast<void *>(&img->data[0]));
+  void * data = const_cast<void *>(reinterpret_cast<const void *>(&img->data[0]));
+  cv::Mat bgra(img->height, img->width, CV_8UC4, data);
   cv::Mat bgr;
 
   cv::cvtColor(bgra, bgr, cv::COLOR_BGRA2BGR);
