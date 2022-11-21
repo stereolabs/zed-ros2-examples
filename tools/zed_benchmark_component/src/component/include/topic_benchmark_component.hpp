@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TOPIC_BENCHMARK_HPP
-#define TOPIC_BENCHMARK_HPP
+#ifndef TOPIC_BENCHMARK_COMPONENT_HPP_
+#define TOPIC_BENCHMARK_COMPONENT_HPP_
 
 #include <rcutils/logging_macros.h>
 
 #include <atomic>
+#include <map>
+#include <string>
+#include <memory>
 #include <rclcpp/generic_subscription.hpp>  // Not available before ROS2 Humble
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialized_message.hpp>
@@ -82,4 +85,4 @@ private:
 };
 }  // namespace stereolabs
 
-#endif
+#endif  // TOPIC_BENCHMARK_COMPONENT_HPP_

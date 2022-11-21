@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef WINAVG_HPP
-#define WINAVG_HPP
+#ifndef WINAVG_HPP_
+#define WINAVG_HPP_
 
 #include <cstddef>  // size_t
 #include <deque>    // std::dequeue
@@ -25,7 +25,7 @@ namespace stereolabs
 class WinAvg
 {
 public:
-  WinAvg(size_t win_size = 15);
+  explicit WinAvg(size_t win_size = 15);
   ~WinAvg();
 
   double setNewSize(size_t win_size);
@@ -48,4 +48,4 @@ private:
 
 }  // namespace stereolabs
 
-#endif
+#endif  // WINAVG_HPP_

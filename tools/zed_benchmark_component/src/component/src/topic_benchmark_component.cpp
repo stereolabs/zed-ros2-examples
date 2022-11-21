@@ -141,7 +141,7 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
 {
   static bool first = true;
 
-  //RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
+  // RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
   if (first) {
     mLastRecTime = std::chrono::steady_clock::now();  // Set the start time point
     first = false;
@@ -166,7 +166,7 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
             << " Mbps (Avg: " << bw_avg << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.)
             << " MB" << std::flush;
 
-  //std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
+  // std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
 
   std::unique_ptr<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped> stat_msg =
     std::make_unique<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>();

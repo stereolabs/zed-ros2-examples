@@ -55,7 +55,8 @@ double WinAvg::addValue(double val)
 
   auto avg = mSumVals / mVals.size();
 
-  //std::cout << "New val: " << val << " - Size: " << mVals.size() << " - Sum: " << mSumVals << " - Avg: " << avg << std::endl;
+  // std::cout << "New val: " << val << " - Size: " << mVals.size()
+  // << " - Sum: " << mSumVals << " - Avg: " << avg << std::endl;
 
   return avg;
 }
