@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(zed_rgb_convert)
 
+## Generate symbols for IDE indexer
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ################################################
 # Check the ROS2 version
 
@@ -21,14 +24,14 @@ else()
                 set(FOUND_ROS2_DISTRO ${distro})
                 set(ROS2_FOUND TRUE)
             endif()
-        endif()        
-    endforeach()    
-endif(DEFINED ENV{ROS_DISTRO})
+        endif()
+    endforeach()
+endif()
 
 if(ROS2_FOUND)
     if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
         message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_FOXY)    
+        add_definitions(-DFOUND_FOXY)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
@@ -55,21 +58,21 @@ endif()
 #endif()
 
 # if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
-IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE Release)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Release )
+if(CMAKE_BUILD_TYPE MATCHES Release)
     #message(" * Release Mode")
     add_compile_options(-Wno-deprecated-declarations)
 endif()
 
-if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo )
+if(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
     #message(" * Release with Debug Info Mode")
     add_compile_options(-Wno-deprecated-declarations)
 endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Debug )
+if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(" * Debug Mode")
 endif()
 
@@ -103,10 +106,15 @@ find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(zed_components)
 
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 ###############################################################################
 #Add all files in subdirectories of the project in
 # a dummy_target so qtcreator have access to all files
-FILE(GLOB_RECURSE all_files ${CMAKE_SOURCE_DIR}/*)
+file(GLOB_RECURSE all_files ${CMAKE_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 
 ###############################################################################
@@ -126,7 +134,7 @@ set(node_plugins "")
 # SOURCES
 
 set(INC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/visibility_control.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cvt_visibility_control.hpp
 )
 
 set(INC_COMP
@@ -197,17 +205,6 @@ install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
 )
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME}_component)

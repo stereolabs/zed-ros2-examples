@@ -1,11 +1,26 @@
+// Copyright 2022 Stereolabs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "topic_benchmark_component.hpp"
 
 #include <rcutils/logging_macros.h>
-#include <rclcpp/time.hpp>
-#include <rclcpp/qos_overriding_options.hpp>
-#include <rclcpp/qos.hpp>
+
 #include <chrono>
 #include <iostream>
+#include <rclcpp/qos.hpp>
+#include <rclcpp/qos_overriding_options.hpp>
+#include <rclcpp/time.hpp>
 
 using namespace std::placeholders;
 
@@ -46,8 +61,7 @@ void TopicBenchmarkComponent::init()
 
 template<typename T>
 void TopicBenchmarkComponent::getParam(
-  std::string paramName, T defValue, T & outVal,
-  std::string log_info, bool dynamic)
+  std::string paramName, T defValue, T & outVal, std::string log_info, bool dynamic)
 {
   rcl_interfaces::msg::ParameterDescriptor descriptor;
   descriptor.read_only = !dynamic;
@@ -61,7 +75,8 @@ void TopicBenchmarkComponent::getParam(
   if (!get_parameter(paramName, outVal)) {
     RCLCPP_WARN_STREAM(
       get_logger(), "The parameter '"
-        << paramName << "' is not available or is not valid, using the default value: "
+        << paramName
+        << "' is not available or is not valid, using the default value: "
         << defValue);
   }
 
@@ -79,20 +94,18 @@ void TopicBenchmarkComponent::getParameters()
     RCLCPP_WARN(
       get_logger(),
       "Please remap the parameter 'topic_name' with the name of the parameter to benchmark.\n"
-      "e.g. 'ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=/zed2i/zed_node/rgb/image_rect_color'");
+      "e.g. 'ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p "
+      "topic_name:=/zed2i/zed_node/rgb/image_rect_color'");
   }
   getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
   mAvgFreq.setNewSize(mWinSize);
-
 }
 
 void TopicBenchmarkComponent::updateTopicInfo()
 {
-  mTopicAvailable.store(
-    false);
+  mTopicAvailable.store(false);
 
-  std::map<std::string,
-    std::vector<std::string>> topic_infos = this->get_topic_names_and_types();
+  std::map<std::string, std::vector<std::string>> topic_infos = this->get_topic_names_and_types();
   for (const auto & topic_it : topic_infos) {
     std::string topic_name = topic_it.first;
 
@@ -105,13 +118,9 @@ void TopicBenchmarkComponent::updateTopicInfo()
         RCLCPP_INFO_STREAM(
           get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
 
-        std::shared_ptr<rclcpp::GenericSubscription> sub =
-          create_generic_subscription(
-          mTopicName,
-          topic_type,
-          rclcpp::SensorDataQoS(),
-          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1)
-          );
+        std::shared_ptr<rclcpp::GenericSubscription> sub = create_generic_subscription(
+          mTopicName, topic_type, rclcpp::SensorDataQoS(),
+          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1));
 
         mSubMap[topic_type] = sub;
       }
@@ -130,11 +139,11 @@ void TopicBenchmarkComponent::updateTopicInfo()
 
 void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg)
 {
-  static bool first = true; 
+  static bool first = true;
 
-  //RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
+  // RCLCPP_INFO_STREAM(get_logger(), "Received a message of size: " << msg->size() );
   if (first) {
-    mLastRecTime = std::chrono::steady_clock::now();       // Set the start time point
+    mLastRecTime = std::chrono::steady_clock::now();  // Set the start time point
     first = false;
     return;
   }
@@ -152,11 +161,12 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
   double bw = freq * bw_scale * msg->size();
   double bw_avg = avg_freq * bw_scale * msg->size();
 
-  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount << " - Freq: " <<
-    freq << " Hz (Avg: " << avg_freq << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
-            << " Mbps) - Msg size: " << msg->size()/(1024.*1024.) << " MB" << std::flush;
+  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount
+            << " - Freq: " << freq << " Hz (Avg: " << avg_freq << " Hz) - Bandwidth: " << bw
+            << " Mbps (Avg: " << bw_avg << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.)
+            << " MB" << std::flush;
 
-  //std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
+  // std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
 
   std::unique_ptr<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped> stat_msg =
     std::make_unique<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>();
@@ -170,7 +180,7 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
   mPub->publish(std::move(stat_msg));
 }
 
-}     // namespace stereolabs
+}  // namespace stereolabs
 
 #include "rclcpp_components/register_node_macro.hpp"
 
