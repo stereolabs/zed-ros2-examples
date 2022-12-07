@@ -45,11 +45,13 @@ def launch_setup(context, *args, **kwargs):
     models = LaunchConfiguration('cam_models')
     serials = LaunchConfiguration('cam_serials')
     poses = LaunchConfiguration('cam_poses')
+    disable_tf = LaunchConfiguration('disable_tf')
 
     names_arr = parse_array_param(names.perform(context))
     models_arr = parse_array_param(models.perform(context))
     serials_arr = parse_array_param(serials.perform(context))
     poses_arr = parse_array_param(poses.perform(context))
+    disable_tf_val = disable_tf.perform(context)
 
     num_cams = len(names_arr)
 
@@ -95,7 +97,8 @@ def launch_setup(context, *args, **kwargs):
         # Only the first camera send odom and map TF
         publish_tf = 'false'
         if (cam_idx == 0):
-            publish_tf = 'true'
+            if (disable_tf_val == 'False' or disable_tf_val == 'false'):
+                publish_tf = 'true'
 
         # Add the node
         # ZED Wrapper launch file
@@ -136,6 +139,10 @@ def generate_launch_description():
                 'cam_poses',
                 description='An array containing the array of the pose of the cameras with respect to the base frame link, '
                 'e.g. [[0.5,0.0,0.0,0.0,0.0,0.0],[0.0,0.2,0.0,0.0,1.571,0.0]],[0.0,-0.2,0.0,0.0,-1.571,0.0],[-0.5,0.0,0.0,0.0,0.0,3.142]]]'),
+            DeclareLaunchArgument(
+                'disable_tf',
+                default_value='False',
+                description='If `True` disable TF broadcasting for all the cameras in order to fuse visual odometry information externally.'),
             OpaqueFunction(function=launch_setup)
         ]
     )

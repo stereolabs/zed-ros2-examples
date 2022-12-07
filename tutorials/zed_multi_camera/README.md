@@ -13,6 +13,7 @@ The number of ZED nodes to start is infered by the size of the parameters passed
 * `cam_models`: An array containing the names of the cameras, e.g. `'[zed2i,zed2,zed2,zed2i]'`
 * `cam_serials`: An array containing the serial numbers of the cameras, e.g. `[3001234,2001234,2004321,3004321]`
 * `cam_poses`: An array containing the array of the pose of the cameras with respect to the base frame link, e.g. `[[0.5,0.0,0.0,0.0,0.0,0.0],[0.0,0.2,0.0,0.0,1.571,0.0]],[0.0,-0.2,0.0,0.0,-1.571,0.0],[-0.5,0.0,0.0,0.0,0.0,3.142]]]`
+* `disable_tf`: Disable TF broadcasting for all the cameras in ordet to fuse visual odometry information externally. [default: 'false']
 
 The TF broadcasting is disabled for all the cameras, but the first which is configured to publish the `map` -> `odom` -> `base_link` TF chain.
 
