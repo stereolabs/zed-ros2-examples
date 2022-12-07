@@ -71,7 +71,53 @@ def launch_setup(context, *args, **kwargs):
                 text="The size of the `poses` param array must be equal to the size of `names`"))
         ]
 
-    return []
+    cam_idx = 0
+    actions = []
+
+    for name in names_arr:
+        model = models_arr[cam_idx]
+        serial = serials_arr[cam_idx]
+        pose = '['
+
+        info = "* Starting a ZED ROS2 node for camera " + name + \
+            "(" + model + "/" + serial + ") with pose "
+
+        start_pose_idx = cam_idx*6
+        for i in range(start_pose_idx, start_pose_idx+6):
+            pose += poses_arr[i] + ','
+        pose = pose[:-1]
+        pose += ']'
+
+        info += pose
+
+        actions.append(LogInfo(msg=TextSubstitution(text=info)))
+
+        # Only the first camera send odom and map TF
+        publish_tf = 'false'
+        if (cam_idx == 0):
+            publish_tf = 'true'
+
+        # Add the node
+        # ZED Wrapper launch file
+        zed_wrapper_launch = IncludeLaunchDescription(
+            launch_description_source=PythonLaunchDescriptionSource([
+                get_package_share_directory('zed_wrapper'),
+                '/launch/' + model + '.launch.py'
+            ]),
+            launch_arguments={
+                'camera_name': name,
+                'serial_number': serial,
+                'cam_pose': pose,
+                'publish_tf': publish_tf,
+                'publish_map_tf': publish_tf
+            }.items()
+        )
+
+        actions.append(zed_wrapper_launch)
+
+        cam_idx += 1
+
+    return actions
 
 
 def generate_launch_description():
@@ -79,17 +125,17 @@ def generate_launch_description():
         [
             DeclareLaunchArgument(
                 'cam_names',
-                description='An array containing the names of the cameras of the rig, e.g. ["zed_front","zed_back","zed_left", "zed_right"]'),
+                description='An array containing the names of the cameras, e.g. [zed_front,zed_back,zed_left,zed_right]'),
             DeclareLaunchArgument(
                 'cam_models',
-                description='An array containing the names of the cameras of the rig, e.g. ["zed2i","zed2","zed2", "zed2i"]'),
+                description='An array containing the names of the cameras, e.g. [zed2i,zed2,zed2, zed2i]'),
             DeclareLaunchArgument(
                 'cam_serials',
-                description='An array containing the serial numbers of the cameras of the rig, e.g. ["3001234","2001234","2004321", "3004321"]'),
+                description='An array containing the serial numbers of the cameras, e.g. [3001234,2001234,2004321,3004321]'),
             DeclareLaunchArgument(
                 'cam_poses',
-                description='An array containing the poses of the cameras of the rig with respect to the base frame link, '
-                'e.g. [[0.5,0.0,0.0,0.0,0.0,0.0],[0.0,0.2,0.0,0.0,1.571,0.0]],[0.0,-0.2,0.0,0.0,-1.571,0.0],[-0.5,0.0,0.0,0.0,3.141,0.0]]]'),
+                description='An array containing the array of the pose of the cameras with respect to the base frame link, '
+                'e.g. [[0.5,0.0,0.0,0.0,0.0,0.0],[0.0,0.2,0.0,0.0,1.571,0.0]],[0.0,-0.2,0.0,0.0,-1.571,0.0],[-0.5,0.0,0.0,0.0,0.0,3.142]]]'),
             OpaqueFunction(function=launch_setup)
         ]
     )
