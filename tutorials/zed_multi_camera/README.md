@@ -21,9 +21,25 @@ All the parameter arrays must have the same size:
 
 ## Example
 
-Example launch command for a robot configuration with two cameras, the second is placed on top of the first looking backward:
+### Two cameras
+
+Launch command for a robot configuration with two cameras, the second is placed on top of the first looking backward:
 
     $ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[zed2i,zed2]' cam_serials:='[35199186,23154724]' cam_poses:=[[0.0,0.0,0.0,0.0,0.0,0.0],[0.0,0.0,0.03,0.0,0.0,3.142]]
+
+### Four cameras
+
+Launch command for a robot configuration with four cameras:
+
+* The first camera is a ZED2i placed in the middle-front of the robot, and looking forward, i.e. `'zed_front','zed2i','30001234','[0.5,0.0,0.0,0.0,0.0,0.0]'`.
+* The second camera is a ZED2 place in the middle-left side of the robot, and looking left, i.e. `'zed_left','zed2','20001234','[0.0,0.3,0.0,0.0,1.571,0.0]'`.
+* The third camera is a ZED2 placed in the middle-right of the robot, and looking right, i.e. `'zed_right','zed2','20004321','[0.0,-0.3,0.0,0.0,-1.571,0.0]'`.
+* The fourth camera is a ZED2i place in the middle-back of the robot, and looking back, i.e. `'zed_back','zed2i','30004321','[-0.5,0.0,0.0,0.0,0.0,3.142]'`.
+
+
+```
+$ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_left, zed_right,zed_back]' cam_models:='[zed2i,zed2,zed2,zed2i]' cam_serials:='[30001234,20001234,20004321,30004321]' cam_poses:=[[0.5,0.0,0.0,0.0,0.0,0.0],[0.0,0.3,0.0,0.0,1.571,0.0],[0.0,-0.3,0.0,0.0,-1.571,0.0],[-0.5,0.0,0.0,0.0,0.0,3.142]]'
+```
 
 
 
