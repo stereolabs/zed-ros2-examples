@@ -99,6 +99,9 @@ def launch_setup(context, *args, **kwargs):
         if (cam_idx == 0):
             if (disable_tf_val == 'False' or disable_tf_val == 'false'):
                 publish_tf = 'true'
+                
+        # A different node name is required by the Diagnostic Updated
+        node_name = 'zed_node_' + str(cam_idx)
 
         # Add the node
         # ZED Wrapper launch file
@@ -112,7 +115,8 @@ def launch_setup(context, *args, **kwargs):
                 'serial_number': serial,
                 'cam_pose': pose,
                 'publish_tf': publish_tf,
-                'publish_map_tf': publish_tf
+                'publish_map_tf': publish_tf,
+                'node_name': node_name
             }.items()
         )
 
