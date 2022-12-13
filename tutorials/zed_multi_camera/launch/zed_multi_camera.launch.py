@@ -35,6 +35,7 @@ from launch_ros.actions import Node
 def parse_array_param(param):
     str = param.replace('[', '')
     str = str.replace(']', '')
+    str = str.replace(' ', '')
     arr = str.split(',')
 
     return arr
@@ -99,7 +100,7 @@ def launch_setup(context, *args, **kwargs):
         if (cam_idx == 0):
             if (disable_tf_val == 'False' or disable_tf_val == 'false'):
                 publish_tf = 'true'
-                
+
         # A different node name is required by the Diagnostic Updated
         node_name = 'zed_node_' + str(cam_idx)
 
