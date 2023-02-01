@@ -1,6 +1,6 @@
 <library path="zed_nav2">
-  <class name="sl::nav2::ZedCostmapLayer"
-         type="sl::nav2::ZedCostmapLayer"
+  <class name="zed_nav2/ZedCostmapLayer"
+         type="zed_nav2::ZedCostmapLayer"
          base_class_type="nav2_costmap_2d::Layer">
     <description>
       Plugin to integrate ZED Terrain Mapping in as a Nav2 costmap_2d layer.

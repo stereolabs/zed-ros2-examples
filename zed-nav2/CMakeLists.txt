@@ -99,7 +99,7 @@ set(PLUGIN_INC
 
 ###############################################################################
 # BIN & INSTALLATION
-set(PLUGIN_NAME zed_costmap_2D)
+set(PLUGIN_NAME ${PROJECT_NAME})
 add_library(${PLUGIN_NAME} SHARED
   ${PLUGIN_INC}
   ${PLUGIN_SRC}
@@ -111,6 +111,22 @@ target_include_directories(${PLUGIN_NAME} PUBLIC
 )
 
 # Install the plugin
-pluginlib_export_plugin_description_file(${PLUGIN_NAME} plugins_description.xml)
+pluginlib_export_plugin_description_file(nav2_costmap_2d plugins_description.xml)
 ament_target_dependencies(${PLUGIN_NAME} ${DEPENDENCIES})
-#ament_auto_package(INSTALL_TO_SHARE launch)
+
+install(
+  TARGETS ${PLUGIN_NAME}
+  EXPORT ${PLUGIN_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+install(DIRECTORY
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/
+  DESTINATION include/${PROJECT_NAME}/
+)
+
+ament_package()
