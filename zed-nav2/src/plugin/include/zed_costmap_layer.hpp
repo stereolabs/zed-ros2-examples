@@ -27,6 +27,7 @@
 #include <grid_map_msgs/msg/grid_map.hpp>
 #include <grid_map_ros/grid_map_ros.hpp>
 
+
 namespace zed_nav2
 {
 
@@ -52,7 +53,7 @@ public:
     const grid_map_msgs::msg::GridMap::ConstSharedPtr msg);
 
 private:
-  bool lookupInSlice(const Eigen::Vector2f & pos, float * distance);
+  bool debug_;
 
   // Settings
   float max_obstacle_distance_ = 1.0f;
