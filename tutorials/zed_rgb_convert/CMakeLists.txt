@@ -97,7 +97,9 @@ set(DEPENDENCIES_CONT
     zed_components
 )
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
 find_package(rcutils REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)

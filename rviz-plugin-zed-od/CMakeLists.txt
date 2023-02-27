@@ -91,7 +91,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
 
 find_package(rviz_common REQUIRED)
 find_package(rviz_rendering REQUIRED)

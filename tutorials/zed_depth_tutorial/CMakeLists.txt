@@ -54,7 +54,9 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 # dependencies
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
