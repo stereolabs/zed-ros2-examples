@@ -191,7 +191,7 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/stereo/image_rect_color
           Value: false
       Enabled: true
@@ -209,7 +209,7 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/depth/depth_registered
           Value: false
         - Class: rviz_default_plugins/Image
@@ -223,7 +223,7 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/confidence/confidence_map
           Value: false
         - Alpha: 0.699999988079071
@@ -435,7 +435,7 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/mapping/fused_cloud
           Use Fixed Frame: true
           Use rainbow: true
@@ -450,7 +450,7 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/plane_marker
           Value: false
         - Alpha: 1
@@ -497,7 +497,7 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/obj_det/objects
           Transparency: 0.25
           Value: true
@@ -534,7 +534,7 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/atm_press
           Use Fixed Frame: true
           Use rainbow: true
@@ -568,7 +568,7 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/temperature/imu
           Use Fixed Frame: true
           Use rainbow: true
@@ -602,7 +602,7 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/temperature/left
           Use Fixed Frame: true
           Use rainbow: true
@@ -636,7 +636,7 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
+            Reliability Policy: Reliable
             Value: /zed2/zed_node/temperature/right
           Use Fixed Frame: true
           Use rainbow: true
@@ -665,14 +665,14 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Best Effort
+        Reliability Policy: Reliable
         Value: /initialpose
     - Class: rviz_default_plugins/SetGoal
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Best Effort
+        Reliability Policy: Reliable
         Value: /goal_pose
     - Class: rviz_default_plugins/PublishPoint
       Single click: true
@@ -680,7 +680,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Best Effort
+        Reliability Policy: Reliable
         Value: /clicked_point
   Transformation:
     Current:
