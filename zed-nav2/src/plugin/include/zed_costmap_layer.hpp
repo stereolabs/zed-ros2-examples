@@ -16,14 +16,22 @@
 #ifndef ZED_COSTMAP_LAYER_HPP_
 #define ZED_COSTMAP_LAYER_HPP_
 
+#define RGB_LAYER "rgb"
+#define TRAVERSABILITY_LAYER "traversability"
+#define ELEVATION_LAYER "elevation"
+
 #include "visibility_control.hpp"
 
 #include <Eigen/Core>
+#include <string>
 #include <nav2_costmap_2d/costmap_layer.hpp>
 #include <nav2_costmap_2d/layer.hpp>
 #include <nav2_costmap_2d/layered_costmap.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <rcutils/logging_macros.h>
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 #include <grid_map_msgs/msg/grid_map.hpp>
 #include <grid_map_ros/grid_map_ros.hpp>
 
@@ -55,17 +63,27 @@ public:
 private:
   bool debug_;
 
-  // Settings
+  // ----> Parameters
   float max_obstacle_distance_ = 1.0f;
   float inflation_distance_ = 0.5f;
-  // This should not include any "special" values like 255.
-  uint8_t max_cost_value_ = 252;
+  float max_traversability_cost_ = 0.5f;
+  std::string target_frame_id_ = "";
+  //  <---- Parameters
 
-  // Subscribers
+  // ----> Grid map
   rclcpp::Subscription<grid_map_msgs::msg::GridMap>::SharedPtr
     map_sub_;
-
   grid_map::GridMap map_;
+  // This should not include any "special" values like 255.
+  uint8_t max_cost_value_ = 252;
+  std::mutex mGrid_mutex;
+  // <---- Grid map
+
+  // ----> initialization Transform listener
+  std::unique_ptr<tf2_ros::Buffer> mTfBuffer;
+  std::unique_ptr<tf2_ros::TransformListener> mTfListener;
+  // <---- initialization Transform listener
+
 };
 
 }  // namespace zed_nav2
