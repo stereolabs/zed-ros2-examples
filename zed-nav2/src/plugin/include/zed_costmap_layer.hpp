@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef ZED_COSTMAP_LAYER_HPP_
 #define ZED_COSTMAP_LAYER_HPP_
 
@@ -35,57 +34,55 @@
 #include <grid_map_msgs/msg/grid_map.hpp>
 #include <grid_map_ros/grid_map_ros.hpp>
 
-
 namespace zed_nav2
 {
 
-class ZedCostmapLayer : public nav2_costmap_2d::CostmapLayer
-{
-public:
-  ZED_COSTMAP_2D_PLUGIN_PUBLIC
-  explicit ZedCostmapLayer();
+  class ZedCostmapLayer : public nav2_costmap_2d::CostmapLayer
+  {
+  public:
+    ZED_COSTMAP_2D_PLUGIN_PUBLIC
+    explicit ZedCostmapLayer();
 
-  void onInitialize() override;
-  void updateBounds(
-    double robot_x, double robot_y, double robot_yaw,
-    double * min_x, double * min_y, double * max_x,
-    double * max_y) override;
-  void updateCosts(
-    nav2_costmap_2d::Costmap2D & master_grid, int min_i,
-    int min_j, int max_i, int max_j) override;
+    void onInitialize() override;
+    void updateBounds(
+        double robot_x, double robot_y, double robot_yaw,
+        double *min_x, double *min_y, double *max_x,
+        double *max_y) override;
+    void updateCosts(
+        nav2_costmap_2d::Costmap2D &master_grid, int min_i,
+        int min_j, int max_i, int max_j) override;
 
-  void reset() override {}
-  bool isClearable() override {return true;}
+    void reset() override {}
+    bool isClearable() override { return true; }
 
-  void gridmapCallback(
-    const grid_map_msgs::msg::GridMap::ConstSharedPtr msg);
+    void gridmapCallback(
+        const grid_map_msgs::msg::GridMap::ConstSharedPtr msg);
 
-private:
-  bool debug_;
+  private:
+    bool debug_;
 
-  // ----> Parameters
-  float max_obstacle_distance_ = 1.0f;
-  float inflation_distance_ = 0.5f;
-  float max_traversability_cost_ = 0.5f;
-  std::string target_frame_id_ = "";
-  //  <---- Parameters
+    // ----> Parameters
+    float max_obstacle_distance_ = 1.0f;
+    float inflation_distance_ = 0.5f;
+    float max_traversability_cost_ = 0.5f;
+    std::string target_frame_id_ = "";
+    //  <---- Parameters
 
-  // ----> Grid map
-  rclcpp::Subscription<grid_map_msgs::msg::GridMap>::SharedPtr
-    map_sub_;
-  grid_map::GridMap map_;
-  // This should not include any "special" values like 255.
-  uint8_t max_cost_value_ = 252;
-  std::mutex mGrid_mutex;
-  // <---- Grid map
+    // ----> Grid map
+    rclcpp::Subscription<grid_map_msgs::msg::GridMap>::SharedPtr
+        map_sub_;
+    grid_map::GridMap map_;
+    // This should not include any "special" values like 255.
+    float max_cost_value_ = 252;
+    std::mutex mGrid_mutex;
+    // <---- Grid map
 
-  // ----> initialization Transform listener
-  std::unique_ptr<tf2_ros::Buffer> mTfBuffer;
-  std::unique_ptr<tf2_ros::TransformListener> mTfListener;
-  // <---- initialization Transform listener
+    // ----> initialization Transform listener
+    std::unique_ptr<tf2_ros::Buffer> mTfBuffer;
+    std::unique_ptr<tf2_ros::TransformListener> mTfListener;
+    // <---- initialization Transform listener
+  };
 
-};
+} // namespace zed_nav2
 
-}  // namespace zed_nav2
-
-#endif  // ZED_COSTMAP_LAYER_HPP_
+#endif // ZED_COSTMAP_LAYER_HPP_

@@ -6,7 +6,7 @@
 #include <nav2_costmap_2d/costmap_math.hpp>
 #include <nav2_costmap_2d/footprint.hpp>
 #include <rclcpp/parameter_events_filter.hpp>
-
+#include <tf2_eigen/tf2_eigen/tf2_eigen.hpp>
 #include <grid_map_ros/grid_map_ros.hpp>
 
 #include "zed_costmap_layer.hpp"
@@ -33,8 +33,6 @@ namespace zed_nav2
 
     grid_map_topic = node->declare_parameter<std::string>(
         getFullName("grid_map_topic"), grid_map_topic);
-    // max_cost_value_ = node->declare_parameter<uint8_t>(
-    //     getFullName("max_cost_value"), max_cost_value_);
 
     if (debug_)
     {
@@ -82,7 +80,6 @@ namespace zed_nav2
     // ----> TF2 Transform
     mTfBuffer = std::make_unique<tf2_ros::Buffer>(clock_);
     mTfListener = std::make_unique<tf2_ros::TransformListener>(*mTfBuffer); // Start TF Listener thread
-
     // <---- TF2 Transform
 
     // Add subscribers to the gridmap message.
@@ -194,25 +191,16 @@ namespace zed_nav2
       for (int i = min_i; i < max_i; i++)
       {
         int index = getIndex(i, j);
-
-        // Figure out the world coordinates of this gridcell.
-        // double world_x, world_y;
-        // mapToWorld(i, j, world_x, world_y);
-
-        // Look up the corresponding cell in our latest map.
-        // float value = map_.atPosition("occupancy", grid_map::Position(world_x, world_y));
-        // float occupancy_value = std::numeric_limits<double>::quiet_NaN();
         float traversability_value = std::numeric_limits<double>::quiet_NaN();
         try
         {
-          // occupancy_value = map_.at(RGB_LAYER, grid_map::Index(i, j));
+          //TODO (Patrick) add checks for map size and resolution
           auto size = map_.getSize();
           auto xx = size[0];
           auto yy = size[1];
           RCLCPP_DEBUG(logger_, "Size x: %d, Size y: %d", xx, yy);
           auto layers = map_.getBasicLayers();
-          auto idx = grid_map::Index(i, j);
-          traversability_value = map_.at(TRAVERSABILITY_LAYER, grid_map::Index(j, i));
+          traversability_value = map_.at(TRAVERSABILITY_LAYER, grid_map::Index(i, j));
         }
         catch (const std::out_of_range &e)
         {
@@ -223,19 +211,14 @@ namespace zed_nav2
               node->get_logger(),
               "Gridmap size: " << map_.getLength().x() / map_.getResolution() << "x" << map_.getLength().y() / map_.getResolution());
         }
-        catch (const std::exception &ex)
-        {
-          RCLCPP_ERROR(logger_, "I go boom boom because: %s", ex.what());
-        }
-
         // Calculate what this maps to in the original structure.
         uint8_t cost = nav2_costmap_2d::NO_INFORMATION;
 
         // ----> From ZED SDK
-        const float UNKNOWN_CELL = -1.f;
-        // values for OCCUPANCY
-        const float FREE_CELL = 0.f;
-        const float OCCUPIED_CELL = 1.f;
+        constexpr float OCCUPIED_CELL = 1.f;
+        constexpr float FREE_CELL = 0.f;
+        constexpr float INVALID_CELL_DATA = NAN;
+        constexpr float UNKNOWN_CELL = NAN;
         // <---- From ZED SDK
 
         // Convert the distance value to a costmap value.
@@ -247,25 +230,26 @@ namespace zed_nav2
         {
           cost = nav2_costmap_2d::LETHAL_OBSTACLE;
         }
+        else if( isnan(traversability_value)) // traversability_value == INVALID_CELL_DATA || traversability_value == UNKNOWN_CELL
+        {
+          cost = nav2_costmap_2d::NO_INFORMATION;
+        }
         else
         {
-          cost = static_cast<uint8_t>(max_cost_value_ * traversability_value); // traversability is between 0.0 and 1.0
+          cost = static_cast<uint8_t>(traversability_value * max_cost_value_);
         }
-        RCLCPP_DEBUG(logger_, "Cost at cell %d %d is: %d.", i, j, cost);
-
         // Reverse cell order because of different conventions between Costmap and grid map.
-        size_t updateRange = (max_j - min_j) * (max_i - min_i);
         int upper_bound = getIndex(max_i, max_j);
         int lower_bound = getIndex(min_i, min_j);
         int reversed_index = upper_bound - 1 - index + lower_bound;
         if (reversed_index >= lower_bound && reversed_index < upper_bound)
         {
           costmap_array[reversed_index] = cost;
-          RCLCPP_DEBUG(logger_, "Updated cost at cell %d %d is: %d.", i, j, costmap_array[reversed_index]);
+          RCLCPP_DEBUG(logger_, "Updated cost at cell %d %d is: %f<-->%d.", i, j, traversability_value,costmap_array[reversed_index]);
         }
         else
         {
-          RCLCPP_DEBUG(logger_, "Out of bounds reversed index %d %d is: %d.", i, j, reversed_index);
+          RCLCPP_DEBUG(logger_, "Out of bounds reversed index i:%d j:%d reversed index: %d.", i, j, reversed_index);
         }
       }
     }
@@ -289,79 +273,56 @@ namespace zed_nav2
       throw std::runtime_error{"Failed to lock node"};
     }
 
+    mGrid_mutex.lock();
     RCLCPP_DEBUG(node->get_logger(), "GridMap callback.");
 
     // Deserialize into grid map
-    mGrid_mutex.lock();
     grid_map::GridMapRosConverter::fromMessage(*msg, map_);
 
+
+    if (msg->header.frame_id != target_frame_id_)
+    {
+      RCLCPP_DEBUG(node->get_logger(), "Transforming map from %s to %s.", msg->header.frame_id.c_str(), target_frame_id_.c_str());
+      try
+      {
+        auto tf_stamped = mTfBuffer->lookupTransform(target_frame_id_,
+                                                     msg->header.frame_id,
+                                                     rclcpp::Time(0, 0, RCL_ROS_TIME),
+                                                     rclcpp::Duration(1, 0));
+        {
+          RCLCPP_DEBUG(logger_, "Applying transform");
+          auto transform = tf2::transformToEigen(tf_stamped);
+          map_ = map_.getTransformedMap(transform, ELEVATION_LAYER, target_frame_id_);
+          RCLCPP_DEBUG(logger_, "Transform applied");
+        }   
+      }
+      catch (tf2::TransformException &ex)
+      {
+        if (!first_tf_error)
+        {
+          rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+          RCLCPP_WARN_THROTTLE(logger_, steady_clock, 1.0, "Transform error: %s", ex.what());
+          RCLCPP_WARN_THROTTLE(
+              logger_, steady_clock, 1.0, "The tf from '%s' to '%s' is not available.",
+              msg->header.frame_id.c_str(), target_frame_id_.c_str());
+        }
+        else
+        {
+          first_tf_error = false;
+        }
+      }
+      catch (std::out_of_range &ex)
+      {
+        rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+        RCLCPP_ERROR(logger_,
+                     "Error transforming map from frame `%s` to frame `%s`: no layer with name `%s` is present",
+                     msg->header.frame_id.c_str(),
+                     target_frame_id_.c_str(),
+                     TRAVERSABILITY_LAYER);
+      }
+    }
+
     mGrid_mutex.unlock();
-
-    // if (msg->header.frame_id != target_frame_id_)
-    // {
-    //   RCLCPP_DEBUG(node->get_logger(), "Transforming map from %s to %s.", msg->header.frame_id.c_str(), target_frame_id_.c_str());
-    //   try
-    //   {
-    //     auto tf_stamped = mTfBuffer->lookupTransform(target_frame_id_,
-    //                                                  msg->header.frame_id,
-    //                                                  rclcpp::Time(0, 0, RCL_ROS_TIME),
-    //                                                  rclcpp::Duration(1, 0));
-
-    //     // Check if it is only a transaltion - the call to move could be less expensive
-    //     // if (tf_stamped.transform.rotation.w == 1.0 &&
-    //     //     tf_stamped.transform.rotation.x == 0.0 &&
-    //     //     tf_stamped.transform.rotation.y == 0.0 &&
-    //     //     tf_stamped.transform.rotation.z == 0.0)
-    //     // {
-    //     //   auto transaltion = grid_map::Position(tf_stamped.transform.translation.x,
-    //     //                                         tf_stamped.transform.translation.y);
-    //     //   RCLCPP_DEBUG(logger_, "Applying Translation");
-    //     //   map_.move(transaltion);
-    //     //   RCLCPP_DEBUG(logger_, "Transform applied");
-    //     // }
-    //     // else
-    //     {
-    //       auto quat = Eigen::Quaternion<double>(tf_stamped.transform.rotation.w,
-    //                                             tf_stamped.transform.rotation.x,
-    //                                             tf_stamped.transform.rotation.y,
-    //                                             tf_stamped.transform.rotation.z);
-    //       auto translation = Eigen::Vector3d(tf_stamped.transform.translation.x,
-    //                                          tf_stamped.transform.translation.y,
-    //                                          tf_stamped.transform.translation.z);
-    //       RCLCPP_DEBUG(logger_, "Applying transform");
-    //       Eigen::Isometry3d transform;
-    //       transform.rotate(quat);
-    //       transform.translate(translation);
-    //       map_ = map_.getTransformedMap(transform, ELEVATION_LAYER, target_frame_id_);
-    //       RCLCPP_DEBUG(logger_, "Transform applied");
-    //     }
-    //     // Apply frame conversion to grid map
-    //   }
-    //   catch (tf2::TransformException &ex)
-    //   {
-    //     if (!first_tf_error)
-    //     {
-    //       rclcpp::Clock steady_clock(RCL_STEADY_TIME);
-    //       RCLCPP_WARN_THROTTLE(logger_, steady_clock, 1.0, "Transform error: %s", ex.what());
-    //       RCLCPP_WARN_THROTTLE(
-    //           logger_, steady_clock, 1.0, "The tf from '%s' to '%s' is not available.",
-    //           msg->header.frame_id.c_str(), target_frame_id_.c_str());
-    //     }
-    //     else
-    //     {
-    //       first_tf_error = false;
-    //     }
-    //   }
-    //   catch (std::out_of_range &ex)
-    //   {
-    //     rclcpp::Clock steady_clock(RCL_STEADY_TIME);
-    //     RCLCPP_ERROR(logger_,
-    //                  "Error transforming map from frame `%s` to frame `%s`: no layer with name `%s` is present",
-    //                  msg->header.frame_id.c_str(),
-    //                  target_frame_id_.c_str(),
-    //                  ELEVATION_LAYER);
-    //   }
-    // }
   }
 } // namespace zed_nav2
 
