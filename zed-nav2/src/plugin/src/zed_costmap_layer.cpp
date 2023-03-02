@@ -168,7 +168,7 @@ namespace zed_nav2
 
     setDefaultValue(nav2_costmap_2d::NO_INFORMATION);
     matchSize();
-    uint8_t *costmap_array = getCharMap();
+    uint8_t *costmap_array = master_grid.getCharMap();
     unsigned int size_x = getSizeInCellsX(), size_y = getSizeInCellsY();
 
     RCLCPP_DEBUG(
@@ -207,8 +207,8 @@ namespace zed_nav2
         {
           // occupancy_value = map_.at(RGB_LAYER, grid_map::Index(i, j));
           auto size = map_.getSize();
-          auto xx =size[0];
-          auto yy =size[1];
+          auto xx = size[0];
+          auto yy = size[1];
           RCLCPP_DEBUG(logger_, "Size x: %d, Size y: %d", xx, yy);
           auto layers = map_.getBasicLayers();
           auto idx = grid_map::Index(i, j);
@@ -252,21 +252,27 @@ namespace zed_nav2
           cost = static_cast<uint8_t>(max_cost_value_ * traversability_value); // traversability is between 0.0 and 1.0
         }
         RCLCPP_DEBUG(logger_, "Cost at cell %d %d is: %d.", i, j, cost);
+
         // Reverse cell order because of different conventions between Costmap and grid map.
-        size_t nCells = map_.getSize().prod();
-        int cost_idx = nCells - index - 1;
-        int cost_size = (max_j - min_j) * (max_i - min_i);
-        if (cost_idx > 0 && cost_idx < (cost_size - 1))
+        size_t updateRange = (max_j - min_j) * (max_i - min_i);
+        int upper_bound = getIndex(max_i, max_j);
+        int lower_bound = getIndex(min_i, min_j);
+        int reversed_index = upper_bound - 1 - index + lower_bound;
+        if (reversed_index >= lower_bound && reversed_index < upper_bound)
         {
-          costmap_array[cost_idx] = cost;
+          costmap_array[reversed_index] = cost;
+          RCLCPP_DEBUG(logger_, "Updated cost at cell %d %d is: %d.", i, j, costmap_array[reversed_index]);
+        }
+        else
+        {
+          RCLCPP_DEBUG(logger_, "Out of bounds reversed index %d %d is: %d.", i, j, reversed_index);
         }
       }
     }
 
     // This combines the master costmap with the current costmap by taking
     // the max across all costmaps.
-    // updateWithMax(master_grid, min_i, min_j, max_i, max_j);
-    updateWithTrueOverwrite(master_grid, min_i, min_j, max_i, max_j);
+    updateWithMax(master_grid, min_i, min_j, max_i, max_j);
     RCLCPP_DEBUG(node->get_logger(), "Finished updating.");
     mGrid_mutex.unlock();
     current_ = true;
@@ -356,7 +362,6 @@ namespace zed_nav2
     //                  ELEVATION_LAYER);
     //   }
     // }
-  
   }
 } // namespace zed_nav2
 
