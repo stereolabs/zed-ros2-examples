@@ -194,12 +194,6 @@ namespace zed_nav2
         float traversability_value = std::numeric_limits<double>::quiet_NaN();
         try
         {
-          //TODO (Patrick) add checks for map size and resolution
-          auto size = map_.getSize();
-          auto xx = size[0];
-          auto yy = size[1];
-          RCLCPP_DEBUG(logger_, "Size x: %d, Size y: %d", xx, yy);
-          auto layers = map_.getBasicLayers();
           traversability_value = map_.at(TRAVERSABILITY_LAYER, grid_map::Index(i, j));
         }
         catch (const std::out_of_range &e)
@@ -230,7 +224,7 @@ namespace zed_nav2
         {
           cost = nav2_costmap_2d::LETHAL_OBSTACLE;
         }
-        else if( isnan(traversability_value)) // traversability_value == INVALID_CELL_DATA || traversability_value == UNKNOWN_CELL
+        else if (isnan(traversability_value)) // traversability_value == INVALID_CELL_DATA || traversability_value == UNKNOWN_CELL
         {
           cost = nav2_costmap_2d::NO_INFORMATION;
         }
@@ -245,7 +239,7 @@ namespace zed_nav2
         if (reversed_index >= lower_bound && reversed_index < upper_bound)
         {
           costmap_array[reversed_index] = cost;
-          RCLCPP_DEBUG(logger_, "Updated cost at cell %d %d is: %f<-->%d.", i, j, traversability_value,costmap_array[reversed_index]);
+          RCLCPP_DEBUG(logger_, "Updated cost at cell %d %d is: %f<-->%d.", i, j, traversability_value, costmap_array[reversed_index]);
         }
         else
         {
@@ -279,6 +273,19 @@ namespace zed_nav2
     // Deserialize into grid map
     grid_map::GridMapRosConverter::fromMessage(*msg, map_);
 
+    // Check the data matches the configuration
+    auto size = map_.getSize();
+    if (size.x() != getSizeInCellsX() ||
+        size.y() != getSizeInCellsY() ||
+        map_.getResolution() != getResolution())
+    {
+      RCLCPP_WARN(logger_,
+                  "The received grid map size (%d, %d) & resolution (%f) do not match the costmap size (%d, %d) and resolution (%f).",
+                  size.x(), size.y(), map_.getResolution(),
+                  getSizeInCellsX(), getSizeInCellsY(), getResolution());
+    }
+
+    // End of check
 
     if (msg->header.frame_id != target_frame_id_)
     {
@@ -294,7 +301,7 @@ namespace zed_nav2
           auto transform = tf2::transformToEigen(tf_stamped);
           map_ = map_.getTransformedMap(transform, ELEVATION_LAYER, target_frame_id_);
           RCLCPP_DEBUG(logger_, "Transform applied");
-        }   
+        }
       }
       catch (tf2::TransformException &ex)
       {
