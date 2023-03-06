@@ -127,14 +127,10 @@ namespace zed_nav2
 
     if (layers_exist)
     {
-      //   *min_x = -map_.getLength().x() / 2.0;
-      //   *max_x = map_.getLength().x() / 2.0;
-      //   *min_y = -map_.getLength().y() / 2.0;
-      //   *max_y = map_.getLength().y() / 2.0;
-      *min_x = -1.0;
-      *max_x = 1.0;
-      *min_y = -1.0;
-      *max_y = 1.0;
+      *min_x = -getSizeInMetersX() / 2.0;
+      *max_x = getSizeInMetersX() / 2.0;
+      *min_y = -getSizeInMetersY() / 2.0;
+      *max_y = getSizeInMetersX() / 2.0;
     }
     else
     {
