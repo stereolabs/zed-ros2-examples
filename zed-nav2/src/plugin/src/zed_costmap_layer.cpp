@@ -77,6 +77,14 @@ namespace zed_nav2
         node->get_logger(),
         "Name: " << name_ << " - Max traversability cost: " << max_traversability_cost_);
 
+    RCLCPP_INFO_STREAM(
+        node->get_logger(),
+        "Name: " << name_ << " - Cost map resolution: " << getResolution());
+
+    RCLCPP_INFO_STREAM(
+        node->get_logger(),
+        "Name: " << name_ << " - Cost map size: X(" << getSizeInCellsX() << ") Y (" << getSizeInCellsY() << ")");
+
     // ----> TF2 Transform
     mTfBuffer = std::make_unique<tf2_ros::Buffer>(clock_);
     mTfListener = std::make_unique<tf2_ros::TransformListener>(*mTfBuffer); // Start TF Listener thread
@@ -105,13 +113,28 @@ namespace zed_nav2
       throw std::runtime_error{"Failed to lock node"};
     }
 
+    RCLCPP_DEBUG(logger_, "Updating bounds");
     bool layers_exist = checkLayersAndWarn();
+
+    if (layered_costmap_->isRolling())
+    {
+      updateOrigin(
+          robot_x - getSizeInMetersX() / 2,
+          robot_y - getSizeInMetersY() / 2);
+    }
+
+    useExtraBounds(min_x, min_y, max_x, max_y);
+
     if (layers_exist)
     {
-      *min_x = -map_.getLength().x() / 2.0;
-      *max_x = map_.getLength().x() / 2.0;
-      *min_y = -map_.getLength().y() / 2.0;
-      *max_y = map_.getLength().y() / 2.0;
+      //   *min_x = -map_.getLength().x() / 2.0;
+      //   *max_x = map_.getLength().x() / 2.0;
+      //   *min_y = -map_.getLength().y() / 2.0;
+      //   *max_y = map_.getLength().y() / 2.0;
+      *min_x = -1.0;
+      *max_x = 1.0;
+      *min_y = -1.0;
+      *max_y = 1.0;
     }
     else
     {
@@ -141,6 +164,7 @@ namespace zed_nav2
     {
       throw std::runtime_error{"Failed to lock node"};
     }
+    RCLCPP_DEBUG(logger_, "Updating Costs");
 
     RCLCPP_DEBUG(
         node->get_logger(),
@@ -234,7 +258,6 @@ namespace zed_nav2
 
     // This combines the master costmap with the current costmap by taking
     // the max across all costmaps.
-    // updateWithTrueOverwrite(master_grid, min_i, min_j, max_i, max_j);
     updateWithMax(master_grid, min_i, min_j, max_i, max_j);
     RCLCPP_DEBUG(node->get_logger(), "Finished updating.");
     mGrid_mutex.unlock();
@@ -277,7 +300,15 @@ namespace zed_nav2
   {
 
     auto node = node_.lock();
+    RCLCPP_DEBUG(node->get_logger(), "GridMap callback.");
     static bool first_tf_error = true;
+    int cost_map_x = static_cast<int>(getSizeInCellsX());
+    int cost_map_y = static_cast<int>(getSizeInCellsY());
+    // if (cost_map_x == 0 || cost_map_y == 0)
+    // {
+    //   RCLCPP_DEBUG(node->get_logger(), "GridMap callback skipped due to uninitialized node.");
+    //   return;
+    // }
 
     if (!node)
     {
@@ -294,8 +325,7 @@ namespace zed_nav2
     auto size = map_.getSize();
     int grid_x = size.x();
     int grid_y = size.y();
-    int cost_map_x = static_cast<int>(getSizeInCellsX());
-    int cost_map_y = static_cast<int>(getSizeInCellsY());
+
     int res_grid = static_cast<int>(10000 * map_.getResolution());
     int res_cost = static_cast<int>(10000 * getResolution());
 
@@ -311,6 +341,7 @@ namespace zed_nav2
 
     if (grid_x == 0 || grid_y == 0)
     {
+      RCLCPP_WARN(logger_, "Skipping empty  grid map");
       return;
     }
 
