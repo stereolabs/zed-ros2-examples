@@ -64,7 +64,8 @@ namespace zed_nav2
     // ----> Parameters
     float max_obstacle_distance_ = 1.0f;
     float inflation_distance_ = 0.5f;
-    float max_traversability_cost_ = 0.5f;
+    float max_traversability_cost_ = 0.8f;
+    float min_traversability_cost_ = 0.1f;
     std::string target_frame_id_ = "";
     //  <---- Parameters
 

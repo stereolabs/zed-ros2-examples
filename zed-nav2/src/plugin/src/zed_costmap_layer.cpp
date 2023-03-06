@@ -27,6 +27,7 @@ namespace zed_nav2
     debug_ = node->declare_parameter<bool>(getFullName("debug"), debug_);
     target_frame_id_ = node->declare_parameter<std::string>(getFullName("target_frame_id"), target_frame_id_);
     max_traversability_cost_ = node->declare_parameter<float>(getFullName("max_traversability_cost"), max_traversability_cost_);
+    min_traversability_cost_ = node->declare_parameter<float>(getFullName("min_traversability_cost"), min_traversability_cost_);
 
     // Get the path of the gridmap topic.
     std::string grid_map_topic = "/local_map/gridmap";
@@ -76,6 +77,10 @@ namespace zed_nav2
     RCLCPP_INFO_STREAM(
         node->get_logger(),
         "Name: " << name_ << " - Max traversability cost: " << max_traversability_cost_);
+
+    RCLCPP_INFO_STREAM(
+        node->get_logger(),
+        "Name: " << name_ << " - Min traversability cost: " << min_traversability_cost_);
 
     RCLCPP_INFO_STREAM(
         node->get_logger(),
@@ -220,7 +225,7 @@ namespace zed_nav2
         // <---- From ZED SDK
 
         // Convert the distance value to a costmap value.
-        if (traversability_value == FREE_CELL)
+        if (traversability_value == FREE_CELL || traversability_value <= min_traversability_cost_)
         {
           cost = nav2_costmap_2d::FREE_SPACE;
         }
