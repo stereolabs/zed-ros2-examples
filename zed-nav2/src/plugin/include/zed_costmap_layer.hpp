@@ -81,6 +81,8 @@ namespace zed_nav2
     std::unique_ptr<tf2_ros::Buffer> mTfBuffer;
     std::unique_ptr<tf2_ros::TransformListener> mTfListener;
     // <---- initialization Transform listener
+
+    bool checkLayersAndWarn();
   };
 
 } // namespace zed_nav2

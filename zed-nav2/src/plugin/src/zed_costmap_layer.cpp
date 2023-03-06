@@ -105,7 +105,8 @@ namespace zed_nav2
       throw std::runtime_error{"Failed to lock node"};
     }
 
-    if (map_.exists(ELEVATION_LAYER) && map_.exists(RGB_LAYER) && map_.exists(TRAVERSABILITY_LAYER))
+    bool layers_exist = checkLayersAndWarn();
+    if (layers_exist)
     {
       *min_x = -map_.getLength().x() / 2.0;
       *max_x = map_.getLength().x() / 2.0;
@@ -114,23 +115,6 @@ namespace zed_nav2
     }
     else
     {
-      RCLCPP_WARN(
-          node->get_logger(),
-          "The gridmap message does not contain the required '%s', '%s', and '%s' layers",
-          ELEVATION_LAYER,
-          RGB_LAYER,
-          TRAVERSABILITY_LAYER);
-      std::vector<std::string> layers = map_.getLayers();
-      std::stringstream ss;
-      for (size_t s = 0; s < layers.size(); s++)
-      {
-        ss << layers[s];
-        ss << ",";
-      }
-      RCLCPP_DEBUG_STREAM(
-          node->get_logger(),
-          "Gridmap not valid. Available layers: " << ss.str().c_str());
-
       return;
     }
 
@@ -160,8 +144,22 @@ namespace zed_nav2
 
     RCLCPP_DEBUG(
         node->get_logger(),
-        "Update costs: Min i: %d Min j: %d Max i: %d Max j: %d", min_i,
+        "Update bounds: Min i: %d Min j: %d Max i: %d Max j: %d", min_i,
         min_j, max_i, max_j);
+
+    // Size checks
+    if (!checkLayersAndWarn())
+    {
+      return;
+    }
+    if (map_.getSize().prod() == 0)
+    {
+      RCLCPP_DEBUG(
+          node->get_logger(),
+          "Empty grid map when updating costs !");
+      return;
+    }
+    // End of Size checks
 
     setDefaultValue(nav2_costmap_2d::NO_INFORMATION);
     matchSize();
@@ -169,22 +167,8 @@ namespace zed_nav2
     unsigned int size_x = getSizeInCellsX(), size_y = getSizeInCellsY();
 
     RCLCPP_DEBUG(
-        node->get_logger(), "Size in cells x: %d size in cells y: %d",
+        node->get_logger(), "Costmap2D size in cells x: %d size in cells y: %d",
         size_x, size_y);
-
-    if (!map_.exists(ELEVATION_LAYER) || !map_.exists(RGB_LAYER) || !map_.exists(TRAVERSABILITY_LAYER))
-    {
-      std::vector<std::string> layers = map_.getLayers();
-      std::stringstream ss;
-      for (size_t s = 0; s < layers.size(); s++)
-      {
-        ss << layers[s];
-        ss << ",";
-      }
-      RCLCPP_DEBUG_STREAM(
-          node->get_logger(),
-          "Gridmap not valid. Available layers: " << ss.str().c_str());
-    }
 
     for (int j = min_j; j < max_j; j++)
     {
@@ -239,7 +223,7 @@ namespace zed_nav2
         if (reversed_index >= lower_bound && reversed_index < upper_bound)
         {
           costmap_array[reversed_index] = cost;
-          RCLCPP_DEBUG(logger_, "Updated cost at cell %d %d is: %f<-->%d.", i, j, traversability_value, costmap_array[reversed_index]);
+          // RCLCPP_DEBUG(logger_, "Updated cost at cell %d %d is: %f<-->%d.", i, j, traversability_value, costmap_array[reversed_index]);
         }
         else
         {
@@ -250,15 +234,48 @@ namespace zed_nav2
 
     // This combines the master costmap with the current costmap by taking
     // the max across all costmaps.
+    // updateWithTrueOverwrite(master_grid, min_i, min_j, max_i, max_j);
     updateWithMax(master_grid, min_i, min_j, max_i, max_j);
     RCLCPP_DEBUG(node->get_logger(), "Finished updating.");
     mGrid_mutex.unlock();
     current_ = true;
   }
 
+  bool ZedCostmapLayer::checkLayersAndWarn()
+  {
+    if (map_.exists(ELEVATION_LAYER) && map_.exists(RGB_LAYER) && map_.exists(TRAVERSABILITY_LAYER))
+    {
+      return true;
+    }
+    else
+    {
+      RCLCPP_WARN(
+          logger_,
+          "The gridmap message does not contain the required '%s', '%s', and '%s' layers",
+          ELEVATION_LAYER,
+          RGB_LAYER,
+          TRAVERSABILITY_LAYER);
+      std::vector<std::string> layers = map_.getLayers();
+      std::stringstream ss;
+      for (size_t s = 0; s < layers.size(); s++)
+      {
+        ss << layers[s];
+        ss << ",";
+      }
+      RCLCPP_DEBUG_STREAM(
+          logger_,
+          "Gridmap not valid. Available layers: " << ss.str().c_str());
+
+      return false;
+    }
+
+    return false;
+  }
+
   void ZedCostmapLayer::gridmapCallback(
       const grid_map_msgs::msg::GridMap::ConstSharedPtr msg)
   {
+
     auto node = node_.lock();
     static bool first_tf_error = true;
 
@@ -275,14 +292,26 @@ namespace zed_nav2
 
     // Check the data matches the configuration
     auto size = map_.getSize();
-    if (size.x() != getSizeInCellsX() ||
-        size.y() != getSizeInCellsY() ||
-        map_.getResolution() != getResolution())
+    int grid_x = size.x();
+    int grid_y = size.y();
+    int cost_map_x = static_cast<int>(getSizeInCellsX());
+    int cost_map_y = static_cast<int>(getSizeInCellsY());
+    int res_grid = static_cast<int>(10000 * map_.getResolution());
+    int res_cost = static_cast<int>(10000 * getResolution());
+
+    if (grid_x != cost_map_x ||
+        grid_y != cost_map_y ||
+        res_grid != res_cost)
     {
       RCLCPP_WARN(logger_,
                   "The received grid map size (%d, %d) & resolution (%f) do not match the costmap size (%d, %d) and resolution (%f).",
                   size.x(), size.y(), map_.getResolution(),
                   getSizeInCellsX(), getSizeInCellsY(), getResolution());
+    }
+
+    if (grid_x == 0 || grid_y == 0)
+    {
+      return;
     }
 
     // End of check
@@ -292,10 +321,21 @@ namespace zed_nav2
       RCLCPP_DEBUG(node->get_logger(), "Transforming map from %s to %s.", msg->header.frame_id.c_str(), target_frame_id_.c_str());
       try
       {
+        auto res = mTfBuffer->canTransform(target_frame_id_,
+                                           msg->header.frame_id,
+                                           rclcpp::Time(0, 0, RCL_ROS_TIME),
+                                           rclcpp::Duration::from_nanoseconds(1e4));
+
+        if (!res)
+        {
+          RCLCPP_DEBUG(node->get_logger(), "Cannot transform from %s to %s.", msg->header.frame_id.c_str(), target_frame_id_.c_str());
+          return;
+        }
+
         auto tf_stamped = mTfBuffer->lookupTransform(target_frame_id_,
                                                      msg->header.frame_id,
                                                      rclcpp::Time(0, 0, RCL_ROS_TIME),
-                                                     rclcpp::Duration(1, 0));
+                                                     rclcpp::Duration::from_nanoseconds(1e4));
         {
           RCLCPP_DEBUG(logger_, "Applying transform");
           auto transform = tf2::transformToEigen(tf_stamped);
