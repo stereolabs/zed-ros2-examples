@@ -79,8 +79,8 @@ namespace zed_nav2
     // <---- Grid map
 
     // ----> initialization Transform listener
-    std::unique_ptr<tf2_ros::Buffer> mTfBuffer;
-    std::unique_ptr<tf2_ros::TransformListener> mTfListener;
+    // std::unique_ptr<tf2_ros::Buffer> mTfBuffer;
+    // std::unique_ptr<tf2_ros::TransformListener> mTfListener;
     // <---- initialization Transform listener
 
     bool checkLayersAndWarn();
