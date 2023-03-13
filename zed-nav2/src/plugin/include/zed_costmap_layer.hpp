@@ -44,19 +44,16 @@ namespace zed_nav2
     explicit ZedCostmapLayer();
 
     void onInitialize() override;
-    void updateBounds(
-        double robot_x, double robot_y, double robot_yaw,
-        double *min_x, double *min_y, double *max_x,
-        double *max_y) override;
-    void updateCosts(
-        nav2_costmap_2d::Costmap2D &master_grid, int min_i,
-        int min_j, int max_i, int max_j) override;
+    void updateBounds(double robot_x, double robot_y, double robot_yaw,
+                      double *min_x, double *min_y, double *max_x,
+                      double *max_y) override;
+    void updateCosts(nav2_costmap_2d::Costmap2D &master_grid, int min_i,
+                     int min_j, int max_i, int max_j) override;
 
     void reset() override {}
     bool isClearable() override { return true; }
 
-    void gridmapCallback(
-        const grid_map_msgs::msg::GridMap::ConstSharedPtr msg);
+    void gridmapCallback(const grid_map_msgs::msg::GridMap::ConstSharedPtr msg);
 
   private:
     bool debug_;
@@ -66,24 +63,23 @@ namespace zed_nav2
     float inflation_distance_ = 0.5f;
     float max_traversability_cost_ = 0.8f;
     float min_traversability_cost_ = 0.1f;
-    std::string target_frame_id_ = "";
+    std::string robot_frame_id_ = "base_link";
+    std::string target_frame_id = "odom";
     //  <---- Parameters
 
     // ----> Grid map
-    rclcpp::Subscription<grid_map_msgs::msg::GridMap>::SharedPtr
-        map_sub_;
+    rclcpp::Subscription<grid_map_msgs::msg::GridMap>::SharedPtr map_sub_;
     grid_map::GridMap map_;
     // This should not include any "special" values like 255.
     float max_cost_value_ = 252;
     std::mutex mGrid_mutex;
     // <---- Grid map
 
-    // ----> initialization Transform listener
-    // std::unique_ptr<tf2_ros::Buffer> mTfBuffer;
-    // std::unique_ptr<tf2_ros::TransformListener> mTfListener;
-    // <---- initialization Transform listener
-
+    // ----> Utility functions
     bool checkLayersAndWarn();
+    bool canTransformAndWarn(std::string target_frame_id, std::string current_frame_id);
+    geometry_msgs::msg::TransformStamped lookupTransform(std::string target_frame_id, std::string current_frame_id);
+    // <---- Utility functions
   };
 
 } // namespace zed_nav2
