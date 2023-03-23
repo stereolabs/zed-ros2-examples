@@ -82,7 +82,7 @@ protected:
     RCLCPP_INFO(
       get_logger(),
       "Received pose in '%s' frame : X: %.2f Y: %.2f Z: %.2f - R: %.2f P: %.2f Y: %.2f - "
-      "Timestamp: %u.%u sec ",
+      "Ts: %u.%u sec ",
       msg->header.frame_id.c_str(), tx, ty, tz, roll * RAD2DEG, pitch * RAD2DEG, yaw * RAD2DEG,
       msg->header.stamp.sec, msg->header.stamp.nanosec);
   }
@@ -110,7 +110,7 @@ protected:
     RCLCPP_INFO(
       get_logger(),
       "Received odometry in '%s' frame : X: %.2f Y: %.2f Z: %.2f - R: %.2f P: %.2f Y: %.2f - "
-      "Timestamp: %u.%u sec ",
+      "Ts: %u.%u sec ",
       msg->header.frame_id.c_str(), tx, ty, tz, roll * RAD2DEG, pitch * RAD2DEG, yaw * RAD2DEG,
       msg->header.stamp.sec, msg->header.stamp.nanosec);
   }

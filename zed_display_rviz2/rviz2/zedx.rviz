@@ -74,8 +74,7 @@ Visualization Manager:
         Value: /zedx/robot_description
       Enabled: true
       Links:
-        All Links Enabled:
-          {}
+        All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
@@ -92,6 +91,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         zedx_left_camera_frame:
           Alpha: 1
           Show Axes: false
@@ -221,7 +221,7 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: RGB8
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Max Intensity: 4096
@@ -242,7 +242,7 @@ Visualization Manager:
             Value: /zedx/zed_node/point_cloud/cloud_registered
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
+          Value: false
       Enabled: true
       Name: Depth
     - Class: rviz_common/Group
@@ -630,25 +630,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 2.1345221996307373
+      Distance: 1.652974009513855
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.32347729802131653
-        Y: 0.5254694223403931
-        Z: 0.4662867784500122
+        X: 0.23551030457019806
+        Y: 0.39590129256248474
+        Z: 0.32887372374534607
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.09020400047302246
+      Pitch: 0.18520395457744598
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.8385579586029053
+      Yaw: 2.7185568809509277
     Saved: ~
 Window Geometry:
   Confidence:

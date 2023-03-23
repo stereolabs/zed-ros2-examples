@@ -30,7 +30,7 @@ void imageRightRectifiedCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
   RCLCPP_INFO(
     g_node->get_logger(),
-    "Right Rectified image received from ZED\tSize: %dx%d - Timestamp: %u.%u sec ", msg->width,
+    "Right Rectified image received from ZED\tSize: %dx%d - Ts: %u.%u sec ", msg->width,
     msg->height, msg->header.stamp.sec, msg->header.stamp.nanosec);
 }
 
@@ -38,7 +38,7 @@ void imageLeftRectifiedCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
   RCLCPP_INFO(
     g_node->get_logger(),
-    "Left  Rectified image received from ZED\tSize: %dx%d - Timestamp: %u.%u sec ", msg->width,
+    "Left  Rectified image received from ZED\tSize: %dx%d - Ts: %u.%u sec ", msg->width,
     msg->height, msg->header.stamp.sec, msg->header.stamp.nanosec);
 }
 

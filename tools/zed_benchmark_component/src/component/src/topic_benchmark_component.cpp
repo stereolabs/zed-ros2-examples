@@ -119,7 +119,7 @@ void TopicBenchmarkComponent::updateTopicInfo()
           get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
 
         std::shared_ptr<rclcpp::GenericSubscription> sub = create_generic_subscription(
-          mTopicName, topic_type, rclcpp::SensorDataQoS(),
+          mTopicName, topic_type, rclcpp::SystemDefaultsQoS(),
           std::bind(&TopicBenchmarkComponent::topicCallback, this, _1));
 
         mSubMap[topic_type] = sub;
