@@ -3,7 +3,7 @@
 namespace zed_gnss_tutorial {
 
     ZedGnssTutorialNode::ZedGnssTutorialNode(const rclcpp::NodeOptions & options) : nav2_util::LifecycleNode("zed_gnss_tutorial_node","",options){
-
+        //Configure callback group
     }
 
     ZedGnssTutorialNode::~ZedGnssTutorialNode(){
@@ -11,10 +11,17 @@ namespace zed_gnss_tutorial {
     }
 
     nav2_util::CallbackReturn ZedGnssTutorialNode::on_configure(const rclcpp_lifecycle::State & /*state*/){
+
+        // get parameters
+        //Configure sub
+        //Configure srv
+
         return nav2_util::CallbackReturn::SUCCESS;
     }
     
     nav2_util::CallbackReturn ZedGnssTutorialNode::on_activate(const rclcpp_lifecycle::State & /*state*/){
+
+        createBond();
         return nav2_util::CallbackReturn::SUCCESS;
     }
     

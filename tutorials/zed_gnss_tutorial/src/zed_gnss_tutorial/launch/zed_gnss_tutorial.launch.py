@@ -39,7 +39,7 @@ def generate_launch_description():
             executable='lifecycle_manager',
             name='zed_gnss_tutorial_node_manager',
             output='both',
-            parameters=[{'autostart': False},
+            parameters=[{'autostart': True},
                         {'node_names': ['zed_gnss_tutorial_node']},
                         {'bond_timeout': 4.0}],
             )

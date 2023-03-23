@@ -16,6 +16,10 @@ find_package(nav2_util REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(nav2_lifecycle_manager REQUIRED)
+find_package(geographic_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(robot_localization REQUIRED)
 
 include_directories(include)
 
@@ -31,6 +35,10 @@ ament_target_dependencies(zed_gnss_tutorial_lib
     lifecycle_msgs
     rclcpp_components
     nav2_lifecycle_manager
+    geographic_msgs
+    tf2
+    tf2_ros
+    robot_localization
 )
 
 rclcpp_components_register_nodes(zed_gnss_tutorial_lib "zed_gnss_tutorial::ZedGnssTutorialNode")

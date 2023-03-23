@@ -15,6 +15,10 @@
   <build_depend>lifecycle_msgs</build_depend>
   <build_depend>rclcpp_components</build_depend>
   <build_depend>nav2_lifecycle_manager</build_depend>
+  <build_depend>geographic_msgs</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>robot_localization</build_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
