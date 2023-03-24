@@ -1,7 +1,7 @@
 #include "zed_gnss_tutorial/zed_gnss_tutorial.hpp"
 
 // TODO: deal with qos
-// TODO: Check transitions
+// TODO: Check transitions and sync
 // TODO: Add ros2 wrapper, gps driver and rviz to launch file
 // TODO: linter, comment and refactor
 // TODO: Destructor, shutdown and error func
@@ -134,6 +134,8 @@ namespace zed_gnss_tutorial {
     }
 
     void ZedGnssTutorialNode::timer_callback(){
+
+        RCLCPP_INFO(get_logger(),"***** Timer Callback *****");
 
         if (mSubGeoPoseStamped->get_publisher_count()==0){
             RCLCPP_ERROR(get_logger(),"No publisher for %s has been registered",geopose_topic_name_.c_str());
