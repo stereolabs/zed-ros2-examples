@@ -1,0 +1,9 @@
+/**:
+    ros__parameters:
+
+      target_frame_name: 'base_link'
+      source_frame_name: 'map'
+      geopose_topic_name: '/FrontLeftCamera/zed_node/geo_pose'
+      fromll_service_name: '/FrontLeftCamera/zed_node/fromLL'
+      toll_service_name: '/FrontLeftCamera/zed_node/toLL'
+      timer_period_sec: 5

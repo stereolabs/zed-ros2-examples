@@ -8,7 +8,7 @@ from launch_ros.descriptions import ComposableNode
 
 def generate_launch_description():
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default = False)
+    use_sim_time = LaunchConfiguration('use_sim_time', default = True)
 
     zed_gnss_tutorial_config_path = LaunchConfiguration(
         'zed_gnss_tutorial_config_path',
@@ -25,7 +25,7 @@ def generate_launch_description():
                       plugin = 'zed_gnss_tutorial::ZedGnssTutorialNode',
                       name = 'zed_gnss_tutorial_node',
                       parameters = [
-                        #zed_gnss_tutorial_config_path,
+                        zed_gnss_tutorial_config_path,
                         {'use_sim_time': use_sim_time}
                         ],
                       extra_arguments = [{'use_intra_process_comms': True}]
@@ -39,7 +39,8 @@ def generate_launch_description():
             executable='lifecycle_manager',
             name='zed_gnss_tutorial_node_manager',
             output='both',
-            parameters=[{'autostart': True},
+            parameters=[{'use_sim_time': use_sim_time},
+                        {'autostart': True},
                         {'node_names': ['zed_gnss_tutorial_node']},
                         {'bond_timeout': 4.0}],
             )

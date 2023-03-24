@@ -1,0 +1,7 @@
+nmea_navsat_driver:
+  ros__parameters:
+    port: "/dev/ttyACM0"
+    baud: 9600
+    frame_id: "gnss_link"
+    time_ref_source: "gnss_link"
+    useRMC: False

@@ -28,18 +28,34 @@ namespace zed_gnss_tutorial{
         nav2_util::CallbackReturn on_shutdown(const rclcpp_lifecycle::State & /*state*/) override;
 
         private:
-        
-        std::shared_ptr<rclcpp::CallbackGroup> callback_group_;
-        std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> single_executor_;
-        std::unique_ptr<std::thread> thread_;
 
-        std::shared_ptr<rclcpp::Subscription<geographic_msgs::msg::GeoPoseStamped>> mSubGeoPoseStamped;
+        void geopose_callback(const geographic_msgs::msg::GeoPoseStamped::SharedPtr msg);
+        void timer_callback();
+        void declare_params();
+        void get_params();
+        
+        rclcpp::CallbackGroup::SharedPtr callback_group_;
+        rclcpp::executors::SingleThreadedExecutor single_executor_;
+        std::thread thread_;
+
+        rclcpp::Subscription<geographic_msgs::msg::GeoPoseStamped>::SharedPtr mSubGeoPoseStamped;
 
         std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
         std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
-        std::shared_ptr<rclcpp::Client<robot_localization::srv::FromLL>> from_ll_to_map_client_;
-        std::shared_ptr<rclcpp::Client<robot_localization::srv::ToLL>> fmap_to_ll_client_;
+        rclcpp::Client<robot_localization::srv::FromLL>::SharedPtr from_ll_to_map_client_; 
+        rclcpp::Client<robot_localization::srv::ToLL>::SharedPtr to_ll_from_map_client_;
+
+        rclcpp::TimerBase::SharedPtr timer_;
+
+        geographic_msgs::msg::GeoPoseStamped latest_geopose_msg_;
+
+        std::string target_frame_name_{"base_link"};
+        std::string source_frame_name_{"map"};
+        std::string geopose_topic_name_{"geo_pose"};
+        std::string fromll_service_name_{"fromLL"};
+        std::string toll_service_name_{"toLL"};
+        int timer_period_sec_{5};
     };
 }
 #endif
