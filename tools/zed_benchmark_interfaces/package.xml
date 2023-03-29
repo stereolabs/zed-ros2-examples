@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
 	<name>zed_topic_benchmark_interfaces</name>
-	<version>0.1.0</version>
+	<version>3.8.2</version>
 	<description>Contains message and service definitions used by the ZED ROS2 topic benchmark tool.</description>
 	<maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
 	<license>Apache License 2.0</license>
