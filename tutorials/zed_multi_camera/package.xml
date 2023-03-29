@@ -2,7 +2,7 @@
 <!-- Package format 3 according to http://www.ros.org/reps/rep-0149.html -->
 <package format="3">
 	<name>zed_multi_camera</name>
-	<version>0.1.0</version>
+	<version>4.0.0</version>
 	<description> This package is a tutorial showing how to configure a multi-camera system.</description>
 	<maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
 	<license>Apache License 2.0</license>
