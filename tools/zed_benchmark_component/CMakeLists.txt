@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 project(zed_topic_benchmark_component)
 
 ## Generate symbols for IDE indexer

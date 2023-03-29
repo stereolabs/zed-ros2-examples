@@ -2,8 +2,6 @@
 
 # Stereolabs ZED Camera - ROS2 Tutorials and Examples
 
-# NOTE - THIS IS A BETA VERSION FOR DEVELOPMENT ONLY TO BE USED WITH ZED SDK V4.0-BETA
-
 This package is a collection of examples and tutorials to illustrate how to better use the ZED cameras in the ROS2 framework
 
 [More information](https://www.stereolabs.com/docs/ros2/)

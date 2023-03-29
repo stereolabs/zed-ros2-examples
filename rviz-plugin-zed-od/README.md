@@ -14,9 +14,9 @@ is required to correctly execute the ROS node to acquire data from a Stereolabs 
 
 ### Prerequisites
 
-   - Ubuntu 20.04
-   - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.3 or later
-   - [ROS2 ROS 2 Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
+- ROS2 Foxy Fitxroy or ROS2 Humble Hawksbill: 
+  - [Foxy on Ubuntu 20.04](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
+  - [Humble on Ubuntu 22.04](https://docs.ros.org/en/humble/Installation/Linux-Install-Debians.html)
 
 ### Installation
 
