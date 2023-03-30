@@ -74,10 +74,10 @@ void TopicBenchmarkComponent::getParam(
 
   if (!get_parameter(paramName, outVal)) {
     RCLCPP_WARN_STREAM(
-      get_logger(), "The parameter '"
-        << paramName
-        << "' is not available or is not valid, using the default value: "
-        << defValue);
+      get_logger(), "The parameter '" <<
+        paramName <<
+        "' is not available or is not valid, using the default value: " <<
+        defValue);
   }
 
   if (!log_info.empty()) {
@@ -119,7 +119,7 @@ void TopicBenchmarkComponent::updateTopicInfo()
           get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
 
         std::shared_ptr<rclcpp::GenericSubscription> sub = create_generic_subscription(
-          mTopicName, topic_type, rclcpp::SensorDataQoS(),
+          mTopicName, topic_type, rclcpp::SystemDefaultsQoS(),
           std::bind(&TopicBenchmarkComponent::topicCallback, this, _1));
 
         mSubMap[topic_type] = sub;
@@ -161,10 +161,10 @@ void TopicBenchmarkComponent::topicCallback(std::shared_ptr<rclcpp::SerializedMe
   double bw = freq * bw_scale * msg->size();
   double bw_avg = avg_freq * bw_scale * msg->size();
 
-  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount
-            << " - Freq: " << freq << " Hz (Avg: " << avg_freq << " Hz) - Bandwidth: " << bw
-            << " Mbps (Avg: " << bw_avg << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.)
-            << " MB" << std::flush;
+  std::cout << '\r' << std::fixed << std::setprecision(2) << "#" << ++mTopicCount <<
+    " - Freq: " << freq << " Hz (Avg: " << avg_freq << " Hz) - Bandwidth: " << bw <<
+    " Mbps (Avg: " << bw_avg << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) <<
+    " MB" << std::flush;
 
   // std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
 

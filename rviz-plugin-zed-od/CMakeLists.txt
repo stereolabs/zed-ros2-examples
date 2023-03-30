@@ -91,7 +91,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
 
 find_package(rviz_common REQUIRED)
 find_package(rviz_rendering REQUIRED)
@@ -115,20 +116,21 @@ add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 ###############################################################################
 # INCLUDES and LIBS
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include
 )
 ###############################################################################
 # SOURCES
-set(PLUGIN_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_display.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_info.cpp
+set(PLUGIN_SRC  
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_display.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_info.cpp
 )
 
 set(PLUGIN_INC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/visibility_control.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_display.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_info.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include/visibility_control.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_body_parts.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_display.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_info.hpp
 )
 
 ###############################################################################

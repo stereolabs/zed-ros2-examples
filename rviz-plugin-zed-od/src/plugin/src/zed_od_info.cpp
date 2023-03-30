@@ -330,7 +330,7 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     if (obj.body_format == 0) {
       size_t idx = 0;
-      for (auto & limb : BODY_BONES_18) {
+      for (auto & limb : BODY_18_BONES) {
         linePtr link;
 
         if (create) {
@@ -362,7 +362,71 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
       }
     } else if (obj.body_format == 1) {
       size_t idx = 0;
-      for (auto & limb : BODY_BONES_34) {
+      for (auto & limb : BODY_34_BONES) {
+        linePtr link;
+
+        if (create) {
+          link = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mSkelSceneNode);
+          link->setColor(mColorSkel.r, mColorSkel.g, mColorSkel.b, mColorSkel.a);
+          link->setLineWidth(mLinkSize * mSkelScale);
+          mSkelLinks.push_back(link);
+        } else {
+          link = mSkelLinks[idx];
+        }
+        idx++;
+
+        Ogre::Vector3 start, end;
+        start[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
+        start[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
+        start[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
+
+        end[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[0];
+        end[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[1];
+        end[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[2];
+        if (qIsNaN(start[0]) || qIsNaN(end[0]) || !mShowSkel) {
+          link->setLineWidth(0.f);
+        } else {
+          link->setLineWidth(mLinkSize * mSkelScale);
+          link->clear();
+          link->addPoint(start);
+          link->addPoint(end);
+        }
+      }
+    } else if (obj.body_format == 2) {
+      size_t idx = 0;
+      for (auto & limb : BODY_38_BONES) {
+        linePtr link;
+
+        if (create) {
+          link = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mSkelSceneNode);
+          link->setColor(mColorSkel.r, mColorSkel.g, mColorSkel.b, mColorSkel.a);
+          link->setLineWidth(mLinkSize * mSkelScale);
+          mSkelLinks.push_back(link);
+        } else {
+          link = mSkelLinks[idx];
+        }
+        idx++;
+
+        Ogre::Vector3 start, end;
+        start[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
+        start[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
+        start[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
+
+        end[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[0];
+        end[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[1];
+        end[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[2];
+        if (qIsNaN(start[0]) || qIsNaN(end[0]) || !mShowSkel) {
+          link->setLineWidth(0.f);
+        } else {
+          link->setLineWidth(mLinkSize * mSkelScale);
+          link->clear();
+          link->addPoint(start);
+          link->addPoint(end);
+        }
+      }
+    } else if (obj.body_format == 3) {
+      size_t idx = 0;
+      for (auto & limb : BODY_70_BONES) {
         linePtr link;
 
         if (create) {

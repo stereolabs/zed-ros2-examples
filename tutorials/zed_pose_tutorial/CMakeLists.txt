@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 project(zed_tutorial_pos_tracking)
 
 ## Generate symbols for IDE indexer
@@ -54,7 +54,9 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 # dependencies
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)

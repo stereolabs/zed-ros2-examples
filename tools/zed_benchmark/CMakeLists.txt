@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 project(zed_topic_benchmark)
 
 ## Generate symbols for IDE indexer
@@ -58,7 +58,9 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
     zed_topic_benchmark_component
   )
 
-  find_package(ament_cmake REQUIRED)
+  find_package(ament_cmake_auto REQUIRED)
+  ament_auto_find_build_dependencies()
+  
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
   find_package(zed_topic_benchmark_component REQUIRED)
