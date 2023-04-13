@@ -24,8 +24,12 @@
 
 using namespace std::placeholders;
 
+
 namespace stereolabs
 {
+
+const int QOS_QUEUE_SIZE = 100;
+
 TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions & options)
 : rclcpp::Node("topic_benchmark", options)
 {
@@ -33,9 +37,13 @@ TopicBenchmarkComponent::TopicBenchmarkComponent(const rclcpp::NodeOptions & opt
 
   init();
 
+  auto pub_opt = rclcpp::PublisherOptions();
+  pub_opt.qos_overriding_options =
+    rclcpp::QosOverridingOptions::with_default_policies();
+
   std::string pub_topic_name = /*std::string("~/") + */ mTopicName + std::string("_stats");
   mPub = create_publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>(
-    pub_topic_name, rclcpp::SensorDataQoS());
+    pub_topic_name, rclcpp::QoS(QOS_QUEUE_SIZE), pub_opt);
   RCLCPP_INFO_STREAM(get_logger(), "Advertised on topic: " << mPub->get_topic_name());
 }
 
@@ -97,7 +105,9 @@ void TopicBenchmarkComponent::getParameters()
       "e.g. 'ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p "
       "topic_name:=/zed2i/zed_node/rgb/image_rect_color'");
   }
-  getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
+  getParam(
+    "avg_win_size", mWinSize, mWinSize,
+    "Average window size: ");
   mAvgFreq.setNewSize(mWinSize);
 }
 
@@ -118,9 +128,13 @@ void TopicBenchmarkComponent::updateTopicInfo()
         RCLCPP_INFO_STREAM(
           get_logger(), "Found topic: '" << mTopicName << "' of type: '" << topic_type << "'");
 
+        auto sub_opt = rclcpp::SubscriptionOptions();
+        sub_opt.qos_overriding_options =
+          rclcpp::QosOverridingOptions::with_default_policies();
+
         std::shared_ptr<rclcpp::GenericSubscription> sub = create_generic_subscription(
-          mTopicName, topic_type, rclcpp::SystemDefaultsQoS(),
-          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1));
+          mTopicName, topic_type, rclcpp::QoS(QOS_QUEUE_SIZE),
+          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1), sub_opt);
 
         mSubMap[topic_type] = sub;
       }

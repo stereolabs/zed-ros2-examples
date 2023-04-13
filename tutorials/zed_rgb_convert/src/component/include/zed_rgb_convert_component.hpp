@@ -50,7 +50,7 @@ private:
   image_transport::CameraSubscriber mSubBgra;
 
   // QoS parameters
-  rclcpp::QoS mVideoQos;
+  rclcpp::QoS mDefaultQoS;
 };
 
 }  // namespace stereolabs
