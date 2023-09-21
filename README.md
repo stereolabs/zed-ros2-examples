@@ -27,6 +27,7 @@ Open a terminal, clone the repository, update the dependencies and build the pac
     $ cd ~/ros2_ws/src/ #use your current ros2 workspace folder
     $ git clone https://github.com/stereolabs/zed-ros2-examples.git
     $ cd ../
+    $ apt update
     $ rosdep install --from-paths src --ignore-src -r -y
     $ colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
     $ source ~/.bashrc
