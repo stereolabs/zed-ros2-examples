@@ -29,6 +29,7 @@ Open a terminal, clone the repository, update the dependencies and build the pac
     $ cd ../
     $ apt update
     $ rosdep install --from-paths src --ignore-src -r -y
+    $ source /opt/ros/humble/setup.sh
     $ colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
     $ source ~/.bashrc
 
