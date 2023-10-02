@@ -34,13 +34,25 @@ If you own a ZED camera launch:
 
     $ ros2 launch zed_display_rviz2 display_zed.launch.py
 
+If you own a ZED 2 camera launch:
+
+    $ ros2 launch zed_display_rviz2 display_zed2.launch.py
+
+If you own a ZED 2i camera launch:
+
+    $ ros2 launch zed_display_rviz2 display_zed2i.launch.py
+
 If you own a ZED Mini camera launch:
 
     $ ros2 launch zed_display_rviz2 display_zedm.launch.py
 
-If you own a ZED 2 camera launch:
+If you own a ZED X camera launch:
 
-    $ ros2 launch zed_display_rviz2 display_zed2.launch.py
+    $ ros2 launch zed_display_rviz2 display_zedx.launch.py
+
+If you own a ZED X Mini camera launch:
+
+    $ ros2 launch zed_display_rviz2 display_zedxm.launch.py
 
 ![ZED rendering on Rviz](images/depthcloud-RGB.jpg)
 ![ZED rendering on Rviz](images/ZEDM-Rviz.jpg)
