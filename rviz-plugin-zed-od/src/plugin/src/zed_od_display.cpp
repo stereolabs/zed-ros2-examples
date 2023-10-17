@@ -126,7 +126,7 @@ void ZedOdDisplay::processMessage(zed_interfaces::msg::ObjectsStamped::ConstShar
 
 void ZedOdDisplay::createOrUpdateObject(zed_interfaces::msg::Object & obj)
 {
-  int16_t id = obj.label_id;
+  int16_t id = obj.instance_id;
   if (id == -1 && obj.tracking_available) {  // Not a valid ID?
     return;
   }
