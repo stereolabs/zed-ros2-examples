@@ -38,7 +38,7 @@ Launch command for a robot configuration with four cameras:
 
 
 ```
-$ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_left,zed_right,zed_back]' cam_models:='[zed2i,zed2,zed2,zed2i]' cam_serials:='[30001234,20001234,20004321,30004321]' cam_poses:='[[0.5,0.0,0.0,0.0,0.0,0.0],[0.0,0.3,0.0,0.0,1.571,0.0],[0.0,-0.3,0.0,0.0,-1.571,0.0],[-0.5,0.0,0.0,0.0,0.0,3.142]]'
+$ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[zed2i,zed2]' cam_serials:='[30001234,20001234]'
 ```
 
 
