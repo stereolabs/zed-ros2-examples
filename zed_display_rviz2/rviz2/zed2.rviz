@@ -66,7 +66,7 @@ Visualization Manager:
         Durability Policy: Transient Local
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /zed2/robot_description
+        Value: /zed/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -78,44 +78,44 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_baro_link:
+        zed_baro_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_base_link:
+        zed_base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_camera_center:
+        zed_camera_center:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        zed2_left_camera_frame:
+        zed_left_camera_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_left_camera_optical_frame:
+        zed_left_camera_optical_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_mag_link:
+        zed_mag_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_right_camera_frame:
+        zed_right_camera_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_right_camera_optical_frame:
+        zed_right_camera_optical_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_temp_left_link:
+        zed_temp_left_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed2_temp_right_link:
+        zed_temp_right_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -140,7 +140,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/rgb/image_rect_color
+            Value: /zed/zed_node/rgb/image_rect_color
           Value: true
           Visibility:
             Depth:
@@ -191,7 +191,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/stereo/image_rect_color
+            Value: /zed/zed_node/stereo/image_rect_color
           Value: false
       Enabled: true
       Name: Video
@@ -209,7 +209,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/depth/depth_registered
+            Value: /zed/zed_node/depth/depth_registered
           Value: true
         - Class: rviz_default_plugins/Image
           Enabled: false
@@ -223,7 +223,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/confidence/confidence_map
+            Value: /zed/zed_node/confidence/confidence_map
           Value: false
         - Alpha: 1
           Autocompute Intensity Bounds: true
@@ -255,7 +255,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/point_cloud/cloud_registered
+            Value: /zed/zed_node/point_cloud/cloud_registered
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -274,27 +274,27 @@ Visualization Manager:
               Value: true
             odom:
               Value: true
-            zed2_baro_link:
+            zed_baro_link:
               Value: true
-            zed2_base_link:
+            zed_base_link:
               Value: true
-            zed2_camera_center:
+            zed_camera_center:
               Value: true
-            zed2_imu_link:
+            zed_imu_link:
               Value: true
-            zed2_left_camera_frame:
+            zed_left_camera_frame:
               Value: false
-            zed2_left_camera_optical_frame:
+            zed_left_camera_optical_frame:
               Value: false
-            zed2_mag_link:
+            zed_mag_link:
               Value: true
-            zed2_right_camera_frame:
+            zed_right_camera_frame:
               Value: false
-            zed2_right_camera_optical_frame:
+            zed_right_camera_optical_frame:
               Value: false
-            zed2_temp_left_link:
+            zed_temp_left_link:
               Value: true
-            zed2_temp_right_link:
+            zed_temp_right_link:
               Value: true
           Marker Scale: 0.30000001192092896
           Name: TF
@@ -305,23 +305,23 @@ Visualization Manager:
             map:
               odom:
                 base_link:
-                  zed2_base_link:
-                    zed2_camera_center:
-                      zed2_baro_link:
+                  zed_base_link:
+                    zed_camera_center:
+                      zed_baro_link:
                         {}
-                      zed2_left_camera_frame:
-                        zed2_imu_link:
+                      zed_left_camera_frame:
+                        zed_imu_link:
                           {}
-                        zed2_left_camera_optical_frame:
+                        zed_left_camera_optical_frame:
                           {}
-                        zed2_temp_left_link:
+                        zed_temp_left_link:
                           {}
-                      zed2_mag_link:
+                      zed_mag_link:
                         {}
-                      zed2_right_camera_frame:
-                        zed2_right_camera_optical_frame:
+                      zed_right_camera_frame:
+                        zed_right_camera_optical_frame:
                           {}
-                        zed2_temp_right_link:
+                        zed_temp_right_link:
                           {}
           Update Interval: 0.20000000298023224
           Value: true
@@ -343,7 +343,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/pose
+            Value: /zed/zed_node/pose
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -371,7 +371,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/path_map
+            Value: /zed/zed_node/path_map
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -399,7 +399,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/path_odom
+            Value: /zed/zed_node/path_odom
           Value: true
       Enabled: true
       Name: Position
@@ -435,7 +435,7 @@ Visualization Manager:
             Filter size: 1
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/mapping/fused_cloud
+            Value: /zed/zed_node/mapping/fused_cloud
           Use Fixed Frame: true
           Use rainbow: true
           Value: false
@@ -462,7 +462,7 @@ Visualization Manager:
             Filter size: 1
             History Policy: System Default
             Reliability Policy: System Default
-            Value: /zed2/zed_node/local_map/gridmap
+            Value: /zed/zed_node/local_map/gridmap
           Use Rainbow: false
           Value: false
         - Alpha: 1
@@ -498,7 +498,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/local_map/elev_img
+            Value: /zed/zed_node/local_map/elev_img
           Value: false
         - Class: rviz_default_plugins/Image
           Enabled: false
@@ -512,7 +512,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/local_map/col_img
+            Value: /zed/zed_node/local_map/col_img
           Value: false
         - Class: rviz_default_plugins/Marker
           Enabled: true
@@ -525,7 +525,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/plane_marker
+            Value: /zed/plane_marker
           Value: true
       Enabled: true
       Name: Mapping
@@ -546,7 +546,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/obj_det/objects
+            Value: /zed/zed_node/obj_det/objects
           Transparency: 0
           Value: true
         - Class: rviz_plugin_zed_od/ZedOdDisplay
@@ -564,7 +564,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/body_trk/skeletons
+            Value: /zed/zed_node/body_trk/skeletons
           Transparency: 0
           Value: true
       Enabled: true
@@ -601,7 +601,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/atm_press
+            Value: /zed/zed_node/atm_press
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -635,7 +635,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/temperature/imu
+            Value: /zed/zed_node/temperature/imu
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -669,7 +669,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/temperature/left
+            Value: /zed/zed_node/temperature/left
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -703,7 +703,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed2/zed_node/temperature/right
+            Value: /zed/zed_node/temperature/right
           Use Fixed Frame: true
           Use rainbow: true
           Value: true

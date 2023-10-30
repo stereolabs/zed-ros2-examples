@@ -68,7 +68,7 @@ Visualization Manager:
         Durability Policy: Transient Local
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /zedxm/robot_description
+        Value: /zed/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -80,28 +80,28 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zedxm_base_link:
+        zed_base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zedxm_camera_center:
+        zed_camera_center:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        zedxm_left_camera_frame:
+        zed_left_camera_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zedxm_left_camera_optical_frame:
+        zed_left_camera_optical_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zedxm_right_camera_frame:
+        zed_right_camera_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zedxm_right_camera_optical_frame:
+        zed_right_camera_optical_frame:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -126,7 +126,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/rgb/image_rect_color
+            Value: /zed/zed_node/rgb/image_rect_color
           Value: true
           Visibility:
             Depth:
@@ -172,7 +172,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/stereo/image_rect_color
+            Value: /zed/zed_node/stereo/image_rect_color
           Value: false
       Enabled: true
       Name: Video
@@ -190,7 +190,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/depth/depth_registered
+            Value: /zed/zed_node/depth/depth_registered
           Value: true
         - Class: rviz_default_plugins/Image
           Enabled: false
@@ -204,7 +204,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/confidence/confidence_map
+            Value: /zed/zed_node/confidence/confidence_map
           Value: false
         - Alpha: 0.699999988079071
           Autocompute Intensity Bounds: true
@@ -236,7 +236,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/point_cloud/cloud_registered
+            Value: /zed/zed_node/point_cloud/cloud_registered
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -255,19 +255,19 @@ Visualization Manager:
               Value: false
             odom:
               Value: false
-            zedxm_base_link:
+            zed_base_link:
               Value: true
-            zedxm_camera_center:
+            zed_camera_center:
               Value: true
-            zedxm_imu_link:
+            zed_imu_link:
               Value: false
-            zedxm_left_camera_frame:
+            zed_left_camera_frame:
               Value: false
-            zedxm_left_camera_optical_frame:
+            zed_left_camera_optical_frame:
               Value: false
-            zedxm_right_camera_frame:
+            zed_right_camera_frame:
               Value: false
-            zedxm_right_camera_optical_frame:
+            zed_right_camera_optical_frame:
               Value: false
           Marker Scale: 0.30000001192092896
           Name: TF
@@ -278,15 +278,15 @@ Visualization Manager:
             map:
               odom:
                 base_link:
-                  zedxm_base_link:
-                    zedxm_camera_center:
-                      zedxm_left_camera_frame:
-                        zedxm_imu_link:
+                  zed_base_link:
+                    zed_camera_center:
+                      zed_left_camera_frame:
+                        zed_imu_link:
                           {}
-                        zedxm_left_camera_optical_frame:
+                        zed_left_camera_optical_frame:
                           {}
-                      zedxm_right_camera_frame:
-                        zedxm_right_camera_optical_frame:
+                      zed_right_camera_frame:
+                        zed_right_camera_optical_frame:
                           {}
           Update Interval: 0.20000000298023224
           Value: true
@@ -308,7 +308,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/pose
+            Value: /zed/zed_node/pose
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -336,7 +336,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/path_map
+            Value: /zed/zed_node/path_map
           Value: true
         - Alpha: 1
           Buffer Length: 1
@@ -364,7 +364,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/path_odom
+            Value: /zed/zed_node/path_odom
           Value: true
       Enabled: true
       Name: Position
@@ -400,7 +400,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/mapping/fused_cloud
+            Value: /zed/zed_node/mapping/fused_cloud
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -415,7 +415,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/plane_marker
+            Value: /zed/plane_marker
           Value: true
       Enabled: true
       Name: Mapping
@@ -436,7 +436,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/obj_det/objects
+            Value: /zed/zed_node/obj_det/objects
           Transparency: 0.25
           Value: true
       Enabled: true
@@ -473,7 +473,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/atm_press
+            Value: /zed/zed_node/atm_press
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -507,7 +507,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/temperature/imu
+            Value: /zed/zed_node/temperature/imu
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -541,7 +541,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/temperature/left
+            Value: /zed/zed_node/temperature/left
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -575,7 +575,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zedxm/zed_node/temperature/right
+            Value: /zed/zed_node/temperature/right
           Use Fixed Frame: true
           Use rainbow: true
           Value: true

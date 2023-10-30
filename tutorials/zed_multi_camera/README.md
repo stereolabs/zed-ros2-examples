@@ -9,7 +9,7 @@ The example launch file `zed_multi_camera.launch.py` allows to dynamically confi
 
 The number of ZED nodes to start is infered by the size of the parameters passed to the launch file from the command line. 
 
-**Note:** The TF broadcasting is disabled for all the cameras, but the first which is normally configured to publish the `map` -> `odom` -> `base_link` TF chain for the full system, unless `disable_tf` is set to `False`.
+**Note:** The TF broadcasting is disabled for all the cameras, but the first which is normally configured to publish the `map` -> `odom` -> `camera_link` TF chain for the full system, unless `disable_tf` is set to `False`.
 
 All the parameter arrays must have the same size:
 
