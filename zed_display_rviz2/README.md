@@ -30,29 +30,9 @@ Install the [zed-ros2-examples](https://github.com/stereolabs/zed-ros2-examples)
 
 ### Execution
 
-If you own a ZED camera launch:
+    $ ros2 launch zed_display_rviz2 display_zed_cam.launch.py camera_model:=<camera_model>
 
-    $ ros2 launch zed_display_rviz2 display_zed.launch.py
-
-If you own a ZED 2 camera launch:
-
-    $ ros2 launch zed_display_rviz2 display_zed2.launch.py
-
-If you own a ZED 2i camera launch:
-
-    $ ros2 launch zed_display_rviz2 display_zed2i.launch.py
-
-If you own a ZED Mini camera launch:
-
-    $ ros2 launch zed_display_rviz2 display_zedm.launch.py
-
-If you own a ZED X camera launch:
-
-    $ ros2 launch zed_display_rviz2 display_zedx.launch.py
-
-If you own a ZED X Mini camera launch:
-
-    $ ros2 launch zed_display_rviz2 display_zedxm.launch.py
+Please replace `<camera_model>` with the model of the camera that you are using: `'zed'`, `'zedm'`, `'zed2'`, `'zed2i'`, `'zedx'`, `'zedxm'`.
 
 ![ZED rendering on Rviz](images/depthcloud-RGB.jpg)
 ![ZED rendering on Rviz](images/ZEDM-Rviz.jpg)

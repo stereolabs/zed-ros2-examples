@@ -4,16 +4,18 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /RobotModel1
         - /RobotModel1/Description Topic1
         - /Video1/Stereo1/Topic1
         - /Depth1/Depth Map1/Topic1
+        - /Position1
+        - /Position1/TF1
         - /Position1/TF1/Frames1
         - /Position1/Pose1/Topic1
         - /Position1/Pose Path1/Topic1
         - /Position1/Odom Path1/Topic1
         - /Mapping1/Global 3D Map1/Topic1
         - /Mapping1/Local Cost Map1/Topic1
-        - /Detection1
         - /Detection1/Objects1
         - /Sensors1/IMU Temperature1/Topic1
         - /Sensors1/Left Temperature1/Topic1
@@ -54,7 +56,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 1
+    - Alpha: 0.75
       Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
       Description File: ""
@@ -66,12 +68,43 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /zed/robot_description
       Enabled: true
-      Links:
+      Link Tree:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
+        Link Tree Style: Tree of links
+        zed_camera_link:
+          Details:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          zed_camera_center:
+            Details:
+              Alpha: 1
+              Show Axes: false
+              Show Trail: false
+            Value: true
+            zed_left_camera_frame:
+              Details:
+                Alpha: 1
+                Show Axes: false
+                Show Trail: false
+              zed_left_camera_optical_frame:
+                Details:
+                  Alpha: 1
+                  Show Axes: false
+                  Show Trail: false
+            zed_right_camera_frame:
+              Details:
+                Alpha: 1
+                Show Axes: false
+                Show Trail: false
+              zed_right_camera_optical_frame:
+                Details:
+                  Alpha: 1
+                  Show Axes: false
+                  Show Trail: false
       Mass Properties:
         Inertia: false
         Mass: false
@@ -97,9 +130,7 @@ Visualization Manager:
           Value: false
           Visibility:
             Depth:
-              Confidence: true
-              Depth Map: true
-              Loc. Point Cloud: true
+              "": true
               Value: false
             Detection:
               "": true
@@ -217,15 +248,17 @@ Visualization Manager:
               Value: true
             zed_camera_link:
               Value: true
+            zed_imu_link:
+              Value: true
             zed_left_camera_frame:
               Value: true
             zed_left_camera_optical_frame:
-              Value: true
+              Value: false
             zed_right_camera_frame:
               Value: true
             zed_right_camera_optical_frame:
-              Value: true
-          Marker Scale: 0.30000001192092896
+              Value: false
+          Marker Scale: 0.15000000596046448
           Name: TF
           Show Arrows: true
           Show Axes: true
@@ -236,6 +269,8 @@ Visualization Manager:
                 zed_camera_link:
                   zed_camera_center:
                     zed_left_camera_frame:
+                      zed_imu_link:
+                        {}
                       zed_left_camera_optical_frame:
                         {}
                     zed_right_camera_frame:
@@ -248,7 +283,7 @@ Visualization Manager:
           Axes Radius: 0.10000000149011612
           Class: rviz_default_plugins/Pose
           Color: 25; 255; 25
-          Enabled: true
+          Enabled: false
           Head Length: 0.05000000074505806
           Head Radius: 0.029999999329447746
           Name: Pose
@@ -262,12 +297,12 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/pose
-          Value: true
+          Value: false
         - Alpha: 1
           Buffer Length: 1
           Class: rviz_default_plugins/Path
           Color: 25; 255; 25
-          Enabled: true
+          Enabled: false
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.009999999776482582
@@ -290,12 +325,12 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/path_map
-          Value: true
+          Value: false
         - Alpha: 1
           Buffer Length: 1
           Class: rviz_default_plugins/Path
           Color: 255; 25; 25
-          Enabled: true
+          Enabled: false
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.009999999776482582
@@ -318,7 +353,7 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/path_odom
-          Value: true
+          Value: false
       Enabled: true
       Name: Position
     - Class: rviz_common/Group
@@ -445,7 +480,7 @@ Visualization Manager:
             Reliability Policy: Reliable
             Value: /zed/plane_marker
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Mapping
     - Class: rviz_common/Group
       Displays:
@@ -485,7 +520,7 @@ Visualization Manager:
             Value: /zed/zed_node/body_trk/skeletons
           Transparency: 0.25
           Value: false
-      Enabled: true
+      Enabled: false
       Name: Detection
     - Class: rviz_common/Group
       Displays:
@@ -673,25 +708,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 6.678455829620361
+      Distance: 3.435565233230591
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.1164137125015259
-        Y: -0.00856800563633442
-        Z: 0.17664067447185516
+        X: 0.9389320015907288
+        Y: -0.04114275053143501
+        Z: 0.3050636053085327
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.19479747116565704
+      Pitch: 0.2847973704338074
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 3.4050610065460205
+      Yaw: 2.525047779083252
     Saved: ~
 Window Geometry:
   Confidence:
