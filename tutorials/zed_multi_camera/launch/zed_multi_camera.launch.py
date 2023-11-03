@@ -44,25 +44,24 @@ def parse_array_param(param):
 def launch_setup(context, *args, **kwargs):
     
     # URDF/xacro file to be loaded by the Robot State Publisher node
-    multi_xacro_path = os.path.join(
+    multi_zed_xacro_path = os.path.join(
     get_package_share_directory('zed_multi_camera'),
     'urdf',
-    'zed_dual.urdf.xacro')
+    'zed_multi.urdf.xacro')
+
+    robot_description = Command(['xacro', ' ', multi_zed_xacro_path]).perform(context)
 
     # Robot State Publisher node
-    rsp_node = Node(
+    # this will publish the static reference link for a multi-camera configuration
+    # and all the joints. See 'urdf/zed_dual.urdf.xacro' as an example
+    multi_rsp_node = Node(
         package='robot_state_publisher',
         namespace='zed_multi',
         executable='robot_state_publisher',
         name='zed_multi_state_publisher',
         output='screen',
         parameters=[{
-            'robot_description': Command(
-                [
-                    'xacro', ' ', multi_xacro_path, ' ',
-                    'camera_name:=', camera_name_val, ' ',
-                    'camera_model:=', camera_model_val, ' '
-                ])
+            'robot_description': robot_description
         }]
     )
 
@@ -90,8 +89,11 @@ def launch_setup(context, *args, **kwargs):
                 text="The size of the `serials` param array must be equal to the size of `names`"))
         ]
 
+    # Add the robot_state_publisher node to the list of nodes to be started
+    actions = [multi_rsp_node]
+
+    # Set the first camera idx
     cam_idx = 0
-    actions = []
 
     for name in names_arr:
         model = models_arr[cam_idx]
