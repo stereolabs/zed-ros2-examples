@@ -24,7 +24,7 @@ namespace stereolabs
 {
 
 ZedRgbCvtComponent::ZedRgbCvtComponent(const rclcpp::NodeOptions & options)
-: Node("zed_cvt_node", options), mVideoQos(1)
+: Node("zed_cvt_node", options), mDefaultQoS(1)
 {
   RCLCPP_INFO(get_logger(), "********************************");
   RCLCPP_INFO(get_logger(), " ZED BGRA2BGA Convert Component ");
@@ -43,19 +43,19 @@ ZedRgbCvtComponent::ZedRgbCvtComponent(const rclcpp::NodeOptions & options)
 
   // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
-  mVideoQos.keep_last(10);
-  mVideoQos.reliable();
-  mVideoQos.durability_volatile();
+  mDefaultQoS.keep_last(10);
+  mDefaultQoS.reliable();
+  mDefaultQoS.durability_volatile();
 
   // Create camera pusblisher for converted image topic
   mPubBgr = image_transport::create_camera_publisher(
-    this, "~/zed_image_3ch", mVideoQos.get_rmw_qos_profile());
+    this, "~/zed_image_3ch", mDefaultQoS.get_rmw_qos_profile());
   RCLCPP_INFO_STREAM(get_logger(), "Advertised on topic: " << mPubBgr.getTopic());
 
   // Create camera subscriber
   mSubBgra = image_transport::create_camera_subscription(
     this, "zed_image_4ch", std::bind(&ZedRgbCvtComponent::camera_callback, this, _1, _2), "raw",
-    mVideoQos.get_rmw_qos_profile());
+    mDefaultQoS.get_rmw_qos_profile());
 
   RCLCPP_INFO_STREAM(get_logger(), "Subscribed on topic: " << mSubBgra.getTopic());
   RCLCPP_INFO_STREAM(get_logger(), "Subscribed on topic: " << mSubBgra.getInfoTopic());

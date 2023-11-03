@@ -80,7 +80,7 @@ endif()
 # Dependencies
 
 find_package(OpenCV REQUIRED)
-find_package(ZED 3 REQUIRED)
+find_package(ZED 4 REQUIRED)
 find_package(CUDA REQUIRED)
 
 set(DEPENDENCIES_COMP
