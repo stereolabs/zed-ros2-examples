@@ -85,7 +85,7 @@ the first camera is the reference for visual odometry processing and in ROS a jo
 
 The following image display the TF tree generated for the dual camera configuration of this tutorial:
 
-![](./images/frames.png)
+![](./image/frames.png)
 
 
 
