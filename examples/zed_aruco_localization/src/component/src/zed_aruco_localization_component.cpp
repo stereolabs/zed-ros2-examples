@@ -147,6 +147,33 @@ void ZedArucoLocComponent::camera_callback(
   RCLCPP_INFO_STREAM(get_logger(), " * Marker poses estimation: " << elapsed_sec << " sec");
   // <---- Estimate Marker positions
 
+  // ----> Draw and publish the results
+  if (res_sub) {
+    cv::aruco::drawDetectedMarkers(bgr, corners, ids);
+
+    // Create the output message and copy coverted data
+    std::shared_ptr<sensor_msgs::msg::Image> out_bgr = std::make_shared<sensor_msgs::msg::Image>();
+
+    out_bgr->header.stamp = img->header.stamp;
+    out_bgr->header.frame_id = img->header.frame_id;
+    out_bgr->height = bgr.rows;
+    out_bgr->width = bgr.cols;
+
+    int num = 1; // for endianness detection
+    out_bgr->is_bigendian = !(*reinterpret_cast<char *>(&num) == 1);
+
+    out_bgr->step = bgr.step;
+
+    size_t size = out_bgr->step * out_bgr->height;
+    out_bgr->data.resize(size);
+
+    out_bgr->encoding = sensor_msgs::image_encodings::BGR8;
+    memcpy(reinterpret_cast<char *>((&out_bgr->data[0])), &bgr.data[0], size);
+
+    // Publish the new image message coupled with camera info from the original message
+    _pubDetect.publish(out_bgr, cam_info);
+  }
+  // <---- Draw and publish the results
 
   // TODO 2. Coordinates transformation
   // TODO 3. `set_pose` service call

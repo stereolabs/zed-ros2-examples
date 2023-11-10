@@ -67,7 +67,7 @@ private:
 
   // ----> Parameters
   size_t _tagCount = 1; // Number of tags available in the environment
-  float _tagSize = 0.2; // Size of the tags
+  float _tagSize = 0.16; // Size of the tags [m]
   std::map<int, ArucoPose> _tagPoses; // Pose of each tag in the environment in World coordinates
   // <---- Parameters
 };
