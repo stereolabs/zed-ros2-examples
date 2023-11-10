@@ -26,6 +26,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <atomic>
 
 #include "aruco_loc_visibility_control.hpp"
 
@@ -61,6 +62,8 @@ private:
 
   // QoS parameters
   rclcpp::QoS _defaultQoS;
+
+  std::atomic<bool> _detRunning;
 
   // ----> Parameters
   size_t _tagCount = 1; // Number of tags available in the environment

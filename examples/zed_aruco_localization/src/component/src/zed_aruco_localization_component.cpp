@@ -16,6 +16,8 @@
 
 #include <sensor_msgs/image_encodings.hpp>
 
+#include "aruco.hpp"
+
 using namespace std::chrono_literals;
 using namespace std::placeholders;
 
@@ -23,7 +25,7 @@ namespace stereolabs
 {
 
 ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
-: Node("zed_aruco_loc_node", options), _defaultQoS(1)
+: Node("zed_aruco_loc_node", options), _defaultQoS(1), _detRunning(false)
 {
   RCLCPP_INFO(get_logger(), "*********************************");
   RCLCPP_INFO(get_logger(), " ZED ArUco Localization Component ");
@@ -72,9 +74,84 @@ void ZedArucoLocComponent::camera_callback(
     exit(EXIT_FAILURE);
   }
 
-  // TODO 1. ArUco detection
+  if (_detRunning) {
+    return;
+  }
+
+  _detRunning = true;
+
+  // Time statistics
+  rclcpp::Time start;
+  double elapsed_sec;
+
+
+  // Is result image subscribed?
+  bool res_sub = (_pubDetect.getNumSubscribers() > 0);
+
+  // ----> Check for correct input image encoding
+  if (img->encoding != sensor_msgs::image_encodings::BGRA8) {
+    RCLCPP_ERROR(get_logger(), "The input topic image requires 'BGRA8' encoding");
+    return;
+  }
+  // <---- Check for correct input image encoding
+
+  // ----> Convert BGRA image for processing by using OpenCV
+  start = get_clock()->now();
+  void * data = const_cast<void *>(reinterpret_cast<const void *>(&img->data[0]));
+  cv::Mat bgra(img->height, img->width, CV_8UC4, data);
+  cv::Mat bgr, gray; // bgr is used to publish the detection image, gray for ArUco processing
+
+  cv::cvtColor(bgra, gray, cv::COLOR_BGRA2GRAY);
+  if (res_sub) {
+    cv::cvtColor(bgra, bgr, cv::COLOR_BGRA2BGR);
+  }
+  elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
+  RCLCPP_INFO_STREAM(get_logger(), " * Color conversion: " << elapsed_sec << " sec");
+  // ----> Convert BGRA image for processing by using OpenCV
+
+  // ----> Detect ArUco Markers
+  start = get_clock()->now();
+  std::vector<int> ids;
+  std::vector<std::vector<cv::Point2f>> corners;
+
+  auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100);
+  cv::aruco::detectMarkers(bgr, dictionary, corners, ids);
+  elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
+  RCLCPP_INFO_STREAM(get_logger(), " * Marker detection: " << elapsed_sec << " sec");
+  // <---- Detect ArUco Markers
+
+  if (corners.empty()) {
+    return;
+  }
+
+  RCLCPP_INFO_STREAM(get_logger(), " * Detected tags: " << ids.size());
+
+  // ----> Refine the result
+  start = get_clock()->now();
+  for (size_t i = 0; i < corners.size(); ++i) {
+    cv::cornerSubPix(
+      gray, corners[i], cv::Size(5, 5), cv::Size(-1, -1),
+      cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
+  }
+  elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
+  if (corners.empty()) {
+    return;
+  }
+  RCLCPP_INFO_STREAM(get_logger(), " * Subpixel refinement: " << elapsed_sec << " sec");
+  // <---- Refine the result
+
+  // ----> Estimate Marker positions
+  start = get_clock()->now();
+  std::vector<cv::Vec3d> rvecs, tvecs;
+  cv::aruco::estimatePoseSingleMarkers(corners, _tagSize, cam_info->k, cam_info->d, rvecs, tvecs);
+  RCLCPP_INFO_STREAM(get_logger(), " * Marker poses estimation: " << elapsed_sec << " sec");
+  // <---- Estimate Marker positions
+
+
   // TODO 2. Coordinates transformation
   // TODO 3. `set_pose` service call
+
+  _detRunning = false;
 }
 
 }  // namespace stereolabs
