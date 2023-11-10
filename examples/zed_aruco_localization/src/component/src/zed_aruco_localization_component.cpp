@@ -47,7 +47,9 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
   _defaultQoS.durability_volatile();
 
   // Create image publisher
-  _pubDetect = image_transport::create_camera_publisher( this, "aruco_result", _defaultQoS.get_rmw_qos_profile());
+  _pubDetect = image_transport::create_camera_publisher(
+    this, "aruco_result",
+    _defaultQoS.get_rmw_qos_profile());
   RCLCPP_INFO_STREAM(get_logger(), "Advertised on topic: " << _pubDetect.getTopic());
   RCLCPP_INFO_STREAM(get_logger(), "Advertised on topic: " << _pubDetect.getInfoTopic());
 

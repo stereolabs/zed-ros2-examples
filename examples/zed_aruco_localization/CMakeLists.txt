@@ -35,6 +35,9 @@ if(ROS2_FOUND)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_IRON)
     else()
         message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by this package. Correct working is not guarantee.")
     endif()
@@ -120,16 +123,6 @@ endif()
 file(GLOB_RECURSE all_files ${CMAKE_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 
-###############################################################################
-# INCLUDES and LIBS
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
-    ${OpenCV_INCLUDE_DIRS}
-    ${CUDA_INCLUDE_DIRS}
-    ${ZED_INCLUDE_DIRS}
-)
-
 # create ament index resource which references the libraries in the binary dir
 set(node_plugins "")
 
@@ -142,10 +135,12 @@ set(INC
 
 set(INC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_aruco_localization_component.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/aruco.hpp
 )
 
 set(SRC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/aruco.cpp
 )
 
 set(SRC_CONT
@@ -164,15 +159,28 @@ add_library(${PROJECT_NAME}_component SHARED
 target_compile_definitions(${PROJECT_NAME}_component
     PRIVATE "COMPOSITION_BUILDING_DLL"
 )
+target_include_directories(${PROJECT_NAME}_component
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
+    ${OpenCV_INCLUDE_DIRS}
+)
 target_link_libraries(${PROJECT_NAME}_component
+    ${OpenCV_LIBS}
 )
 ament_target_dependencies(${PROJECT_NAME}_component
     ${DEPENDENCIES_COMP}
 )
 
-# Container
+# Container node
 add_executable(${PROJECT_NAME}
     ${SRC_CONT}
+)
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+    ${CUDA_INCLUDE_DIRS}
+    ${ZED_INCLUDE_DIRS}
 )
 target_link_libraries(${PROJECT_NAME}
     ${PROJECT_NAME}_component
@@ -199,6 +207,7 @@ install(TARGETS ${PROJECT_NAME}_component
 # Install header files
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
     DESTINATION include/${PROJECT_NAME}/
 )
 

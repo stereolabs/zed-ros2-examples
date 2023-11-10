@@ -15,6 +15,9 @@
 #ifndef ZED_ARUCO_LOC_COMPONENT_HPP_
 #define ZED_ARUCO_LOC_COMPONENT_HPP_
 
+#include <opencv2/opencv.hpp>
+#include <map>
+
 #include <rcutils/logging_macros.h>
 
 #include <image_transport/camera_publisher.hpp>
@@ -28,6 +31,13 @@
 
 namespace stereolabs
 {
+
+typedef struct
+{
+  int idx;
+  cv::Vec3d position;
+  cv::Vec3d orientation;
+} ArucoPose;
 
 class ZedArucoLocComponent : public rclcpp::Node
 {
@@ -51,6 +61,12 @@ private:
 
   // QoS parameters
   rclcpp::QoS _defaultQoS;
+
+  // ----> Parameters
+  size_t _tagCount = 1; // Number of tags available in the environment
+  float _tagSize = 0.2; // Size of the tags
+  std::map<int, ArucoPose> _tagPoses; // Pose of each tag in the environment in World coordinates
+  // <---- Parameters
 };
 
 }  // namespace stereolabs

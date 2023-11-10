@@ -7,20 +7,22 @@
 
       general:
         marker_count: 1             # Number of tags in the World
+        marker_size: 0.2            # Width of the ArUco tags [m]
+        output_freq: 1.0            # Output frequency when a tag is visible
 
       marker_001:
         aruco_id: 1                 # ID of the ArUco tag as retrieved by the ArUco Detector code
-        pose: [0.0,0.0,0.0]         # Pose with respect to the World origin
-        orientation: [0.0,0.0,0.0]  # Orientation with respect to the World origin
+        pose: [0.0,0.0,0.0]         # Pose with respect to the World origin [m]
+        orientation: [0.0,0.0,0.0]  # Orientation with respect to the World origin [rad]
 
       # Add a number of marker definitions equal to the number of markers in the World
       
       #marker_002:
       #  aruco_id: ZZZ                # ID of the ArUco tag as retrieved by the ArUco Detector code
-      #  pose: [x.x,y.y,z.z]         # Pose with respect to the World origin
-      #  orientation: [R.R,P.P,Y.Y]  # Orientation with respect to the World origin
+      #  pose: [x.x,y.y,z.z]         # Pose with respect to the World origin [m]
+      #  orientation: [R.R,P.P,Y.Y]  # Orientation with respect to the World origin [rad]
 
       #marker_xxx:
       #  aruco_id: YYY               # ID of the ArUco tag as retrieved by the ArUco Detector code
-      #  pose: [x.x,y.y,z.z]         # Pose with respect to the World origin
-      #  orientation: [R.R,P.P,Y.Y]  # Orientation with respect to the World origin
+      #  pose: [x.x,y.y,z.z]         # Pose with respect to the World origin [m]
+      #  orientation: [R.R,P.P,Y.Y]  # Orientation with respect to the World origin [rad]
