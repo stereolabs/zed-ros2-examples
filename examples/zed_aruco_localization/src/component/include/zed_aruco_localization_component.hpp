@@ -28,6 +28,10 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <atomic>
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+
 #include "aruco_loc_visibility_control.hpp"
 
 namespace stereolabs
@@ -36,8 +40,9 @@ namespace stereolabs
 typedef struct
 {
   int idx;
-  cv::Vec3d position;
-  cv::Vec3d orientation;
+  std::string marker_frame_id;
+  std::vector<double> position;
+  std::vector<double> orientation;
 } ArucoPose;
 
 class ZedArucoLocComponent : public rclcpp::Node
@@ -53,6 +58,20 @@ protected:
     const sensor_msgs::msg::Image::ConstSharedPtr & img,
     const sensor_msgs::msg::CameraInfo::ConstSharedPtr & cam_info);
 
+  template<typename T> void getParam(
+    std::string paramName, T defValue, T & outVal,
+    std::string log_info = std::string(), bool dynamic = false);
+
+  void getParams();
+  void getGeneralParams();
+  void getMarkerParams();
+
+  void initTFs();
+  void publishMarkerTFs();
+  bool getTransformFromTf(
+    std::string targetFrame, std::string sourceFrame,
+    tf2::Transform & out_tr);
+
 private:
   // Publisher
   image_transport::CameraPublisher _pubDetect;  // Publisher for detection results
@@ -60,16 +79,26 @@ private:
   // Subscriber
   image_transport::CameraSubscriber _subImage;  // ZED Image subscriber
 
-  // QoS parameters
-  rclcpp::QoS _defaultQoS;
-
-  std::atomic<bool> _detRunning;
+  rclcpp::QoS _defaultQoS;// QoS parameters
+  std::atomic<bool> _detRunning; // Flag used to not perform cuncurrent detections
 
   // ----> Parameters
-  size_t _tagCount = 1; // Number of tags available in the environment
-  float _tagSize = 0.16; // Size of the tags [m]
+  int _markerCount = 1;    // Number of markers available in the environment
+  float _markerSize = 0.16f;  // Size of the tags [m]
+  float _detRate = 1.0f;      // Maximum detection frequency for pose update
+  std::string _worldFrameId;  // World frame id
   std::map<int, ArucoPose> _tagPoses; // Pose of each tag in the environment in World coordinates
   // <---- Parameters
+
+  // ----> TF2
+  std::unique_ptr<tf2_ros::Buffer> _tfBuffer;
+  std::unique_ptr<tf2_ros::TransformListener> _tfListener;
+  std::unique_ptr<tf2_ros::TransformBroadcaster> _tfBroadcaster;
+
+  tf2::Transform _opt2base; // Static transform from camera optical frame to camera base
+  // <---- TF2
+
+  rclcpp::Time _detTime; // Time of the latest detection
 };
 
 }  // namespace stereolabs
