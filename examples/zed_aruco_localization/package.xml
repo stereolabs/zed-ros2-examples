@@ -18,6 +18,7 @@
 	<build_depend>image_transport</build_depend>
 	<build_depend>tf2</build_depend>
 	<build_depend>tf2_ros</build_depend>
+	<build_depend>tf2_geometry_msgs</build_depend>	
 	<build_depend>zed_components</build_depend>
 	<build_depend>zed_interfaces</build_depend>
 
@@ -31,6 +32,7 @@
 	<exec_depend>image_transport</exec_depend>
 	<exec_depend>tf2</exec_depend>
 	<exec_depend>tf2_ros</exec_depend>
+	<exec_depend>tf2_geometry_msgs</exec_depend>
 	<exec_depend>zed_interfaces</exec_depend>
 	<test_depend>ament_lint_auto</test_depend>
 	<test_depend>ament_lint_common</test_depend>

@@ -14,18 +14,33 @@
 
 #include "zed_aruco_localization_component.hpp"
 
+#include <opencv4/opencv2/aruco.hpp>
+
 #include <sstream>
 
 #include <tf2/LinearMath/Transform.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <sensor_msgs/image_encodings.hpp>
-
-#include "aruco.hpp"
+#include <geometry_msgs/msg/pose.hpp>
+#ifdef FOUND_HUMBLE
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#elif defined FOUND_IRON
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#elif defined FOUND_FOXY
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#else
+#error Unsupported ROS2 distro
+#endif
 
 using namespace std::chrono_literals;
 using namespace std::placeholders;
 
 #define TIMEZERO_ROS rclcpp::Time(0, 0, RCL_ROS_TIME)
+
+#ifndef DEG2RAD
+#define DEG2RAD 0.017453293
+#define RAD2DEG 57.295777937
+#endif
 
 namespace stereolabs
 {
@@ -65,6 +80,8 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
   _tfListener =
     std::make_unique<tf2_ros::TransformListener>(*_tfBuffer);  // Start TF Listener thread
   _tfBroadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
+
+  initTFs();
   // <---- TF2 Transform
 
   // Create image publisher
@@ -216,8 +233,8 @@ void ZedArucoLocComponent::camera_callback(
 
   _detRunning = true;
 
-  // Init TF2
-  void initTFs();
+  // Publish the TF poses of the markers from the configuration file
+  publishMarkerTFs();
 
   // Time statistics
   rclcpp::Time start;
@@ -306,7 +323,7 @@ void ZedArucoLocComponent::camera_callback(
   RCLCPP_INFO_STREAM(get_logger(), " * Marker poses estimation: " << elapsed_sec << " sec");
   // <---- Estimate Marker positions
 
-  // ----> Find closest marker
+  // ----> Find the closest marker
   size_t nearest_aruco_index = 999;
   double nearest_distance = 1e9;
   for (size_t i = 0; i < ids.size(); i++) {
@@ -322,61 +339,92 @@ void ZedArucoLocComponent::camera_callback(
   RCLCPP_INFO_STREAM(
     get_logger(),
     " * Nearest marker: " << ids[nearest_aruco_index] << " -> " << nearest_distance << "m");
-  // <---- Find closest marker
+  // <---- Find the closest marker
 
   // Update Marker TFs
   publishMarkerTFs();
 
-  // ----> Calculate new camera pose
-  cv::Mat rot(3, 3, CV_64FC1);
-  cv::Rodrigues(
-    cv::Vec3d(
-      {rvecs[nearest_aruco_index](0), rvecs[nearest_aruco_index](1),
-        rvecs[nearest_aruco_index](2)}), rot);
+  double r, p, y;
+
+  // ----> ArUco rvec and tvec to TF2 Transform
+  tf2::Vector3 tf2_origin(tvecs[nearest_aruco_index][0], tvecs[nearest_aruco_index][1],
+    tvecs[nearest_aruco_index][2]);
+  cv::Mat cv_rot(3, 3, CV_64F);
+  cv::Rodrigues(rvecs[nearest_aruco_index], cv_rot);
   // Convert to a tf2::Matrix3x3
-  tf2::Matrix3x3 tf2_rot(rot.at<double>(0, 0), rot.at<double>(0, 1), rot.at<double>(0, 2),
-    rot.at<double>(1, 0), rot.at<double>(1, 1), rot.at<double>(1, 2),
-    rot.at<double>(2, 0), rot.at<double>(2, 1), rot.at<double>(2, 2));
+  tf2::Matrix3x3 tf2_rot(cv_rot.at<double>(0, 0), cv_rot.at<double>(0, 1), cv_rot.at<double>(0, 2),
+    cv_rot.at<double>(1, 0), cv_rot.at<double>(1, 1), cv_rot.at<double>(1, 2),
+    cv_rot.at<double>(2, 0), cv_rot.at<double>(2, 1), cv_rot.at<double>(2, 2));
 
-  // Create a transform and convert to a Pose
-  tf2::Transform tf2_transform(tf2_rot, tf2::Vector3(
-      tvecs[nearest_aruco_index](0), tvecs[nearest_aruco_index](1),
-      tvecs[nearest_aruco_index](2)));
+  tf2::Transform pose_aruco(tf2_rot, tf2_origin);
 
+  pose_aruco.getBasis().getRPY(r, p, y);
   RCLCPP_INFO(
-    get_logger(), "tf2_transform: [%.3f,%.3f,%.3f] [%.3f,%.3f,%.3f,%.3f]",
-    tf2_transform.getOrigin().getX(), tf2_transform.getOrigin().getY(),
-    tf2_transform.getOrigin().getZ(),
-    tf2_transform.getRotation().getX(),
-    tf2_transform.getRotation().getY(),
-    tf2_transform.getRotation().getZ(), tf2_transform.getRotation().getW());
+    get_logger(), "pose_aruco -> Pos: [%.3f°,%.3f°,%.3f°] - Or: [%.3f°,%.3f°,%.3f°]",
+    pose_aruco.getOrigin().x(), pose_aruco.getOrigin().y(), pose_aruco.getOrigin().z(),
+    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  // <---- ArUco rvec and tvec to TF2 Transform
 
-  // Convert from optical frame to camera base frame
-  tf2::Transform base_pose = _opt2base.inverse() * tf2_transform.inverse() * _opt2base;
+  // ----> Change basis from ArUco to camera in image coordinate system
+  tf2::Transform pose_img;
+  pose_img.mult(_img2aruco, pose_aruco);
+  pose_img = pose_img.inverse();
 
+  pose_img.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(
+    get_logger(), "pose_img -> Pos: [%.3f°,%.3f°,%.3f°] - Or: [%.3f°,%.3f°,%.3f°]",
+    pose_img.getOrigin().x(), pose_img.getOrigin().y(), pose_img.getOrigin().z(),
+    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  // <---- Change basis from ArUco to camera in image coordinate system
+
+  // ----> ArUco pose in ROS coordinate system
+  tf2::Transform ros2aruco;
+  ros2aruco.mult(_img2aruco, _ros2img);
+  tf2::Transform aruco2ros = ros2aruco.inverse();
+  // <---- ArUco pose in ROS coordinate system
+
+  // ----> Left camera sensor in ROS coordinate respect to the marker
+  tf2::Transform pose_marker;
+  pose_marker.mult(pose_img, ros2aruco);
+  pose_marker.mult(aruco2ros, pose_marker);
+
+  pose_marker.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(
+    get_logger(), "pose_marker -> Pos: [%.3f°,%.3f°,%.3f°] - Or: [%.3f°,%.3f°,%.3f°]",
+    pose_marker.getOrigin().x(), pose_marker.getOrigin().y(), pose_marker.getOrigin().z(),
+    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  // <---- Left camera sensor in ROS coordinate  respect to the marker
+
+  // ----> Create TF
   geometry_msgs::msg::TransformStamped transformStamped;
 
   transformStamped.header.stamp = get_clock()->now();
 
   transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
-  transformStamped.child_frame_id = "zed_aruco";
+  transformStamped.child_frame_id = "zed_base_aruco";
 
-  transformStamped.transform.rotation.x = base_pose.getRotation().getX();
-  transformStamped.transform.rotation.y = base_pose.getRotation().getY();
-  transformStamped.transform.rotation.z = base_pose.getRotation().getZ();
-  transformStamped.transform.rotation.w = base_pose.getRotation().getW();
+  transformStamped.transform.rotation.x = pose_marker.getRotation().x();
+  transformStamped.transform.rotation.y = pose_marker.getRotation().y();
+  transformStamped.transform.rotation.z = pose_marker.getRotation().z();
+  transformStamped.transform.rotation.w = pose_marker.getRotation().w();
 
-  transformStamped.transform.translation.x = base_pose.getOrigin().getX();
-  transformStamped.transform.translation.y = base_pose.getOrigin().getY();
-  transformStamped.transform.translation.z = base_pose.getOrigin().getZ();
+  transformStamped.transform.translation.x = pose_marker.getOrigin().x();
+  transformStamped.transform.translation.y = pose_marker.getOrigin().y();
+  transformStamped.transform.translation.z = pose_marker.getOrigin().z();
 
+  // Broadcast TF
   _tfBroadcaster->sendTransform(transformStamped);
-  // <---- Calculate new camera pose
+  // <---- Create TF
 
   // ----> Draw and publish the results
   if (res_sub) {
     start = get_clock()->now();
+
+    // Draw the markers
     cv::aruco::drawDetectedMarkers(bgr, corners, ids);
+    auto rvec = rvecs[nearest_aruco_index];
+    auto tvec = tvecs[nearest_aruco_index];
+    cv::drawFrameAxes(bgr, camera_matrix, dist_coeffs, rvec, tvec, 0.1);
 
     // Create the output message and copy coverted data
     std::shared_ptr<sensor_msgs::msg::Image> out_bgr = std::make_shared<sensor_msgs::msg::Image>();
@@ -440,41 +488,40 @@ void ZedArucoLocComponent::publishMarkerTFs()
 
 bool ZedArucoLocComponent::getTransformFromTf(
   std::string targetFrame, std::string sourceFrame,
-  tf2::Transform & out_tr)
+  geometry_msgs::msg::TransformStamped & out_tr)
 {
   std::string msg;
-  geometry_msgs::msg::TransformStamped tf_ros;
 
   try {
-    // ----> Without this a warning is returned the first time... why???
-    _tfBuffer->canTransform(targetFrame, sourceFrame, TIMEZERO_ROS, 500ms, &msg);
+    // ----> Without this code a warning is returned the first time... why???
+    _tfBuffer->canTransform(targetFrame, sourceFrame, TIMEZERO_ROS, 1000ms, &msg);
     RCLCPP_INFO_STREAM(
       get_logger(),
-      "canTransform '" << targetFrame.c_str() << "' -> '" << sourceFrame.c_str() << "':" <<
+      "[getTransformFromTf] canTransform '" << targetFrame.c_str() << "' -> '" << sourceFrame.c_str() << "':" <<
         msg.c_str());
     std::this_thread::sleep_for(3ms);
-    // <---- Without this a warning is returned the first time... why???
+    // <---- Without this code a warning is returned the first time... why???
 
-    tf_ros = _tfBuffer->lookupTransform(targetFrame, sourceFrame, TIMEZERO_ROS, 1s);
+    out_tr = _tfBuffer->lookupTransform(targetFrame, sourceFrame, TIMEZERO_ROS, 1s);
   } catch (const tf2::TransformException & ex) {
     RCLCPP_ERROR(
-      this->get_logger(), "Could not transform '%s' to '%s': %s",
+      this->get_logger(), "[getTransformFromTf] Could not transform '%s' to '%s': %s",
       targetFrame.c_str(), sourceFrame.c_str(), ex.what());
     return false;
   }
 
-  tf2::Vector3 origin;
-  origin.setX(tf_ros.transform.translation.x);
-  origin.setY(tf_ros.transform.translation.y);
-  origin.setZ(tf_ros.transform.translation.z);
-  out_tr.setOrigin(origin);
+  tf2::Stamped<tf2::Transform> transf;
+  tf2::fromMsg(out_tr, transf);
+  double r, p, y;
+  transf.getBasis().getRPY(r, p, y, 1);
 
-  tf2::Quaternion q;
-  q.setX(tf_ros.transform.rotation.x);
-  q.setY(tf_ros.transform.rotation.y);
-  q.setZ(tf_ros.transform.rotation.z);
-  q.setW(tf_ros.transform.rotation.w);
-  out_tr.setRotation(q);
+  RCLCPP_INFO(
+    get_logger(),
+    "[getTransformFromTf] '%s' -> '%s': \n\t[%.3f,%.3f,%.3f] - [%.3f°,%.3f°,%.3f°]",
+    sourceFrame.c_str(),
+    targetFrame.c_str(),
+    out_tr.transform.translation.x, out_tr.transform.translation.y, out_tr.transform.translation.z,
+    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
 
   return true;
 }
@@ -485,15 +532,47 @@ void ZedArucoLocComponent::initTFs()
   publishMarkerTFs();
 
   // Get the transform from camera optical frame to camera base frame
-  std::string cam_opt_frame = "zed_left_camera_optical_frame"; // TODO(Walter) create from params
+  std::string cam_opt_frame = "zed_left_camera_frame"; // TODO(Walter) create from params
   std::string cam_base_frame = "zed_camera_link"; // TODO(Walter) create from params
-  bool tf_ok = getTransformFromTf(cam_opt_frame, cam_base_frame, _opt2base);
+  bool tf_ok = getTransformFromTf(cam_base_frame, cam_opt_frame, _base2opt);
   if (!tf_ok) {
     RCLCPP_ERROR(
       get_logger(),
-      "The transform '%s' -> '%s' is not available. Please verify the parameters and the status of the 'ZED State Publisher' node.");
+      "The transform '%s' -> '%s' is not available. Please verify the parameters and the status of the 'ZED State Publisher' node.",
+      cam_base_frame.c_str(), cam_opt_frame.c_str());
     exit(EXIT_FAILURE);
   }
+
+  double r, p, y;
+  tf2::Matrix3x3 basis;
+
+  // ----> ArUco coordinate system to Image coordinate system, and viceversa
+  basis = tf2::Matrix3x3(
+    -1.0, 0.0, 0.0,
+    0.0, -1.0, 0.0,
+    0.0, 0.0, 1.0);
+  _img2aruco.setBasis(basis);
+  _aruco2img = _img2aruco.inverse();
+  // <---- ArUco coordinate system to Image coordinate system, and viceversa
+
+  // ----> ROS coordinate system to Image coordinate system, and viceversa
+  basis = tf2::Matrix3x3(
+    0.0, -1.0, 0.0,
+    0.0, 0.0, -1.0,
+    1.0, 0.0, 0.0);
+  _ros2img.setBasis(basis);
+  _img2ros = _ros2img.inverse();
+  // <---- ROS coordinate system to Image coordinate system, and viceversa
+
+  _img2aruco.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(get_logger(), "_img2aruco: %.3f°,%.3f°,%.3f°", r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  _aruco2img.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(get_logger(), "_aruco2img: %.3f°,%.3f°,%.3f°", r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  _ros2img.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(get_logger(), "_ros2img: %.3f°,%.3f°,%.3f°", r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  _img2ros.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(get_logger(), "_img2ros: %.3f°,%.3f°,%.3f°", r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+
 }
 
 

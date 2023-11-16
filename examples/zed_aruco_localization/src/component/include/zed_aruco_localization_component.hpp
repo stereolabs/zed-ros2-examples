@@ -15,7 +15,7 @@
 #ifndef ZED_ARUCO_LOC_COMPONENT_HPP_
 #define ZED_ARUCO_LOC_COMPONENT_HPP_
 
-#include <opencv2/opencv.hpp>
+#include <opencv4/opencv2/opencv.hpp>
 #include <map>
 
 #include <rcutils/logging_macros.h>
@@ -70,7 +70,7 @@ protected:
   void publishMarkerTFs();
   bool getTransformFromTf(
     std::string targetFrame, std::string sourceFrame,
-    tf2::Transform & out_tr);
+    geometry_msgs::msg::TransformStamped & out_tr);
 
 private:
   // Publisher
@@ -95,7 +95,13 @@ private:
   std::unique_ptr<tf2_ros::TransformListener> _tfListener;
   std::unique_ptr<tf2_ros::TransformBroadcaster> _tfBroadcaster;
 
-  tf2::Transform _opt2base; // Static transform from camera optical frame to camera base
+  geometry_msgs::msg::TransformStamped _aruco2ros; // Static transform the ArUco frame to camera optical
+  geometry_msgs::msg::TransformStamped _base2opt; // Static transform from camera optical frame to camera base
+
+  tf2::Transform _img2aruco;
+  tf2::Transform _aruco2img;
+  tf2::Transform _ros2img;
+  tf2::Transform _img2ros;
   // <---- TF2
 
   rclcpp::Time _detTime; // Time of the latest detection

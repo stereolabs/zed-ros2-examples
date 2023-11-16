@@ -82,7 +82,7 @@ endif()
 #############################################
 # Dependencies
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 4 REQUIRED)
 find_package(ZED 4 REQUIRED)
 find_package(CUDA REQUIRED)
 
@@ -95,6 +95,7 @@ set(DEPENDENCIES_COMP
     zed_interfaces
     tf2
     tf2_ros
+    tf2_geometry_msgs
 )
 
 set(DEPENDENCIES_CONT
@@ -114,6 +115,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(zed_components)
 
 if(BUILD_TESTING)
@@ -139,12 +141,10 @@ set(INC
 
 set(INC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_aruco_localization_component.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/aruco.hpp
 )
 
 set(SRC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/aruco.cpp
 )
 
 set(SRC_CONT
