@@ -128,7 +128,8 @@ def launch_setup(context, *args, **kwargs):
         #prefix=['gdbserver localhost:3000'],
         remappings=[
             ('in/zed_image','zed_node/rgb/image_rect_color'),
-            ('in/camera_info','zed_node/rgb/camera_info')
+            ('in/camera_info','zed_node/rgb/camera_info'),
+            ('set_pose','zed_node/set_pose')
         ],
         parameters=[
             # YAML files

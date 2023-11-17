@@ -18,6 +18,7 @@
 #include <opencv4/opencv2/opencv.hpp>
 #include <map>
 
+#include <rclcpp/rclcpp.hpp>
 #include <rcutils/logging_macros.h>
 
 #include <image_transport/camera_publisher.hpp>
@@ -31,6 +32,8 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+
+#include <zed_interfaces/srv/set_pose.hpp>
 
 #include "aruco_loc_visibility_control.hpp"
 
@@ -67,27 +70,36 @@ protected:
   void getMarkerParams();
 
   void initTFs();
-  void publishMarkerTFs();
+  void broadcastMarkerTFs();
   bool getTransformFromTf(
     std::string targetFrame, std::string sourceFrame,
-    geometry_msgs::msg::TransformStamped & out_tr);
+    tf2::Transform & out_tr);
+
+  bool resetZedPose(tf2::Transform & new_pose);
 
 private:
-  // Publisher
+  // ----> ROS Messages
   image_transport::CameraPublisher _pubDetect;  // Publisher for detection results
-
-  // Subscriber
   image_transport::CameraSubscriber _subImage;  // ZED Image subscriber
-
   rclcpp::QoS _defaultQoS;// QoS parameters
+  // <---- ROS Messages
+
+  // Service client
+  rclcpp::Client<zed_interfaces::srv::SetPose>::SharedPtr _setPoseClient;
+
+  // ----> Running variables
+  rclcpp::Time _detTime; // Time of the latest detection
   std::atomic<bool> _detRunning; // Flag used to not perform cuncurrent detections
+  // <---- Running variables
 
   // ----> Parameters
   int _markerCount = 1;    // Number of markers available in the environment
   float _markerSize = 0.16f;  // Size of the tags [m]
   float _detRate = 1.0f;      // Maximum detection frequency for pose update
   std::string _worldFrameId;  // World frame id
+  double _maxDist;            // Maximum distance from the camera
   std::map<int, ArucoPose> _tagPoses; // Pose of each tag in the environment in World coordinates
+  bool _debugActive;
   // <---- Parameters
 
   // ----> TF2
@@ -95,16 +107,14 @@ private:
   std::unique_ptr<tf2_ros::TransformListener> _tfListener;
   std::unique_ptr<tf2_ros::TransformBroadcaster> _tfBroadcaster;
 
-  geometry_msgs::msg::TransformStamped _aruco2ros; // Static transform the ArUco frame to camera optical
-  geometry_msgs::msg::TransformStamped _base2opt; // Static transform from camera optical frame to camera base
-
   tf2::Transform _img2aruco;
   tf2::Transform _aruco2img;
   tf2::Transform _ros2img;
   tf2::Transform _img2ros;
-  // <---- TF2
+  tf2::Transform _left2base;
 
-  rclcpp::Time _detTime; // Time of the latest detection
+  rclcpp::TimerBase::SharedPtr _tfTimer; // Timer to broadcast marker TFs
+  // <---- TF2
 };
 
 }  // namespace stereolabs

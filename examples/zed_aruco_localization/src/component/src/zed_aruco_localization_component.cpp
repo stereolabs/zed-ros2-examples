@@ -82,6 +82,11 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
   _tfBroadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
 
   initTFs();
+
+  int msec = static_cast<int>(1000. / (_detRate * 10.));
+  _tfTimer = create_wall_timer(
+    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(msec)),
+    std::bind(&ZedArucoLocComponent::broadcastMarkerTFs, this));
   // <---- TF2 Transform
 
   // Create image publisher
@@ -98,6 +103,9 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
 
   RCLCPP_INFO_STREAM(get_logger(), "Subscribed on topic: " << _subImage.getTopic());
   RCLCPP_INFO_STREAM(get_logger(), "Subscribed on topic: " << _subImage.getInfoTopic());
+
+  // Create service caller
+  _setPoseClient = create_client<zed_interfaces::srv::SetPose>("set_pose");
 }
 
 template<typename T>
@@ -124,6 +132,12 @@ void ZedArucoLocComponent::getParam(
 
 void ZedArucoLocComponent::getParams()
 {
+  getParam("debug.active", _debugActive, _debugActive);
+
+  if (_debugActive) {
+    RCLCPP_INFO(get_logger(), "***** DEBUG MODE *****");
+  }
+
   getGeneralParams();
   getMarkerParams();
 }
@@ -140,6 +154,10 @@ void ZedArucoLocComponent::getGeneralParams()
   RCLCPP_INFO(get_logger(), " * Detection rate [Hz]: ");
   getParam("general.world_frame_id", _worldFrameId, _worldFrameId);
   RCLCPP_INFO(get_logger(), " * World frame id: ");
+  getParam("general.maximum_distance", _maxDist, _maxDist);
+  RCLCPP_INFO(get_logger(), " * Maximum distance [m]: ");
+
+
 }
 
 void ZedArucoLocComponent::getMarkerParams()
@@ -232,9 +250,6 @@ void ZedArucoLocComponent::camera_callback(
   }
 
   _detRunning = true;
-
-  // Publish the TF poses of the markers from the configuration file
-  publishMarkerTFs();
 
   // Time statistics
   rclcpp::Time start;
@@ -341,8 +356,14 @@ void ZedArucoLocComponent::camera_callback(
     " * Nearest marker: " << ids[nearest_aruco_index] << " -> " << nearest_distance << "m");
   // <---- Find the closest marker
 
-  // Update Marker TFs
-  publishMarkerTFs();
+  if (nearest_distance > _maxDist) {
+    _detRunning = false;
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "  The closest marker is too far: " << nearest_distance << " m > " << _maxDist << " m");
+    RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    return;
+  }
 
   double r, p, y;
 
@@ -360,7 +381,7 @@ void ZedArucoLocComponent::camera_callback(
 
   pose_aruco.getBasis().getRPY(r, p, y);
   RCLCPP_INFO(
-    get_logger(), "pose_aruco -> Pos: [%.3f°,%.3f°,%.3f°] - Or: [%.3f°,%.3f°,%.3f°]",
+    get_logger(), "pose_aruco -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
     pose_aruco.getOrigin().x(), pose_aruco.getOrigin().y(), pose_aruco.getOrigin().z(),
     r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
   // <---- ArUco rvec and tvec to TF2 Transform
@@ -372,7 +393,7 @@ void ZedArucoLocComponent::camera_callback(
 
   pose_img.getBasis().getRPY(r, p, y);
   RCLCPP_INFO(
-    get_logger(), "pose_img -> Pos: [%.3f°,%.3f°,%.3f°] - Or: [%.3f°,%.3f°,%.3f°]",
+    get_logger(), "pose_img -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
     pose_img.getOrigin().x(), pose_img.getOrigin().y(), pose_img.getOrigin().z(),
     r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
   // <---- Change basis from ArUco to camera in image coordinate system
@@ -384,37 +405,97 @@ void ZedArucoLocComponent::camera_callback(
   // <---- ArUco pose in ROS coordinate system
 
   // ----> Left camera sensor in ROS coordinate respect to the marker
-  tf2::Transform pose_marker;
-  pose_marker.mult(pose_img, ros2aruco);
-  pose_marker.mult(aruco2ros, pose_marker);
+  tf2::Transform left_pose_marker;
+  left_pose_marker.mult(pose_img, ros2aruco);
+  left_pose_marker.mult(aruco2ros, left_pose_marker);
 
-  pose_marker.getBasis().getRPY(r, p, y);
+  left_pose_marker.getBasis().getRPY(r, p, y);
   RCLCPP_INFO(
-    get_logger(), "pose_marker -> Pos: [%.3f°,%.3f°,%.3f°] - Or: [%.3f°,%.3f°,%.3f°]",
-    pose_marker.getOrigin().x(), pose_marker.getOrigin().y(), pose_marker.getOrigin().z(),
+    get_logger(), "pose_marker -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+    left_pose_marker.getOrigin().x(), left_pose_marker.getOrigin().y(),
+    left_pose_marker.getOrigin().z(),
     r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
   // <---- Left camera sensor in ROS coordinate  respect to the marker
 
-  // ----> Create TF
+  // ----> Camera base in ROS coordinate respect to the marker
+  tf2::Transform base_pose_marker;
+  base_pose_marker.mult(left_pose_marker, _left2base);
+
+  base_pose_marker.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(
+    get_logger(), "pose_marker -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+    base_pose_marker.getOrigin().x(), base_pose_marker.getOrigin().y(),
+    base_pose_marker.getOrigin().z(),
+    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  // <---- Camera base in ROS coordinate respect to the marker
+
+  // ----> New camera pose in ROS world
+  tf2::Transform marker_world_pose;
+  tf2::Vector3 orig(
+    _tagPoses[ids[nearest_aruco_index]].position[0],
+    _tagPoses[ids[nearest_aruco_index]].position[1],
+    _tagPoses[ids[nearest_aruco_index]].position[2]);
+  marker_world_pose.setOrigin(orig);
+
+  tf2::Quaternion q;
+  q.setRPY(
+    _tagPoses[ids[nearest_aruco_index]].orientation[0],
+    _tagPoses[ids[nearest_aruco_index]].orientation[1],
+    _tagPoses[ids[nearest_aruco_index]].orientation[2]);
+  marker_world_pose.setRotation(q);
+
+  tf2::Transform map_pose;
+  map_pose.mult(marker_world_pose, base_pose_marker);
+  // <---- New camera pose in ROS world
+
+  // ----> Reset camera position
+  resetZedPose(map_pose);
+  // <---- Reset camera position
+
+  // ----> Debug TF
   geometry_msgs::msg::TransformStamped transformStamped;
 
   transformStamped.header.stamp = get_clock()->now();
 
   transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
+  transformStamped.child_frame_id = "zed_left_aruco";
+
+  transformStamped.transform.rotation.x = left_pose_marker.getRotation().x();
+  transformStamped.transform.rotation.y = left_pose_marker.getRotation().y();
+  transformStamped.transform.rotation.z = left_pose_marker.getRotation().z();
+  transformStamped.transform.rotation.w = left_pose_marker.getRotation().w();
+
+  transformStamped.transform.translation.x = left_pose_marker.getOrigin().x();
+  transformStamped.transform.translation.y = left_pose_marker.getOrigin().y();
+  transformStamped.transform.translation.z = left_pose_marker.getOrigin().z();
+
+  // Broadcast debug TF
+  _tfBroadcaster->sendTransform(transformStamped);
+
+  transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
   transformStamped.child_frame_id = "zed_base_aruco";
 
-  transformStamped.transform.rotation.x = pose_marker.getRotation().x();
-  transformStamped.transform.rotation.y = pose_marker.getRotation().y();
-  transformStamped.transform.rotation.z = pose_marker.getRotation().z();
-  transformStamped.transform.rotation.w = pose_marker.getRotation().w();
+  transformStamped.transform.rotation.x = base_pose_marker.getRotation().x();
+  transformStamped.transform.rotation.y = base_pose_marker.getRotation().y();
+  transformStamped.transform.rotation.z = base_pose_marker.getRotation().z();
+  transformStamped.transform.rotation.w = base_pose_marker.getRotation().w();
 
-  transformStamped.transform.translation.x = pose_marker.getOrigin().x();
-  transformStamped.transform.translation.y = pose_marker.getOrigin().y();
-  transformStamped.transform.translation.z = pose_marker.getOrigin().z();
+  transformStamped.transform.translation.x = base_pose_marker.getOrigin().x();
+  transformStamped.transform.translation.y = base_pose_marker.getOrigin().y();
+  transformStamped.transform.translation.z = base_pose_marker.getOrigin().z();
 
-  // Broadcast TF
+  // Broadcast debug TF
   _tfBroadcaster->sendTransform(transformStamped);
-  // <---- Create TF
+
+  tf2::Transform test;
+  getTransformFromTf("zed_left_aruco", "zed_base_aruco", test);
+
+  base_pose_marker.getBasis().getRPY(r, p, y);
+  RCLCPP_INFO(
+    get_logger(), "test TF -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+    test.getOrigin().x(), test.getOrigin().y(), test.getOrigin().z(),
+    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  // <---- Debug TF
 
   // ----> Draw and publish the results
   if (res_sub) {
@@ -452,15 +533,13 @@ void ZedArucoLocComponent::camera_callback(
   }
   // <---- Draw and publish the results
 
-  // TODO 3. `set_pose` service call
-
   _detTime = get_clock()->now();
 
   RCLCPP_INFO_STREAM(get_logger(), "*****************************");
   _detRunning = false;
 }
 
-void ZedArucoLocComponent::publishMarkerTFs()
+void ZedArucoLocComponent::broadcastMarkerTFs()
 {
   for (auto pose:_tagPoses) {
     geometry_msgs::msg::TransformStamped transformStamped;
@@ -488,9 +567,10 @@ void ZedArucoLocComponent::publishMarkerTFs()
 
 bool ZedArucoLocComponent::getTransformFromTf(
   std::string targetFrame, std::string sourceFrame,
-  geometry_msgs::msg::TransformStamped & out_tr)
+  tf2::Transform & out_tr)
 {
   std::string msg;
+  geometry_msgs::msg::TransformStamped transf_msg;
 
   try {
     // ----> Without this code a warning is returned the first time... why???
@@ -502,7 +582,7 @@ bool ZedArucoLocComponent::getTransformFromTf(
     std::this_thread::sleep_for(3ms);
     // <---- Without this code a warning is returned the first time... why???
 
-    out_tr = _tfBuffer->lookupTransform(targetFrame, sourceFrame, TIMEZERO_ROS, 1s);
+    transf_msg = _tfBuffer->lookupTransform(targetFrame, sourceFrame, TIMEZERO_ROS, 1s);
   } catch (const tf2::TransformException & ex) {
     RCLCPP_ERROR(
       this->get_logger(), "[getTransformFromTf] Could not transform '%s' to '%s': %s",
@@ -510,17 +590,18 @@ bool ZedArucoLocComponent::getTransformFromTf(
     return false;
   }
 
-  tf2::Stamped<tf2::Transform> transf;
-  tf2::fromMsg(out_tr, transf);
+  tf2::Stamped<tf2::Transform> tr_stamped;
+  tf2::fromMsg(transf_msg, tr_stamped);
+  out_tr = tr_stamped;
   double r, p, y;
-  transf.getBasis().getRPY(r, p, y, 1);
+  out_tr.getBasis().getRPY(r, p, y, 1);
 
   RCLCPP_INFO(
     get_logger(),
     "[getTransformFromTf] '%s' -> '%s': \n\t[%.3f,%.3f,%.3f] - [%.3f°,%.3f°,%.3f°]",
     sourceFrame.c_str(),
     targetFrame.c_str(),
-    out_tr.transform.translation.x, out_tr.transform.translation.y, out_tr.transform.translation.z,
+    out_tr.getOrigin().x(), out_tr.getOrigin().y(), out_tr.getOrigin().z(),
     r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
 
   return true;
@@ -528,18 +609,15 @@ bool ZedArucoLocComponent::getTransformFromTf(
 
 void ZedArucoLocComponent::initTFs()
 {
-  // Publish the TF poses of the markers from the configuration file
-  publishMarkerTFs();
-
   // Get the transform from camera optical frame to camera base frame
-  std::string cam_opt_frame = "zed_left_camera_frame"; // TODO(Walter) create from params
+  std::string cam_left_frame = "zed_left_camera_frame"; // TODO(Walter) create from params
   std::string cam_base_frame = "zed_camera_link"; // TODO(Walter) create from params
-  bool tf_ok = getTransformFromTf(cam_base_frame, cam_opt_frame, _base2opt);
+  bool tf_ok = getTransformFromTf(cam_left_frame, cam_base_frame, _left2base);
   if (!tf_ok) {
     RCLCPP_ERROR(
       get_logger(),
       "The transform '%s' -> '%s' is not available. Please verify the parameters and the status of the 'ZED State Publisher' node.",
-      cam_base_frame.c_str(), cam_opt_frame.c_str());
+      cam_base_frame.c_str(), cam_left_frame.c_str());
     exit(EXIT_FAILURE);
   }
 
@@ -575,6 +653,45 @@ void ZedArucoLocComponent::initTFs()
 
 }
 
+bool ZedArucoLocComponent::resetZedPose(tf2::Transform & new_pose)
+{
+  RCLCPP_INFO(get_logger(), "*** Calling ZED 'set_pose' service ***");
+
+  auto request = std::make_shared<zed_interfaces::srv::SetPose::Request>();
+  request->pos[0] = new_pose.getOrigin().x();
+  request->pos[1] = new_pose.getOrigin().y();
+  request->pos[2] = new_pose.getOrigin().z();
+
+  double r, p, y;
+  new_pose.getBasis().getRPY(r, p, y);
+  request->orient[0] = r;
+  request->orient[1] = p;
+  request->orient[2] = y;
+
+  while (!_setPoseClient->wait_for_service(1s)) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(get_logger(), "  * Interrupted while waiting for the service. Exiting.");
+      return false;
+    }
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      "  * '" << _setPoseClient->get_service_name() << "' service not available, waiting...");
+  }
+
+  auto future = _setPoseClient->async_send_request(request);
+  RCLCPP_INFO(get_logger(), "  * Service called. Waiting for a reply...");
+
+  auto status = future.wait_for(2s);  // not spinning here!
+  if (status == std::future_status::ready) {
+    RCLCPP_INFO_STREAM(get_logger(), "  * ZED node replied: " << future.get()->message.c_str());
+    return future.get()->success;
+  } else {
+    RCLCPP_ERROR(get_logger(), "  * ZED node did not reply.");
+    return false;
+  }
+
+  return false;
+}
 
 }  // namespace stereolabs
 
