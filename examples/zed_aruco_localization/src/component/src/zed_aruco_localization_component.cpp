@@ -160,19 +160,14 @@ void ZedArucoLocComponent::getGeneralParams()
 {
   RCLCPP_INFO(get_logger(), "*** GENERAL parameters ***");
 
-  getParam("general.marker_count", _markerCount, _markerCount);
-  RCLCPP_INFO(get_logger(), " * Marker count: ");
-  getParam("general.marker_size", _markerSize, _markerSize);
-  RCLCPP_INFO(get_logger(), " * Marker size [m]: ");
-  getParam("general.detection_rate", _detRate, _detRate);
-  RCLCPP_INFO(get_logger(), " * Detection rate [Hz]: ");
-  getParam("general.camera_name", _cameraName, _cameraName);
-  RCLCPP_INFO(get_logger(), " * Camera name: ");
-  getParam("general.world_frame_id", _worldFrameId, _worldFrameId);
-  RCLCPP_INFO(get_logger(), " * World frame id: ");
-  getParam("general.maximum_distance", _maxDist, _maxDist);
-  RCLCPP_INFO(get_logger(), " * Maximum distance [m]: ");
-
+  getParam("general.marker_count", _markerCount, _markerCount, " * Marker count: ");
+  getParam("general.marker_size", _markerSize, _markerSize, " * Marker size [m]: ");
+  getParam("general.detection_rate", _detRate, _detRate, " * Detection rate [Hz]: ");
+  getParam("general.camera_name", _cameraName, _cameraName, " * Camera name: ");
+  getParam("general.world_frame_id", _worldFrameId, _worldFrameId, " * World frame id: ");
+  getParam("general.maximum_distance", _maxDist, _maxDist, " * Maximum distance [m]: ");
+  getParam("general.refine_detection", _refineDetection, _refineDetection);
+  RCLCPP_INFO(get_logger(), " * Refine detection: %s", _refineDetection ? "TRUE" : "FALSE");
 
 }
 
@@ -311,11 +306,11 @@ void ZedArucoLocComponent::camera_callback(
   // <---- Detect ArUco Markers
 
   if (corners.empty()) {
-    _detRunning = false;
     if (_debugActive) {
       RCLCPP_INFO_STREAM(get_logger(), "  No Markers in view");
       RCLCPP_INFO_STREAM(get_logger(), "*****************************");
     }
+    _detRunning = false;
     return;
   }
 
@@ -323,26 +318,28 @@ void ZedArucoLocComponent::camera_callback(
     RCLCPP_INFO_STREAM(get_logger(), " * Detected tags: " << ids.size());
   }
 
-  /*/ ----> Refine the result
-  start = get_clock()->now();
-  for (size_t i = 0; i < corners.size(); ++i) {
-    cv::cornerSubPix(
-      gray, corners[i], cv::Size(5, 5), cv::Size(-1, -1),
-      cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
-  }
-  elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
-  if (corners.empty()) {
-    _detRunning = false;
-    if (_debugActive) {
-      RCLCPP_INFO_STREAM(get_logger(), "  No Markers in view");
-      RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+  // ----> Refine the result
+  if (_refineDetection) {
+    start = get_clock()->now();
+    for (size_t i = 0; i < corners.size(); ++i) {
+      cv::cornerSubPix(
+        gray, corners[i], cv::Size(5, 5), cv::Size(-1, -1),
+        cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
     }
-    return;
+    elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
+    if (corners.empty()) {
+      if (_debugActive) {
+        RCLCPP_INFO_STREAM(get_logger(), "  No Markers in view");
+        RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+      }
+      _detRunning = false;
+      return;
+    }
+    if (_debugActive) {
+      RCLCPP_INFO_STREAM(get_logger(), " * Subpixel refinement: " << elapsed_sec << " sec");
+    }
   }
-  if (_debugActive) {
-    RCLCPP_INFO_STREAM(get_logger(), " * Subpixel refinement: " << elapsed_sec << " sec");
-  }
-  // <---- Refine the result*/
+  // <---- Refine the result
 
   // ----> Estimate Marker positions
   start = get_clock()->now();
@@ -385,19 +382,32 @@ void ZedArucoLocComponent::camera_callback(
   // <---- Find the closest marker
 
   if (nearest_distance > _maxDist) {
-    _detRunning = false;
     if (_debugActive) {
       RCLCPP_INFO_STREAM(
         get_logger(),
         "  The closest marker is too far: " << nearest_distance << " m > " << _maxDist << " m");
       RCLCPP_INFO_STREAM(get_logger(), "*****************************");
     }
+    _detRunning = false;
     return;
   }
 
   RCLCPP_INFO_STREAM(
     get_logger(),
     " * ArUco marker #" << ids[nearest_aruco_index] << " in range: " << nearest_distance << " m");
+
+  // ----> Check if the marker is available in the parameters
+  auto search = _tagPoses.find(ids[nearest_aruco_index]);
+  if (search == _tagPoses.end()) {
+    RCLCPP_WARN_STREAM(
+      get_logger(), "The marker with id #" << ids[nearest_aruco_index] << " is not available.");
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "Please check the file `aruco_loc.yaml` and verify that it's listed in the `marker_xxx` section.");
+    _detRunning = false;
+    return;
+  }
+  // <---- Check if the marker is available in the parameters
 
   double r, p, y;
 
@@ -585,6 +595,8 @@ void ZedArucoLocComponent::camera_callback(
   if (_debugActive) {
     RCLCPP_INFO_STREAM(get_logger(), "*****************************");
   }
+
+  // Detection completed and camera relocated
   _detRunning = false;
 }
 

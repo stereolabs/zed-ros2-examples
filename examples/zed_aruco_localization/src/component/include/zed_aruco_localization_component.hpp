@@ -99,8 +99,9 @@ private:
   std::string _worldFrameId;  // World frame id
   std::string _cameraName = "zed"; // Name of the camera to be re-localized
   double _maxDist;            // Maximum distance from the camera
+  bool _refineDetection; // Enable sub-pixel refinement for the detected corners
   std::map<int, ArucoPose> _tagPoses; // Pose of each tag in the environment in World coordinates
-  bool _debugActive;
+  bool _debugActive;          // Enable debug messages
   // <---- Parameters
 
   // ----> TF2
