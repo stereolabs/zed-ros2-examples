@@ -97,6 +97,7 @@ private:
   float _markerSize = 0.16f;  // Size of the tags [m]
   float _detRate = 1.0f;      // Maximum detection frequency for pose update
   std::string _worldFrameId;  // World frame id
+  std::string _cameraName = "zed"; // Name of the camera to be re-localized
   double _maxDist;            // Maximum distance from the camera
   std::map<int, ArucoPose> _tagPoses; // Pose of each tag in the environment in World coordinates
   bool _debugActive;

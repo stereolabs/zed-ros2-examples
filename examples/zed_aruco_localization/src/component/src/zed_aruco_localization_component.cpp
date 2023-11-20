@@ -166,6 +166,8 @@ void ZedArucoLocComponent::getGeneralParams()
   RCLCPP_INFO(get_logger(), " * Marker size [m]: ");
   getParam("general.detection_rate", _detRate, _detRate);
   RCLCPP_INFO(get_logger(), " * Detection rate [Hz]: ");
+  getParam("general.camera_name", _cameraName, _cameraName);
+  RCLCPP_INFO(get_logger(), " * Camera name: ");
   getParam("general.world_frame_id", _worldFrameId, _worldFrameId);
   RCLCPP_INFO(get_logger(), " * World frame id: ");
   getParam("general.maximum_distance", _maxDist, _maxDist);
@@ -321,7 +323,7 @@ void ZedArucoLocComponent::camera_callback(
     RCLCPP_INFO_STREAM(get_logger(), " * Detected tags: " << ids.size());
   }
 
-  // ----> Refine the result
+  /*/ ----> Refine the result
   start = get_clock()->now();
   for (size_t i = 0; i < corners.size(); ++i) {
     cv::cornerSubPix(
@@ -340,7 +342,7 @@ void ZedArucoLocComponent::camera_callback(
   if (_debugActive) {
     RCLCPP_INFO_STREAM(get_logger(), " * Subpixel refinement: " << elapsed_sec << " sec");
   }
-  // <---- Refine the result
+  // <---- Refine the result*/
 
   // ----> Estimate Marker positions
   start = get_clock()->now();
@@ -500,7 +502,7 @@ void ZedArucoLocComponent::camera_callback(
     transformStamped.header.stamp = get_clock()->now();
 
     transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
-    transformStamped.child_frame_id = "zed_left_aruco";
+    transformStamped.child_frame_id = _cameraName + "_left_aruco";
 
     transformStamped.transform.rotation.x = left_pose_marker.getRotation().x();
     transformStamped.transform.rotation.y = left_pose_marker.getRotation().y();
@@ -515,7 +517,7 @@ void ZedArucoLocComponent::camera_callback(
     _tfBroadcaster->sendTransform(transformStamped);
 
     transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
-    transformStamped.child_frame_id = "zed_base_aruco";
+    transformStamped.child_frame_id = _cameraName + "_base_aruco";
 
     transformStamped.transform.rotation.x = base_pose_marker.getRotation().x();
     transformStamped.transform.rotation.y = base_pose_marker.getRotation().y();
@@ -530,7 +532,7 @@ void ZedArucoLocComponent::camera_callback(
     _tfBroadcaster->sendTransform(transformStamped);
 
     tf2::Transform test;
-    getTransformFromTf("zed_left_aruco", "zed_base_aruco", test);
+    getTransformFromTf(_cameraName + "_left_aruco", _cameraName + "_base_aruco", test);
 
     base_pose_marker.getBasis().getRPY(r, p, y);
     RCLCPP_INFO(
@@ -657,8 +659,8 @@ bool ZedArucoLocComponent::getTransformFromTf(
 void ZedArucoLocComponent::initTFs()
 {
   // Get the transform from camera optical frame to camera base frame
-  std::string cam_left_frame = "zed_left_camera_frame"; // TODO(Walter) create from params
-  std::string cam_base_frame = "zed_camera_link"; // TODO(Walter) create from params
+  std::string cam_left_frame = _cameraName + "_left_camera_frame";
+  std::string cam_base_frame = _cameraName + "_camera_link";
   bool tf_ok = getTransformFromTf(cam_left_frame, cam_base_frame, _left2base);
   if (!tf_ok) {
     RCLCPP_ERROR(

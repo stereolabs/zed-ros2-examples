@@ -8,9 +8,11 @@
       general:
         marker_count: 2             # Number of tags in the World
         marker_size: 0.16           # Width of the ArUco tags [m]
-        detection_rate: 1.0         # Maximum detection frequency for pose update
+        maximum_distance: 2.0       # Maximum distance of the target from the camera to consider it valid
+        detection_rate: 0.5         # Maximum detection frequency for pose update
+        camera_name: "zed"          # Name of the camera to relocalize
         world_frame_id: "map"       # Frame id of the world frame
-        maximum_distance: 1.0       # Maximum distance of the target from the camera to consider it valid
+        
 
       debug:
         active: false                # Enable debug messages
