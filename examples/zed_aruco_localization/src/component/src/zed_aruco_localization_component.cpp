@@ -45,7 +45,7 @@ using namespace std::placeholders;
 namespace stereolabs
 {
 
-ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
+ZedArucoLoc::ZedArucoLoc(const rclcpp::NodeOptions & options)
 : Node("zed_aruco_loc_node", options), _defaultQoS(1), _detRunning(false)
 {
   RCLCPP_INFO(get_logger(), "*********************************");
@@ -86,7 +86,7 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
   int msec = static_cast<int>(1000. / (_detRate * 10.));
   _tfTimer = create_wall_timer(
     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(msec)),
-    std::bind(&ZedArucoLocComponent::broadcastMarkerTFs, this));
+    std::bind(&ZedArucoLoc::broadcastMarkerTFs, this));
   // <---- TF2 Transform
 
   // Create image publisher
@@ -98,7 +98,7 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
 
   // Create camera image subscriber
   _subImage = image_transport::create_camera_subscription(
-    this, "in/zed_image", std::bind(&ZedArucoLocComponent::camera_callback, this, _1, _2), "raw",
+    this, "in/zed_image", std::bind(&ZedArucoLoc::camera_callback, this, _1, _2), "raw",
     _defaultQoS.get_rmw_qos_profile());
 
   RCLCPP_INFO_STREAM(get_logger(), "Subscribed to topic: " << _subImage.getTopic());
@@ -109,7 +109,7 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
 }
 
 template<typename T>
-void ZedArucoLocComponent::getParam(
+void ZedArucoLoc::getParam(
   std::string paramName, T defValue, T & outVal, std::string log_info, bool dynamic)
 {
   rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -130,7 +130,7 @@ void ZedArucoLocComponent::getParam(
   }
 }
 
-void ZedArucoLocComponent::getParams()
+void ZedArucoLoc::getParams()
 {
   getParam("debug.active", _debugActive, _debugActive);
 
@@ -156,7 +156,7 @@ void ZedArucoLocComponent::getParams()
   getMarkerParams();
 }
 
-void ZedArucoLocComponent::getGeneralParams()
+void ZedArucoLoc::getGeneralParams()
 {
   RCLCPP_INFO(get_logger(), "*** GENERAL parameters ***");
 
@@ -171,7 +171,7 @@ void ZedArucoLocComponent::getGeneralParams()
 
 }
 
-void ZedArucoLocComponent::getMarkerParams()
+void ZedArucoLoc::getMarkerParams()
 {
   RCLCPP_INFO(get_logger(), "*** MARKER parameters ***");
 
@@ -240,7 +240,7 @@ void ZedArucoLocComponent::getMarkerParams()
   }
 }
 
-void ZedArucoLocComponent::camera_callback(
+void ZedArucoLoc::camera_callback(
   const sensor_msgs::msg::Image::ConstSharedPtr & img,
   const sensor_msgs::msg::CameraInfo::ConstSharedPtr & cam_info)
 {
@@ -600,7 +600,7 @@ void ZedArucoLocComponent::camera_callback(
   _detRunning = false;
 }
 
-void ZedArucoLocComponent::broadcastMarkerTFs()
+void ZedArucoLoc::broadcastMarkerTFs()
 {
   for (auto pose:_tagPoses) {
     geometry_msgs::msg::TransformStamped transformStamped;
@@ -626,7 +626,7 @@ void ZedArucoLocComponent::broadcastMarkerTFs()
   }
 }
 
-bool ZedArucoLocComponent::getTransformFromTf(
+bool ZedArucoLoc::getTransformFromTf(
   std::string targetFrame, std::string sourceFrame,
   tf2::Transform & out_tr)
 {
@@ -668,7 +668,7 @@ bool ZedArucoLocComponent::getTransformFromTf(
   return true;
 }
 
-void ZedArucoLocComponent::initTFs()
+void ZedArucoLoc::initTFs()
 {
   // Get the transform from camera optical frame to camera base frame
   std::string cam_left_frame = _cameraName + "_left_camera_frame";
@@ -714,7 +714,7 @@ void ZedArucoLocComponent::initTFs()
 
 }
 
-bool ZedArucoLocComponent::resetZedPose(tf2::Transform & new_pose)
+bool ZedArucoLoc::resetZedPose(tf2::Transform & new_pose)
 {
   RCLCPP_INFO(get_logger(), "*** Calling ZED 'set_pose' service ***");
 
@@ -769,4 +769,4 @@ bool ZedArucoLocComponent::resetZedPose(tf2::Transform & new_pose)
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::ZedArucoLocComponent)
+RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::ZedArucoLoc)

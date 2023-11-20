@@ -41,7 +41,7 @@ int main(int argc, char * argv[])
   exec.add_node(zed_node);
 
   // Add Zed Aruco Localization component
-  auto zed_aruco_loc_node = std::make_shared<stereolabs::ZedArucoLocComponent>(options);
+  auto zed_aruco_loc_node = std::make_shared<stereolabs::ZedArucoLoc>(options);
   exec.add_node(zed_aruco_loc_node);
 
   // spin will block until work comes in, execute work as it becomes available, and keep blocking.

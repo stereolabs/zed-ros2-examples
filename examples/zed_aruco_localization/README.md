@@ -2,9 +2,15 @@
 
 This example demonstrates how to use a set of ArUco markers placed at known positions and orientations in the environment to locate a ZED camera device.
 
-The zed-aruco-localization node performs ArUco detection at a fixed rate by subscribing to ZED color image topics. When a tag is detected it calculates the camera pose with respect to it and calls the `set_pose` service of the ZED node to reset the camera pose in the "world".
+The example creates a ROS 2 component named `stereolabs::ZedArucoLoc` that must be executed in the same container (process) 
+where the `stereolabs::ZedCamera` component is running to leverage the Intra Process Communication behavior of ROS 2 and minimize 
+the data latency.
 
-You can generate the markers by using [this online tool](https://chev.me/arucogen/). It is important to select the dictionary **6x6**.
+The launch file `zed_aruco_loc.launch.py` shows how to start a ROS 2 container and load the `stereolabs::ZedCamera` component and the `stereolabs::ZedArucoLoc` component.
+
+The `stereolabs::ZedArucoLoc` component subscribes to the rectified left camera RGB image topic of the component `stereolabs::ZedCamera`, performs ArUco detection and recalculates the pose of the camera according to the pose of the detected marker in the world. Finally, the `stereolabs::ZedArucoLoc` component calls the `set_pose` service provided by the `stereolabs::ZedCamera` component to fix the pose of the camera.
+
+You can generate your ArUco markers by using [this online tool](https://chev.me/arucogen/). It is important to select the **6x6** dictionary.
 
 ## Set the parameters
 
@@ -38,6 +44,14 @@ You can use a vectorial editor (e.g. Inkscape) to resize them according to the v
 
 ## Run the example
 
+Call the command 
+
+`ros2 launch zed_aruco_localization zed_aruco_loc.launch.py camera_model:=<camera_model>` 
+
+to start the `zed_aruco_localization` node.
+
+The `zed_aruco_localization` node performs ArUco detection at a fixed rate by subscribing to ZED color image topics. When a tag is detected it calculates the camera pose with respect to it and calls the `set_pose` service of the ZED node to reset the camera pose in the "world".
+
 Before running the example, it is important to set the following parameters in `config/aruco_loc.yaml`:
 
 * `general.marker_count`: indicates how many markers are placed in the world
@@ -56,6 +70,8 @@ Then for each marker a set of parameters must be added:
 * `aruco_id`: the index of the marker as detected
 * `position`: the position of the marker in world frame, i.e. with respect to the origin
 * `orientation`: the roll, pitch, yaw orientation [rad] of the marker in world frame, i.e. with respect to the origin
+
+> **Note**: use the command `ros2 launch zed_aruco_localization zed_aruco_loc.launch.py -s` to get the list of all the availabe launch  parameters.
 
 
 

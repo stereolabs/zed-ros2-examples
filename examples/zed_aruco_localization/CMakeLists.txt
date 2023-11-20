@@ -198,8 +198,8 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedArucoLocComponent")
-set(node_plugins "${node_plugins}stereolabs::ZedArucoLocComponent;$<TARGET_FILE:${PROJECT_NAME}_component>\n")
+rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedArucoLoc")
+set(node_plugins "${node_plugins}stereolabs::ZedArucoLoc;$<TARGET_FILE:${PROJECT_NAME}_component>\n")
 
 # Install components
 install(TARGETS ${PROJECT_NAME}_component

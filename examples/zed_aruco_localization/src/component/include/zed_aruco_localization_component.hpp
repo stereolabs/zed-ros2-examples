@@ -48,13 +48,13 @@ typedef struct
   std::vector<double> orientation;
 } ArucoPose;
 
-class ZedArucoLocComponent : public rclcpp::Node
+class ZedArucoLoc : public rclcpp::Node
 {
 public:
   ZED_ARUCO_LOC_COMPONENT_PUBLIC
-  explicit ZedArucoLocComponent(const rclcpp::NodeOptions & options);
+  explicit ZedArucoLoc(const rclcpp::NodeOptions & options);
 
-  virtual ~ZedArucoLocComponent() {}
+  virtual ~ZedArucoLoc() {}
 
 protected:
   void camera_callback(
