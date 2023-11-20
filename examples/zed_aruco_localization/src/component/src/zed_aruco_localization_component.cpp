@@ -101,8 +101,8 @@ ZedArucoLocComponent::ZedArucoLocComponent(const rclcpp::NodeOptions & options)
     this, "in/zed_image", std::bind(&ZedArucoLocComponent::camera_callback, this, _1, _2), "raw",
     _defaultQoS.get_rmw_qos_profile());
 
-  RCLCPP_INFO_STREAM(get_logger(), "Subscribed on topic: " << _subImage.getTopic());
-  RCLCPP_INFO_STREAM(get_logger(), "Subscribed on topic: " << _subImage.getInfoTopic());
+  RCLCPP_INFO_STREAM(get_logger(), "Subscribed to topic: " << _subImage.getTopic());
+  RCLCPP_INFO_STREAM(get_logger(), "Subscribed to topic: " << _subImage.getInfoTopic());
 
   // Create service caller
   _setPoseClient = create_client<zed_interfaces::srv::SetPose>("set_pose");
@@ -135,7 +135,21 @@ void ZedArucoLocComponent::getParams()
   getParam("debug.active", _debugActive, _debugActive);
 
   if (_debugActive) {
-    RCLCPP_INFO(get_logger(), "***** DEBUG MODE *****");
+    rcutils_ret_t res =
+      rcutils_logging_set_logger_level(get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG);
+
+    if (res != RCUTILS_RET_OK) {
+      RCLCPP_INFO(get_logger(), "Error setting DEBUG level for logger");
+    } else {
+      RCLCPP_INFO(get_logger(), "+++ Debug Mode enabled +++");
+    }
+  } else {
+    rcutils_ret_t res =
+      rcutils_logging_set_logger_level(get_logger().get_name(), RCUTILS_LOG_SEVERITY_INFO);
+
+    if (res != RCUTILS_RET_OK) {
+      RCLCPP_INFO(get_logger(), "Error setting INFO level for logger");
+    }
   }
 
   getGeneralParams();
@@ -233,18 +247,21 @@ void ZedArucoLocComponent::camera_callback(
   const sensor_msgs::msg::Image::ConstSharedPtr & img,
   const sensor_msgs::msg::CameraInfo::ConstSharedPtr & cam_info)
 {
-  // Check for correct input image encoding
+  // ----> Check for correct input image encoding
   if (img->encoding != sensor_msgs::image_encodings::BGRA8) {
     RCLCPP_ERROR(get_logger(), "The input topic image requires 'BGRA8' encoding");
     exit(EXIT_FAILURE);
   }
+  // <---- Check for correct input image encoding
 
+  // If a detection is already running let's return
   if (_detRunning) {
     return;
   }
 
   double det_elapsed_sec = (get_clock()->now() - _detTime).nanoseconds() / 1e9;
 
+  // If it's too early to perform another detection let's return
   if (det_elapsed_sec < (1.0 / _detRate)) {
     return;
   }
@@ -255,20 +272,13 @@ void ZedArucoLocComponent::camera_callback(
   rclcpp::Time start;
   double elapsed_sec;
 
-
   // Is result image subscribed?
   bool res_sub = (_pubDetect.getNumSubscribers() > 0);
 
-  // ----> Check for correct input image encoding
-  if (img->encoding != sensor_msgs::image_encodings::BGRA8) {
-    RCLCPP_ERROR(get_logger(), "The input topic image requires 'BGRA8' encoding");
-    _detRunning = false;
-    return;
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    RCLCPP_INFO_STREAM(get_logger(), "    ArUco detection");
   }
-  // <---- Check for correct input image encoding
-
-  RCLCPP_INFO_STREAM(get_logger(), "*****************************");
-  RCLCPP_INFO_STREAM(get_logger(), "    ArUco detection");
 
   // ----> Convert BGRA image for processing by using OpenCV
   start = get_clock()->now();
@@ -280,7 +290,9 @@ void ZedArucoLocComponent::camera_callback(
   cv::cvtColor(bgra, bgr, cv::COLOR_BGRA2BGR);
 
   elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
-  RCLCPP_INFO_STREAM(get_logger(), " * Color conversion: " << elapsed_sec << " sec");
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(get_logger(), " * Color conversion: " << elapsed_sec << " sec");
+  }
   // ----> Convert BGRA image for processing by using OpenCV
 
   // ----> Detect ArUco Markers
@@ -291,17 +303,23 @@ void ZedArucoLocComponent::camera_callback(
   auto dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_100);
   cv::aruco::detectMarkers(bgr, dictionary, corners, ids);
   elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
-  RCLCPP_INFO_STREAM(get_logger(), " * Marker detection: " << elapsed_sec << " sec");
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(get_logger(), " * Marker detection: " << elapsed_sec << " sec");
+  }
   // <---- Detect ArUco Markers
 
   if (corners.empty()) {
     _detRunning = false;
-    RCLCPP_INFO_STREAM(get_logger(), "  No Markers in view");
-    RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    if (_debugActive) {
+      RCLCPP_INFO_STREAM(get_logger(), "  No Markers in view");
+      RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    }
     return;
   }
 
-  RCLCPP_INFO_STREAM(get_logger(), " * Detected tags: " << ids.size());
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(get_logger(), " * Detected tags: " << ids.size());
+  }
 
   // ----> Refine the result
   start = get_clock()->now();
@@ -313,11 +331,15 @@ void ZedArucoLocComponent::camera_callback(
   elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
   if (corners.empty()) {
     _detRunning = false;
-    RCLCPP_INFO_STREAM(get_logger(), "  No Markers in view");
-    RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    if (_debugActive) {
+      RCLCPP_INFO_STREAM(get_logger(), "  No Markers in view");
+      RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    }
     return;
   }
-  RCLCPP_INFO_STREAM(get_logger(), " * Subpixel refinement: " << elapsed_sec << " sec");
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(get_logger(), " * Subpixel refinement: " << elapsed_sec << " sec");
+  }
   // <---- Refine the result
 
   // ----> Estimate Marker positions
@@ -335,7 +357,9 @@ void ZedArucoLocComponent::camera_callback(
     corners, _markerSize, camera_matrix, dist_coeffs, rvecs,
     tvecs);
   elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
-  RCLCPP_INFO_STREAM(get_logger(), " * Marker poses estimation: " << elapsed_sec << " sec");
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(get_logger(), " * Marker poses estimation: " << elapsed_sec << " sec");
+  }
   // <---- Estimate Marker positions
 
   // ----> Find the closest marker
@@ -351,19 +375,27 @@ void ZedArucoLocComponent::camera_callback(
       nearest_aruco_index = i;
     }
   }
-  RCLCPP_INFO_STREAM(
-    get_logger(),
-    " * Nearest marker: " << ids[nearest_aruco_index] << " -> " << nearest_distance << "m");
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      " * Nearest marker: " << ids[nearest_aruco_index] << " -> " << nearest_distance << "m");
+  }
   // <---- Find the closest marker
 
   if (nearest_distance > _maxDist) {
     _detRunning = false;
-    RCLCPP_INFO_STREAM(
-      get_logger(),
-      "  The closest marker is too far: " << nearest_distance << " m > " << _maxDist << " m");
-    RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    if (_debugActive) {
+      RCLCPP_INFO_STREAM(
+        get_logger(),
+        "  The closest marker is too far: " << nearest_distance << " m > " << _maxDist << " m");
+      RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+    }
     return;
   }
+
+  RCLCPP_INFO_STREAM(
+    get_logger(),
+    " * ArUco marker #" << ids[nearest_aruco_index] << " in range: " << nearest_distance << " m");
 
   double r, p, y;
 
@@ -379,11 +411,13 @@ void ZedArucoLocComponent::camera_callback(
 
   tf2::Transform pose_aruco(tf2_rot, tf2_origin);
 
-  pose_aruco.getBasis().getRPY(r, p, y);
-  RCLCPP_INFO(
-    get_logger(), "pose_aruco -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
-    pose_aruco.getOrigin().x(), pose_aruco.getOrigin().y(), pose_aruco.getOrigin().z(),
-    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  if (_debugActive) {
+    pose_aruco.getBasis().getRPY(r, p, y);
+    RCLCPP_INFO(
+      get_logger(), "pose_aruco -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+      pose_aruco.getOrigin().x(), pose_aruco.getOrigin().y(), pose_aruco.getOrigin().z(),
+      r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  }
   // <---- ArUco rvec and tvec to TF2 Transform
 
   // ----> Change basis from ArUco to camera in image coordinate system
@@ -391,11 +425,13 @@ void ZedArucoLocComponent::camera_callback(
   pose_img.mult(_img2aruco, pose_aruco);
   pose_img = pose_img.inverse();
 
-  pose_img.getBasis().getRPY(r, p, y);
-  RCLCPP_INFO(
-    get_logger(), "pose_img -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
-    pose_img.getOrigin().x(), pose_img.getOrigin().y(), pose_img.getOrigin().z(),
-    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  if (_debugActive) {
+    pose_img.getBasis().getRPY(r, p, y);
+    RCLCPP_INFO(
+      get_logger(), "pose_img -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+      pose_img.getOrigin().x(), pose_img.getOrigin().y(), pose_img.getOrigin().z(),
+      r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  }
   // <---- Change basis from ArUco to camera in image coordinate system
 
   // ----> ArUco pose in ROS coordinate system
@@ -409,24 +445,29 @@ void ZedArucoLocComponent::camera_callback(
   left_pose_marker.mult(pose_img, ros2aruco);
   left_pose_marker.mult(aruco2ros, left_pose_marker);
 
-  left_pose_marker.getBasis().getRPY(r, p, y);
-  RCLCPP_INFO(
-    get_logger(), "pose_marker -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
-    left_pose_marker.getOrigin().x(), left_pose_marker.getOrigin().y(),
-    left_pose_marker.getOrigin().z(),
-    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  if (_debugActive) {
+    left_pose_marker.getBasis().getRPY(r, p, y);
+
+    RCLCPP_INFO(
+      get_logger(), "pose_marker -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+      left_pose_marker.getOrigin().x(), left_pose_marker.getOrigin().y(),
+      left_pose_marker.getOrigin().z(),
+      r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  }
   // <---- Left camera sensor in ROS coordinate  respect to the marker
 
   // ----> Camera base in ROS coordinate respect to the marker
   tf2::Transform base_pose_marker;
   base_pose_marker.mult(left_pose_marker, _left2base);
 
-  base_pose_marker.getBasis().getRPY(r, p, y);
-  RCLCPP_INFO(
-    get_logger(), "pose_marker -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
-    base_pose_marker.getOrigin().x(), base_pose_marker.getOrigin().y(),
-    base_pose_marker.getOrigin().z(),
-    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  if (_debugActive) {
+    base_pose_marker.getBasis().getRPY(r, p, y);
+    RCLCPP_INFO(
+      get_logger(), "pose_marker -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+      base_pose_marker.getOrigin().x(), base_pose_marker.getOrigin().y(),
+      base_pose_marker.getOrigin().z(),
+      r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  }
   // <---- Camera base in ROS coordinate respect to the marker
 
   // ----> New camera pose in ROS world
@@ -453,48 +494,50 @@ void ZedArucoLocComponent::camera_callback(
   // <---- Reset camera position
 
   // ----> Debug TF
-  geometry_msgs::msg::TransformStamped transformStamped;
+  if (_debugActive) {
+    geometry_msgs::msg::TransformStamped transformStamped;
 
-  transformStamped.header.stamp = get_clock()->now();
+    transformStamped.header.stamp = get_clock()->now();
 
-  transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
-  transformStamped.child_frame_id = "zed_left_aruco";
+    transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
+    transformStamped.child_frame_id = "zed_left_aruco";
 
-  transformStamped.transform.rotation.x = left_pose_marker.getRotation().x();
-  transformStamped.transform.rotation.y = left_pose_marker.getRotation().y();
-  transformStamped.transform.rotation.z = left_pose_marker.getRotation().z();
-  transformStamped.transform.rotation.w = left_pose_marker.getRotation().w();
+    transformStamped.transform.rotation.x = left_pose_marker.getRotation().x();
+    transformStamped.transform.rotation.y = left_pose_marker.getRotation().y();
+    transformStamped.transform.rotation.z = left_pose_marker.getRotation().z();
+    transformStamped.transform.rotation.w = left_pose_marker.getRotation().w();
 
-  transformStamped.transform.translation.x = left_pose_marker.getOrigin().x();
-  transformStamped.transform.translation.y = left_pose_marker.getOrigin().y();
-  transformStamped.transform.translation.z = left_pose_marker.getOrigin().z();
+    transformStamped.transform.translation.x = left_pose_marker.getOrigin().x();
+    transformStamped.transform.translation.y = left_pose_marker.getOrigin().y();
+    transformStamped.transform.translation.z = left_pose_marker.getOrigin().z();
 
-  // Broadcast debug TF
-  _tfBroadcaster->sendTransform(transformStamped);
+    // Broadcast debug TF
+    _tfBroadcaster->sendTransform(transformStamped);
 
-  transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
-  transformStamped.child_frame_id = "zed_base_aruco";
+    transformStamped.header.frame_id = _tagPoses[ids[nearest_aruco_index]].marker_frame_id;
+    transformStamped.child_frame_id = "zed_base_aruco";
 
-  transformStamped.transform.rotation.x = base_pose_marker.getRotation().x();
-  transformStamped.transform.rotation.y = base_pose_marker.getRotation().y();
-  transformStamped.transform.rotation.z = base_pose_marker.getRotation().z();
-  transformStamped.transform.rotation.w = base_pose_marker.getRotation().w();
+    transformStamped.transform.rotation.x = base_pose_marker.getRotation().x();
+    transformStamped.transform.rotation.y = base_pose_marker.getRotation().y();
+    transformStamped.transform.rotation.z = base_pose_marker.getRotation().z();
+    transformStamped.transform.rotation.w = base_pose_marker.getRotation().w();
 
-  transformStamped.transform.translation.x = base_pose_marker.getOrigin().x();
-  transformStamped.transform.translation.y = base_pose_marker.getOrigin().y();
-  transformStamped.transform.translation.z = base_pose_marker.getOrigin().z();
+    transformStamped.transform.translation.x = base_pose_marker.getOrigin().x();
+    transformStamped.transform.translation.y = base_pose_marker.getOrigin().y();
+    transformStamped.transform.translation.z = base_pose_marker.getOrigin().z();
 
-  // Broadcast debug TF
-  _tfBroadcaster->sendTransform(transformStamped);
+    // Broadcast debug TF
+    _tfBroadcaster->sendTransform(transformStamped);
 
-  tf2::Transform test;
-  getTransformFromTf("zed_left_aruco", "zed_base_aruco", test);
+    tf2::Transform test;
+    getTransformFromTf("zed_left_aruco", "zed_base_aruco", test);
 
-  base_pose_marker.getBasis().getRPY(r, p, y);
-  RCLCPP_INFO(
-    get_logger(), "test TF -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
-    test.getOrigin().x(), test.getOrigin().y(), test.getOrigin().z(),
-    r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+    base_pose_marker.getBasis().getRPY(r, p, y);
+    RCLCPP_INFO(
+      get_logger(), "test TF -> Pos: [%.3f,%.3f,%.3f] - Or: [%.3f°,%.3f°,%.3f°]",
+      test.getOrigin().x(), test.getOrigin().y(), test.getOrigin().z(),
+      r * RAD2DEG, p * RAD2DEG, y * RAD2DEG);
+  }
   // <---- Debug TF
 
   // ----> Draw and publish the results
@@ -529,13 +572,17 @@ void ZedArucoLocComponent::camera_callback(
     // Publish the new image message coupled with camera info from the original message
     _pubDetect.publish(out_bgr, cam_info);
     elapsed_sec = (get_clock()->now() - start).nanoseconds() / 1e9;
-    RCLCPP_INFO_STREAM(get_logger(), " * Publish image result: " << elapsed_sec << " sec");
+    if (_debugActive) {
+      RCLCPP_INFO_STREAM(get_logger(), " * Publish image result: " << elapsed_sec << " sec");
+    }
   }
   // <---- Draw and publish the results
 
   _detTime = get_clock()->now();
 
-  RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+  if (_debugActive) {
+    RCLCPP_INFO_STREAM(get_logger(), "*****************************");
+  }
   _detRunning = false;
 }
 
@@ -668,29 +715,37 @@ bool ZedArucoLocComponent::resetZedPose(tf2::Transform & new_pose)
   request->orient[1] = p;
   request->orient[2] = y;
 
+  RCLCPP_INFO(
+    get_logger(), " * New camera pose [%s]-> Pos:[%.3f,%.3f,%.3f] Or:[%.3f°,%.3f°,%.3f°]",
+    _worldFrameId.c_str(),
+    request->pos[0], request->pos[1], request->pos[2],
+    request->orient[0] * RAD2DEG, request->orient[1] * RAD2DEG, request->orient[2] * RAD2DEG);
+
   while (!_setPoseClient->wait_for_service(1s)) {
     if (!rclcpp::ok()) {
-      RCLCPP_ERROR(get_logger(), "  * Interrupted while waiting for the service. Exiting.");
+      RCLCPP_ERROR(get_logger(), " * Interrupted while waiting for the service. Exiting.");
       return false;
     }
     RCLCPP_INFO_STREAM(
       get_logger(),
-      "  * '" << _setPoseClient->get_service_name() << "' service not available, waiting...");
+      " * '" << _setPoseClient->get_service_name() << "' service not available, waiting...");
   }
 
-  auto future = _setPoseClient->async_send_request(request);
-  RCLCPP_INFO(get_logger(), "  * Service called. Waiting for a reply...");
+  // We give the async_send_request() method a callback (lambda function) that will get executed
+  // once the response is received.
+  // This way we can return immediately from this method and allow other work to be done by the
+  // executor.
+  using ServiceResponseFuture =
+    rclcpp::Client<zed_interfaces::srv::SetPose>::SharedFuture;
+  auto response_received_callback = [this](ServiceResponseFuture future) {
+      auto result = future.get();
+      RCLCPP_INFO_STREAM(
+        get_logger(), " * ZED Node replied to `set_pose` call: " << result->message.c_str());
+    };
 
-  auto status = future.wait_for(2s);  // not spinning here!
-  if (status == std::future_status::ready) {
-    RCLCPP_INFO_STREAM(get_logger(), "  * ZED node replied: " << future.get()->message.c_str());
-    return future.get()->success;
-  } else {
-    RCLCPP_ERROR(get_logger(), "  * ZED node did not reply.");
-    return false;
-  }
+  auto future_result = _setPoseClient->async_send_request(request, response_received_callback);
 
-  return false;
+  return true;
 }
 
 }  // namespace stereolabs

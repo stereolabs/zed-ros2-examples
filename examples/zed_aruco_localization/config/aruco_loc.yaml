@@ -10,24 +10,24 @@
         marker_size: 0.16           # Width of the ArUco tags [m]
         detection_rate: 1.0         # Maximum detection frequency for pose update
         world_frame_id: "map"       # Frame id of the world frame
-        maximum_distance: 2.0       # Maximum distance of the target from the camera to consider it valid
+        maximum_distance: 1.0       # Maximum distance of the target from the camera to consider it valid
 
       debug:
-        active: true               # Enable debug messages
+        active: false                # Enable debug messages
 
       marker_000:
-        aruco_id: 43                # ID of the ArUco tag as retrieved by the ArUco Detector code
-        position: [0.0,0.0,0.7]     # Pose with respect to the World origin [m]
-        orientation: [0.0,0.0,0.0]  # Orientation with respect to the World origin [rad]
+        aruco_id: 43                 # ID of the ArUco tag as retrieved by the ArUco Detector code
+        position: [-1.08,-0.56,0.63] # Pose with respect to the World origin [m]
+        orientation: [0.0,0.0,0.0]   # Orientation with respect to the World origin [rad]
 
       marker_001:
-        aruco_id: 19                # ID of the ArUco tag as retrieved by the ArUco Detector code
-        position: [1.08,0.45,1.145] # Pose with respect to the World origin [m]
-        orientation: [0.0,0.0,0.0]  # Orientation with respect to the World origin [rad]
+        aruco_id: 19                 # ID of the ArUco tag as retrieved by the ArUco Detector code
+        position: [0.0,0.0,1.09]     # Pose with respect to the World origin [m]
+        orientation: [0.0,0.0,0.0]   # Orientation with respect to the World origin [rad]
 
       # Add a number of marker definitions equal to the number of markers in the World
       
       #marker_xxx:
       #  aruco_id: YYY               # ID of the ArUco tag as retrieved by the ArUco Detector code
-      #  position: [x.x,y.y,z.z]         # Pose with respect to the World origin [m]
+      #  position: [x.x,y.y,z.z]     # Pose with respect to the World origin [m]
       #  orientation: [R.R,P.P,Y.Y]  # Orientation with respect to the World origin [rad]
