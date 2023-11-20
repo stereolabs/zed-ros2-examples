@@ -2,9 +2,7 @@
 
 This example demonstrates how to use a set of ArUco markers placed at known positions and orientations in the environment to locate a ZED camera device.
 
-The example creates a ROS 2 component named `stereolabs::ZedArucoLoc` that must be executed in the same container (process) 
-where the `stereolabs::ZedCamera` component is running to leverage the Intra Process Communication behavior of ROS 2 and minimize 
-the data latency.
+The example leverages the concept of [Node Composition in ROS 2(https://docs.ros.org/en/humble/Concepts/Intermediate/About-Composition.html)]. It creates a ROS 2 component named `stereolabs::ZedArucoLoc` that must be executed in the same container (process)where the `stereolabs::ZedCamera` component is running to leverage the Intra Process Communication behavior of ROS 2 and minimize the data latency.
 
 The launch file `zed_aruco_loc.launch.py` shows how to start a ROS 2 container and load the `stereolabs::ZedCamera` component and the `stereolabs::ZedArucoLoc` component.
 

@@ -29,6 +29,8 @@ from launch.substitutions import (
     TextSubstitution
 )
 from launch_ros.actions import Node
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 
 # ZED Configurations to be loaded by ZED Node
 default_config_common = os.path.join(
@@ -69,7 +71,7 @@ def launch_setup(context, *args, **kwargs):
     camera_name = LaunchConfiguration('camera_name')
     camera_model = LaunchConfiguration('camera_model')
 
-    node_name = LaunchConfiguration('node_name')
+    zed_node_name = LaunchConfiguration('zed_node_name')
 
     config_common_path = LaunchConfiguration('config_path')
     config_path_aruco = LaunchConfiguration('config_path_aruco')
@@ -82,12 +84,11 @@ def launch_setup(context, *args, **kwargs):
     publish_imu_tf = LaunchConfiguration('publish_imu_tf')
     xacro_path = LaunchConfiguration('xacro_path')
 
-    ros_params_override_path = LaunchConfiguration('ros_params_override_path')
-
     gnss_frame = LaunchConfiguration('gnss_frame')
 
     camera_name_val = camera_name.perform(context)
     camera_model_val = camera_model.perform(context)
+    zed_node_name_val = zed_node_name.perform(context)
 
     if (camera_name_val == ""):
         camera_name_val = 'zed'
@@ -117,20 +118,11 @@ def launch_setup(context, *args, **kwargs):
     )
 
     # ZED Wrapper and ArUco detector nodes in a container
-    zed_wrapper_node = Node(
-        package='zed_aruco_localization',
+    zed_wrapper_component = ComposableNode(
+        package='zed_components',
         namespace=camera_name_val,
-        executable='zed_aruco_localization',
-        #name=node_name,
-        output='screen',
-        # prefix=['xterm -e valgrind --tools=callgrind'],
-        # prefix=['xterm -e gdb -ex run --args'],
-        #prefix=['gdbserver localhost:3000'],
-        remappings=[
-            ('in/zed_image','zed_node/rgb/image_rect_color'),
-            ('in/camera_info','zed_node/rgb/camera_info'),
-            ('set_pose','zed_node/set_pose')
-        ],
+        plugin='stereolabs::ZedCamera',
+        name=zed_node_name,
         parameters=[
             # YAML files
             config_common_path,  # Common parameters
@@ -145,14 +137,38 @@ def launch_setup(context, *args, **kwargs):
                 'pos_tracking.publish_tf': publish_tf,
                 'pos_tracking.publish_map_tf': publish_map_tf,
                 'sensors.publish_imu_tf': publish_imu_tf
-            },
-            ros_params_override_path,
+            }
         ]
+    )
+
+    zed_aruco_component = ComposableNode(
+        package='zed_aruco_localization',
+        namespace=camera_name_val,
+        plugin='stereolabs::ZedArucoLoc',
+        name= camera_name_val + '_aruco_node',
+        parameters=[config_path_aruco],
+        remappings=[
+                ('in/zed_image', zed_node_name_val + '/rgb/image_rect_color'),
+                ('in/camera_info', zed_node_name_val + '/rgb/camera_info'),
+                ('set_pose', zed_node_name_val + '/set_pose')
+            ]
+    )
+
+    container = ComposableNodeContainer(
+            name='zed_aruco_localization',
+            namespace=camera_name_val,
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+                zed_wrapper_component,
+                zed_aruco_component
+            ],
+            output='screen',
     )
 
     return [
         rsp_node,
-        zed_wrapper_node
+        container
     ]
 
 
@@ -169,9 +185,9 @@ def generate_launch_description():
                 description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
                 choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm']),
             DeclareLaunchArgument(
-                'node_name',
+                'zed_node_name',
                 default_value='zed_node',
-                description='The name of the zed_wrapper node. All the topic will have the same prefix: `/<camera_name>/<node_name>/`'),
+                description='The name of the zed_wrapper node. All the topic will have the same prefix: `/<camera_name>/<zed_node_name>/`'),
             DeclareLaunchArgument(
                 'config_path',
                 default_value=TextSubstitution(text=default_config_common),
@@ -208,10 +224,6 @@ def generate_launch_description():
                 'xacro_path',
                 default_value=TextSubstitution(text=default_xacro_path),
                 description='Path to the camera URDF file as a xacro file.'),
-            DeclareLaunchArgument(
-                'ros_params_override_path',
-                default_value='',
-                description='The path to an additional parameters file to override the defaults'),
             DeclareLaunchArgument(
                 'svo_path',
                 default_value=TextSubstitution(text="live"),
