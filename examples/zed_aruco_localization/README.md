@@ -48,7 +48,7 @@ Call the command
 
 to start the `zed_aruco_localization` node.
 
-> **Note:** you can add the option `rviz:=true` to start a pre-configured RVIZ2 environment to display the detection results.
+> **Note:** you can add the option `rviz:=false` to disable the automatic load of RVIZ2.
 
 The `zed_aruco_localization` node performs ArUco detection at a fixed rate by subscribing to ZED color image topics. When a tag is detected it calculates the camera pose with respect to it and calls the `set_pose` service of the ZED node to reset the camera pose in the "world".
 
