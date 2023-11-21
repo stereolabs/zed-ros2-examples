@@ -245,7 +245,7 @@ def generate_launch_description():
                 description='Path to an input SVO file. Note: overrides the parameter `general.svo_file` in `common.yaml`.'),
             DeclareLaunchArgument(
                 'rviz',
-                default_value='false',
+                default_value='true',
                 description='Starts RVIZ2 preconfigured to show ArUco detection results',
                 choices=['true', 'false']),
             OpaqueFunction(function=launch_setup)
