@@ -30,7 +30,7 @@ The parameters are described in the file `config/aruco_loc.yaml` that is loaded 
 
 For each marker in the world (this must match the number in `marker_count`):
 
-``````
+```
       marker_<idx>:
         aruco_id: <id>                      # ID of the ArUco tag as retrieved by the ArUco Detector code
         position: [<pos_X>,<pos_Y>,<pos_Z>] # Pose with respect to the World origin [m]
