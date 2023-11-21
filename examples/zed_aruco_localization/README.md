@@ -30,7 +30,7 @@ The parameters are described in the file `config/aruco_loc.yaml` that is loaded 
 
 For each marker in the world (this must match the number in `marker_count`):
 
-``````
+```
       marker_<idx>:
         aruco_id: <id>                      # ID of the ArUco tag as retrieved by the ArUco Detector code
         position: [<pos_X>,<pos_Y>,<pos_Z>] # Pose with respect to the World origin [m]
@@ -47,6 +47,8 @@ Call the command
 `ros2 launch zed_aruco_localization zed_aruco_loc.launch.py camera_model:=<camera_model>` 
 
 to start the `zed_aruco_localization` node.
+
+> **Note:** you can add the option `rviz:=true` to start a pre-configured RVIZ2 environment to display the detection results.
 
 The `zed_aruco_localization` node performs ArUco detection at a fixed rate by subscribing to ZED color image topics. When a tag is detected it calculates the camera pose with respect to it and calls the `set_pose` service of the ZED node to reset the camera pose in the "world".
 
