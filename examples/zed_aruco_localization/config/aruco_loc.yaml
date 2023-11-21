@@ -10,8 +10,8 @@
         marker_size: 0.16           # Width/Height of the ArUco markers [m]
         maximum_distance: 2.0       # Maximum distance of the target from the camera to consider it valid
         detection_rate: 0.5         # Maximum detection frequency for pose update
-        camera_name: "zed"          # Name of the camera to relocate
-        world_frame_id: "map"       # Frame id of the world frame
+        camera_name: 'zed'          # Name of the camera to relocate
+        world_frame_id: 'map'       # Frame id of the world frame
         refine_detection: false     # If enabled the corners of the detected markers will be processed to obtain sub-pixel precision
 
       debug:
