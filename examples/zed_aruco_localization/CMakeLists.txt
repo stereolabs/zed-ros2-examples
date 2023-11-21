@@ -98,12 +98,6 @@ set(DEPENDENCIES_COMP
     tf2_geometry_msgs
 )
 
-set(DEPENDENCIES_CONT
-    rclcpp
-    rclcpp_components
-    zed_components
-)
-
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
@@ -147,10 +141,6 @@ set(SRC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
 )
 
-set(SRC_CONT
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/container/zed_aruco_localization.cpp
-)
-
 ###############################################################################
 # Bin and Install
 
@@ -176,28 +166,6 @@ ament_target_dependencies(${PROJECT_NAME}_component
     ${DEPENDENCIES_COMP}
 )
 
-# Container node
-add_executable(${PROJECT_NAME}
-    ${SRC_CONT}
-)
-target_include_directories(${PROJECT_NAME}
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-    ${CUDA_INCLUDE_DIRS}
-    ${ZED_INCLUDE_DIRS}
-)
-target_link_libraries(${PROJECT_NAME}
-    ${PROJECT_NAME}_component
-)
-ament_target_dependencies(${PROJECT_NAME}
-    ${DEPENDENCIES_CONT}
-)
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
 rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedArucoLoc")
 set(node_plugins "${node_plugins}stereolabs::ZedArucoLoc;$<TARGET_FILE:${PROJECT_NAME}_component>\n")
 
@@ -217,11 +185,11 @@ install(
 
 # Install LAUNCH files
 install(DIRECTORY
-  launch config
+  launch config rviz2
   DESTINATION share/${PROJECT_NAME}
 )
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME}_component)
-ament_export_dependencies(${DEPENDENCIES_CONT} ${DEPENDENCIES_COMP})
+ament_export_dependencies(${DEPENDENCIES_COMP})
 ament_package()

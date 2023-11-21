@@ -4,10 +4,9 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
         - /RobotModel1/Description Topic1
+        - /Video1
         - /Video1/Stereo1/Topic1
-        - /Depth1
         - /Depth1/Depth Map1/Topic1
         - /Position1
         - /Position1/TF1
@@ -740,25 +739,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.9019984006881714
+      Distance: 4.8874897956848145
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.8810490369796753
-        Y: -0.8694786429405212
-        Z: 1.5521754026412964
+        X: 0.2550347149372101
+        Y: -0.2057873010635376
+        Z: 1.9154198169708252
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3947974443435669
+      Pitch: 0.3397974967956543
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 5.890111923217773
+      Yaw: 5.620110511779785
     Saved: ~
 Window Geometry:
   ArUco:
