@@ -15,7 +15,7 @@
 #ifndef ZED_ARUCO_LOC_COMPONENT_HPP_
 #define ZED_ARUCO_LOC_COMPONENT_HPP_
 
-#include <opencv4/opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 #include <map>
 
 #include <rclcpp/rclcpp.hpp>

@@ -14,7 +14,7 @@
 
 #include "zed_aruco_localization_component.hpp"
 
-#include <opencv4/opencv2/aruco.hpp>
+#include "aruco.hpp"
 
 #include <sstream>
 

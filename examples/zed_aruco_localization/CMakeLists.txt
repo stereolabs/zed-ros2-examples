@@ -135,10 +135,12 @@ set(INC
 
 set(INC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_aruco_localization_component.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/aruco.hpp
 )
 
 set(SRC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/aruco.cpp
 )
 
 ###############################################################################
