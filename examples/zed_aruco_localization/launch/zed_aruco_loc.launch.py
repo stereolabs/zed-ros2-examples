@@ -75,6 +75,7 @@ def launch_setup(context, *args, **kwargs):
     publish_map_tf = LaunchConfiguration('publish_map_tf')
     publish_imu_tf = LaunchConfiguration('publish_imu_tf')
     xacro_path = LaunchConfiguration('xacro_path')
+    gravity_alignment = LaunchConfiguration('gravity_alignment')
 
     start_rviz = LaunchConfiguration('rviz')
 
@@ -144,7 +145,8 @@ def launch_setup(context, *args, **kwargs):
                 'general.serial_number': serial_number,
                 'pos_tracking.publish_tf': publish_tf,
                 'pos_tracking.publish_map_tf': publish_map_tf,
-                'sensors.publish_imu_tf': publish_imu_tf
+                'sensors.publish_imu_tf': publish_imu_tf,
+                'pos_tracking.set_gravity_as_origin': gravity_alignment
             }
         ]
     )
@@ -234,6 +236,11 @@ def generate_launch_description():
                 'publish_imu_tf',
                 default_value='true',
                 description='Enable publication of the IMU TF. Note: Ignored if `publish_tf` is False.',
+                choices=['true', 'false']),
+            DeclareLaunchArgument(
+                'gravity_alignment',
+                default_value='false',
+                description='Enable orientation alignment to the gravity vector. Note: if enabled the orientation of the markers must refer to Earth gravity.',
                 choices=['true', 'false']),
             DeclareLaunchArgument(
                 'xacro_path',

@@ -52,6 +52,8 @@ to start the `zed_aruco_localization` node.
 
 The `zed_aruco_localization` node performs ArUco detection at a fixed rate by subscribing to ZED color image topics. When a tag is detected it calculates the camera pose with respect to it and calls the `set_pose` service of the ZED node to reset the camera pose in the "world".
 
+> **Note:** By default, the gravity alignment is turned off. However, you can turn it on by using the launch option `gravity_alignment:=true`. Please note that for accurate ArUco re-location, it is crucial to ensure that the pitch and yaw values of each marker's orientation are properly set with respect to the Earth's gravity vector.
+
 Before running the example, it is important to set the following parameters in `config/aruco_loc.yaml`:
 
 * `general.marker_count`: indicates how many markers are placed in the world
