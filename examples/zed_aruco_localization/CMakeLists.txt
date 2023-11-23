@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(zed_rgb_convert)
+project(zed_aruco_localization)
 
 ## Generate symbols for IDE indexer
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -29,10 +29,7 @@ else()
 endif()
 
 if(ROS2_FOUND)
-    if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
-        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_FOXY)
-    elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+    if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
@@ -82,7 +79,7 @@ endif()
 #############################################
 # Dependencies
 
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 4 REQUIRED)
 find_package(ZED 4 REQUIRED)
 find_package(CUDA REQUIRED)
 
@@ -92,12 +89,10 @@ set(DEPENDENCIES_COMP
     builtin_interfaces
     sensor_msgs
     image_transport
-)
-
-set(DEPENDENCIES_CONT
-    rclcpp
-    rclcpp_components
-    zed_components
+    zed_interfaces
+    tf2
+    tf2_ros
+    tf2_geometry_msgs
 )
 
 find_package(ament_cmake_auto REQUIRED)
@@ -109,6 +104,9 @@ find_package(rclcpp_components REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(zed_components)
 
 if(BUILD_TESTING)
@@ -122,16 +120,6 @@ endif()
 file(GLOB_RECURSE all_files ${CMAKE_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 
-###############################################################################
-# INCLUDES and LIBS
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
-    ${OpenCV_INCLUDE_DIRS}
-    ${CUDA_INCLUDE_DIRS}
-    ${ZED_INCLUDE_DIRS}
-)
-
 # create ament index resource which references the libraries in the binary dir
 set(node_plugins "")
 
@@ -139,19 +127,17 @@ set(node_plugins "")
 # SOURCES
 
 set(INC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cvt_visibility_control.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/aruco_loc_visibility_control.hpp
 )
 
 set(INC_COMP
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_rgb_convert_component.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_aruco_localization_component.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/aruco.hpp
 )
 
 set(SRC_COMP
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_rgb_convert_component.cpp
-)
-
-set(SRC_CONT
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/container/zed_rgb_convert.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/aruco.cpp
 )
 
 ###############################################################################
@@ -166,6 +152,12 @@ add_library(${PROJECT_NAME}_component SHARED
 target_compile_definitions(${PROJECT_NAME}_component
     PRIVATE "COMPOSITION_BUILDING_DLL"
 )
+target_include_directories(${PROJECT_NAME}_component
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
+    ${OpenCV_INCLUDE_DIRS}
+)
 target_link_libraries(${PROJECT_NAME}_component
     ${OpenCV_LIBS}
 )
@@ -173,24 +165,8 @@ ament_target_dependencies(${PROJECT_NAME}_component
     ${DEPENDENCIES_COMP}
 )
 
-# Container
-add_executable(${PROJECT_NAME}
-    ${SRC_CONT}
-)
-target_link_libraries(${PROJECT_NAME}
-    ${PROJECT_NAME}_component
-)
-ament_target_dependencies(${PROJECT_NAME}
-    ${DEPENDENCIES_CONT}
-)
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
-rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedRgbCvtComponent")
-set(node_plugins "${node_plugins}stereolabs::ZedRgbCvtComponent;$<TARGET_FILE:zed_rgb_convert_component>\n")
+rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedArucoLoc")
+set(node_plugins "${node_plugins}stereolabs::ZedArucoLoc;$<TARGET_FILE:${PROJECT_NAME}_component>\n")
 
 # Install components
 install(TARGETS ${PROJECT_NAME}_component
@@ -202,16 +178,17 @@ install(TARGETS ${PROJECT_NAME}_component
 # Install header files
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
     DESTINATION include/${PROJECT_NAME}/
 )
 
 # Install LAUNCH files
 install(DIRECTORY
-  launch
+  launch config rviz2
   DESTINATION share/${PROJECT_NAME}
 )
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME}_component)
-ament_export_dependencies(${DEPENDENCIES_CONT} ${DEPENDENCIES_COMP})
+ament_export_dependencies(${DEPENDENCIES_COMP})
 ament_package()

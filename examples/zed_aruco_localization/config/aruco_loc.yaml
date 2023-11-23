@@ -1,0 +1,35 @@
+# config/aruco_loc.yaml
+# Parameters for ArUco localization
+
+---
+/**:
+    ros__parameters:
+
+      general:
+        marker_count: 2             # Number of markers in the World
+        marker_size: 0.16           # Width/Height of the ArUco markers [m]
+        maximum_distance: 2.0       # Maximum distance of the target from the camera to consider it valid
+        detection_rate: 0.5         # Maximum detection frequency for pose update
+        camera_name: 'zed'          # Name of the camera to relocate
+        world_frame_id: 'map'       # Frame id of the world frame
+        refine_detection: false     # If enabled the corners of the detected markers will be processed to obtain sub-pixel precision
+
+      debug:
+        active: false               # Enable debug messages
+
+      marker_000:
+        aruco_id: 43                 # ID of the ArUco tag as retrieved by the ArUco Detector code
+        position: [-1.08,-0.56,0.63] # Pose with respect to the World origin [m]
+        orientation: [0.0,0.0,0.0]   # Orientation with respect to the World origin [rad]
+
+      marker_001:
+        aruco_id: 19                 # ID of the ArUco tag as retrieved by the ArUco Detector code
+        position: [0.0,0.0,1.09]     # Pose with respect to the World origin [m]
+        orientation: [0.0,0.0,0.0]   # Orientation with respect to the World origin [rad]
+
+      # Add a number of marker definitions equal to the number of markers in the World according to the `marker_count` value
+      
+      #marker_xxx:
+      #  aruco_id: YYY               # ID of the ArUco tag as retrieved by the ArUco Detector code
+      #  position: [x.x,y.y,z.z]     # Pose with respect to the World origin [m]
+      #  orientation: [R.R,P.P,Y.Y]  # Orientation with respect to the World origin [rad]

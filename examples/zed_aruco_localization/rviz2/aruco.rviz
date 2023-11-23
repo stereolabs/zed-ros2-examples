@@ -4,10 +4,11 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /RobotModel1
         - /RobotModel1/Description Topic1
+        - /Video1
         - /Video1/Stereo1/Topic1
         - /Depth1/Depth Map1/Topic1
+        - /Position1
         - /Position1/TF1
         - /Position1/TF1/Frames1
         - /Position1/Pose1/Topic1
@@ -19,8 +20,8 @@ Panels:
         - /Sensors1/IMU Temperature1/Topic1
         - /Sensors1/Left Temperature1/Topic1
         - /Sensors1/Right Temperature1/Topic1
-      Splitter Ratio: 0.4577922224998474
-    Tree Height: 485
+      Splitter Ratio: 0.7636363506317139
+    Tree Height: 788
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -109,7 +110,7 @@ Visualization Manager:
     - Class: rviz_common/Group
       Displays:
         - Class: rviz_default_plugins/Camera
-          Enabled: false
+          Enabled: true
           Far Plane Distance: 100
           Image Rendering: background
           Name: RGB Image
@@ -120,27 +121,42 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/rgb/image_rect_color
-          Value: false
+          Value: true
           Visibility:
             Depth:
-              "": true
+              Confidence: true
+              Depth Map: true
+              Loc. Point Cloud: true
               Value: false
             Detection:
-              "": true
+              Bodies: true
+              Objects: true
               Value: true
             Grid: false
             Mapping:
-              "": true
+              Global 3D Map: true
+              Loc. Color Img: true
+              Loc. Elevation Img: true
+              Local Cost Map: true
+              Local GridMap: true
+              Planes: true
               Value: true
             Position:
-              "": true
+              Odom Path: true
+              Pose: true
+              Pose Path: true
+              TF: true
               Value: false
             RobotModel: false
             Sensors:
-              "": true
+              Atm. Pressure: true
+              IMU Temperature: true
+              Left Temperature: true
+              Right Temperature: true
               Value: false
             Value: true
             Video:
+              ArUco: true
               Stereo: true
               Value: false
           Zoom Factor: 1
@@ -158,6 +174,20 @@ Visualization Manager:
             Reliability Policy: Reliable
             Value: /zed/zed_node/stereo/image_rect_color
           Value: false
+        - Class: rviz_default_plugins/Image
+          Enabled: true
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: ArUco
+          Normalize Range: true
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /zed/out/aruco_result
+          Value: true
       Enabled: true
       Name: Video
     - Class: rviz_common/Group
@@ -235,6 +265,10 @@ Visualization Manager:
             All Enabled: false
             map:
               Value: true
+            marker_019:
+              Value: true
+            marker_043:
+              Value: true
             odom:
               Value: true
             zed_camera_center:
@@ -242,7 +276,7 @@ Visualization Manager:
             zed_camera_link:
               Value: true
             zed_imu_link:
-              Value: true
+              Value: false
             zed_left_camera_frame:
               Value: true
             zed_left_camera_optical_frame:
@@ -258,6 +292,10 @@ Visualization Manager:
           Show Names: true
           Tree:
             map:
+              marker_019:
+                {}
+              marker_043:
+                {}
               odom:
                 zed_camera_link:
                   zed_camera_center:
@@ -433,7 +471,7 @@ Visualization Manager:
           Use Timestamp: false
           Value: false
         - Class: rviz_default_plugins/Image
-          Enabled: false
+          Enabled: true
           Max Value: 1
           Median window: 5
           Min Value: 0
@@ -445,9 +483,9 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/local_map/elev_img
-          Value: false
+          Value: true
         - Class: rviz_default_plugins/Image
-          Enabled: false
+          Enabled: true
           Max Value: 1
           Median window: 5
           Min Value: 0
@@ -459,7 +497,7 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/local_map/col_img
-          Value: false
+          Value: true
         - Class: rviz_default_plugins/Marker
           Enabled: true
           Name: Planes
@@ -473,7 +511,7 @@ Visualization Manager:
             Reliability Policy: Reliable
             Value: /zed/plane_marker
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Mapping
     - Class: rviz_common/Group
       Displays:
@@ -701,27 +739,29 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 4.275883674621582
+      Distance: 4.8874897956848145
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.9389320015907288
-        Y: -0.04114275053143501
-        Z: 0.3050636053085327
+        X: 0.2550347149372101
+        Y: -0.2057873010635376
+        Z: 1.9154198169708252
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.20479735732078552
+      Pitch: 0.3397974967956543
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.440048933029175
+      Yaw: 5.620110511779785
     Saved: ~
 Window Geometry:
+  ArUco:
+    collapsed: false
   Confidence:
     collapsed: false
   Depth Map:
@@ -735,7 +775,7 @@ Window Geometry:
     collapsed: false
   Loc. Elevation Img:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000026a0000039afc020000000efb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005d00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003f0000026b000000cc00fffffffb0000000a0056006900650077007301000002b000000129000000a900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec00000151fb0000000a0049006d0061006700650100000312000000cb0000000000000000fb0000001400460072006f006e00740020005600690065007701000003a5000000170000000000000000fb00000012004200610063006b0020005600690065007701000003c200000017000000000000000000000001000002540000039afc020000000afb0000001e0045006c00650076006100740069006f006e00200049006d006100670065010000003f000001ca0000000000000000fb00000012004400650070007400680020004d00610070000000003f000001ca0000002900fffffffb0000000c00530074006500720065006f0000000215000000a50000002900fffffffb000000140043006f006e0066006900640065006e006300650000000122000000720000002900fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fc0000003f000001e30000000000fffffffa000000000100000001fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000001200520047004200200049006d006100670065000000020f000001ca0000002900fffffffb0000001c004c006f0063002e00200043006f006c006f007200200049006d0067000000003f000001ed0000002900fffffffb00000024004c006f0063002e00200045006c00650076006100740069006f006e00200049006d0067000000003f0000039a0000002900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000780000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000005100000039a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001f10000039afc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005d00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003f0000039a000000cc00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec00000151fb0000000a0049006d0061006700650100000312000000cb0000000000000000fb0000001400460072006f006e00740020005600690065007701000003a5000000170000000000000000fb00000012004200610063006b0020005600690065007701000003c200000017000000000000000000000001000001410000039afc020000000dfb0000000a0041007200550063006f010000003f000001c90000002900fffffffb0000001200520047004200200049006d006100670065010000020e000001cb0000002900fffffffb0000000a00560069006500770073000000003f0000039a000000a900fffffffb0000001e0045006c00650076006100740069006f006e00200049006d006100670065010000003f000001ca0000000000000000fb00000012004400650070007400680020004d0061007000000001ee000001eb0000002900fffffffb0000000c00530074006500720065006f0000000215000000a50000002900fffffffb000000140043006f006e0066006900640065006e0063006500000003a1000000380000002900fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fc0000003f000001e30000000000fffffffa000000000100000001fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000000a0041007200550063006f000000020f000001ca0000000000000000fb0000001c004c006f0063002e00200043006f006c006f007200200049006d0067000000003f000001ed0000002900fffffffb00000024004c006f0063002e00200045006c00650076006100740069006f006e00200049006d0067000000003f0000039a0000002900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000780000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000004420000039a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   RGB Image:
     collapsed: false
   Selection:
