@@ -1,0 +1,10 @@
+# config/zed_depth_to_scan.yaml
+# Parameters for Depth image to laser scan conversion
+---
+/**:
+    ros__parameters:
+        scan_time: 0.033 # The time in seconds between scans to report to the consumer of the LaserScan message. This is set directly in the published message. Defaults to 0.033 seconds.
+        range_min: 0.3 # The minimum distance in meters a projected point should be. Points closer than this are discarded. Defaults to 0.3 meters.
+        range_max: 10.0 # The maximum distance in meters a projected point should be. Points further than this are discarded. Defaults to 10.0 meters.
+        scan_height: 1 # The row from the depth image to use for the laser projection. Defaults to 1.
+        output_frame: "camera_depth_frame" # [Normally overwritten by launch file] The frame id to publish in the LaserScan message. Defaults to "camera_depth_frame".
