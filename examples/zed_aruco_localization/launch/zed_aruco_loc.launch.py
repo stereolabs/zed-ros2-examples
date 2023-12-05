@@ -148,7 +148,8 @@ def launch_setup(context, *args, **kwargs):
                 'sensors.publish_imu_tf': publish_imu_tf,
                 'pos_tracking.set_gravity_as_origin': gravity_alignment
             }
-        ]
+        ],
+        extra_arguments=[{'use_intra_process_comms': True}]
     )
 
     # ArUco processing component
@@ -162,7 +163,8 @@ def launch_setup(context, *args, **kwargs):
                 ('in/zed_image', zed_node_name_val + '/rgb/image_rect_color'),
                 ('in/camera_info', zed_node_name_val + '/rgb/camera_info'),
                 ('set_pose', zed_node_name_val + '/set_pose')
-            ]
+            ],
+        extra_arguments=[{'use_intra_process_comms': True}]
     )
 
     # ROS 2 Component Container

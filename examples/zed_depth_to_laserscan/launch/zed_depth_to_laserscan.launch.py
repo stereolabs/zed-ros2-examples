@@ -154,18 +154,13 @@ def launch_setup(context, *args, **kwargs):
             config_path_cvt,
             # Overriding
             {
-                'output_frame': camera_depth_frame,
-                'qos_overrides./parameter_events.publisher.depth': 5
+                'output_frame': camera_depth_frame
             }],
         remappings=[
                 ('depth', zed_node_name_val + '/depth/depth_registered'),
                 ('depth_camera_info', zed_node_name_val + '/depth/camera_info')
             ],
-        extra_arguments=[
-            {
-                'use_intra_process_comms': True
-                }
-            ]
+        #extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package
     )
 
     # ROS 2 Component Container
