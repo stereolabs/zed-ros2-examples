@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-	<name>zed_to_laser_scan</name>
+	<name>zed_depth_to_laserscan</name>
 	<version>1.0.0</version>
 	<description>Contains a ros2 examples launch file to subscribes to a ZED Depth map and generates a virtual laser scan</description>
 	<maintainer email="support@stereolabs.com">STEREOLABS</maintainer>

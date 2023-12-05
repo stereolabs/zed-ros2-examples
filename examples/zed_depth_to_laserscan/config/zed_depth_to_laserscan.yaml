@@ -1,4 +1,4 @@
-# config/zed_depth_to_scan.yaml
+# config/depth_to_scan.yaml
 # Parameters for Depth image to laser scan conversion
 ---
 /**:
