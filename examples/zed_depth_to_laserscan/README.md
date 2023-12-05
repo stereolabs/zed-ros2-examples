@@ -4,9 +4,23 @@ This example demonstrates how to use [ROS 2 Composition](https://docs.ros.org/en
 
 Usage:
 
-```
+```bash
 ros2 launch zed_wrapper zed_camera.launch.py camera_model:=<camera_model>
 ```
+
+the laucnh file will start a ZED Wrapper node, the Depth Image to Laser Scan converter node, RVIZ2 for visualization, and a Robot State Publisher node to broadcast the ZED camera static frames.
+
+You can disable RVIZ2 launching by using the launch parameter `rviz:=false`.
+
+You can also get the list of all the available parameters with 
+
+```bash
+ros2 launch zed_wrapper zed_camera.launch.py -s
+```
+
+![](./images/laserscan.jpg)
+
+![](./images/pointcloud_scan.jpg)
 
 ## The launch file explained
 
