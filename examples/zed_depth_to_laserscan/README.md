@@ -8,11 +8,11 @@ Usage:
 ros2 launch zed_wrapper zed_camera.launch.py camera_model:=<camera_model>
 ```
 
-the laucnh file will start a ZED Wrapper node, the Depth Image to Laser Scan converter node, RVIZ2 for visualization, and a Robot State Publisher node to broadcast the ZED camera static frames.
+the launch file will start the ZED Wrapper node, the Depth Image to Laser Scan converter node, RVIZ2 for data visualization, and a Robot State Publisher node to broadcast the ZED camera static frames.
 
-You can disable RVIZ2 launching by using the launch parameter `rviz:=false`.
+You can disable RVIZ2 by using the launch parameter `rviz:=false`.
 
-You can also get the list of all the available parameters with 
+You can also get the list of all the available launch parameters with 
 
 ```bash
 ros2 launch zed_wrapper zed_camera.launch.py -s
@@ -95,4 +95,6 @@ the parameters are loaded from the YAML files defined by the variable `config_pa
 
 The topic names `depth` and `depth_camera_info` are remapped to match the topic names published by the ZED node.
 
-> **NOTE:** Unfortunately we cannot leverage the Intraprocess Communication and improve data copy because the `depthimage_to_laserscan::DepthImageToLaserScanROS` component has a not compatible QoS setting. If this will be fixed in the future you can uncomment the line `#extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package`.
+## Known issues
+
+Unfortunately we cannot leverage the Intraprocess Communication behavior and improve data transmission performance with zero-copy because the default QoS setting of the `depthimage_to_laserscan::DepthImageToLaserScanROS` component are not compatible [see [issue](https://github.com/ros-perception/depthimage_to_laserscan/issues/75)]. If this will be fixed in the future you can uncomment the line `#extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package`.
