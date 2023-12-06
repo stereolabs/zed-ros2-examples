@@ -39,11 +39,11 @@ default_config_common = os.path.join(
     'common.yaml'
 )
 
-# ArUco Configurations to be loaded by detector Node
-default_config_aruco = os.path.join(
-    get_package_share_directory('zed_aruco_localization'),
+# Depth Image to laser scan config file
+default_config_cvt = os.path.join(
+    get_package_share_directory('zed_depth_to_laserscan'),
     'config',
-    'aruco_loc.yaml'
+    'zed_depth_to_laserscan.yaml'
 )
 
 # URDF/xacro file to be loaded by the Robot State Publisher node
@@ -54,7 +54,6 @@ default_xacro_path = os.path.join(
 )
 
 def launch_setup(context, *args, **kwargs):
-    wrapper_dir = get_package_share_directory('zed_wrapper')
 
     # Launch configuration variables
     svo_path = LaunchConfiguration('svo_path')
@@ -63,19 +62,14 @@ def launch_setup(context, *args, **kwargs):
     camera_model = LaunchConfiguration('camera_model')
 
     zed_node_name = LaunchConfiguration('zed_node_name')
-    aruco_node_name = LaunchConfiguration('aruco_node_name')
 
     config_common_path = LaunchConfiguration('config_path')
-    config_path_aruco = LaunchConfiguration('config_path_aruco')
+    config_path_cvt = LaunchConfiguration('config_path_cvt')
 
     serial_number = LaunchConfiguration('serial_number')
 
     publish_urdf = LaunchConfiguration('publish_urdf')
-    publish_tf = LaunchConfiguration('publish_tf')
-    publish_map_tf = LaunchConfiguration('publish_map_tf')
-    publish_imu_tf = LaunchConfiguration('publish_imu_tf')
     xacro_path = LaunchConfiguration('xacro_path')
-    gravity_alignment = LaunchConfiguration('gravity_alignment')
 
     start_rviz = LaunchConfiguration('rviz')
 
@@ -94,9 +88,12 @@ def launch_setup(context, *args, **kwargs):
 
     # Rviz2 Configurations to be loaded by ZED Node
     config_rviz2 = os.path.join(
-        get_package_share_directory('zed_aruco_localization'),
-        'rviz2','aruco.rviz'
+        get_package_share_directory('zed_depth_to_laserscan'),
+        'rviz2','zed_depth_to_laserscan.rviz'
     )
+
+    # Camera depth frame for the laser scan topic
+    camera_depth_frame = camera_name_val + '_left_camera_frame'
 
     # RVIZ2 node
     rviz2_node = Node(
@@ -136,46 +133,45 @@ def launch_setup(context, *args, **kwargs):
             # YAML files
             config_common_path,  # Common parameters
             config_camera_path,  # Camera related parameters
-            config_path_aruco,   # ArUco detector parameters
             # Overriding
             {
                 'general.camera_name': camera_name_val,
                 'general.camera_model': camera_model_val,
                 'general.svo_file': svo_path,
-                'general.serial_number': serial_number,
-                'pos_tracking.publish_tf': publish_tf,
-                'pos_tracking.publish_map_tf': publish_map_tf,
-                'sensors.publish_imu_tf': publish_imu_tf,
-                'pos_tracking.set_gravity_as_origin': gravity_alignment
+                'general.serial_number': serial_number
             }
         ],
         extra_arguments=[{'use_intra_process_comms': True}]
     )
 
-    # ArUco processing component
-    zed_aruco_component = ComposableNode(
-        package='zed_aruco_localization',
+    # Depth to Laser scan component
+    zed_cvt_component = ComposableNode(
+        package='depthimage_to_laserscan',
         namespace=camera_name_val,
-        plugin='stereolabs::ZedArucoLoc',
-        name=aruco_node_name,
-        parameters=[config_path_aruco],
+        plugin='depthimage_to_laserscan::DepthImageToLaserScanROS',
+        name='depthimage_to_laserscan',
+        parameters=[
+            config_path_cvt,
+            # Overriding
+            {
+                'output_frame': camera_depth_frame
+            }],
         remappings=[
-                ('in/zed_image', zed_node_name_val + '/rgb/image_rect_color'),
-                ('in/camera_info', zed_node_name_val + '/rgb/camera_info'),
-                ('set_pose', zed_node_name_val + '/set_pose')
+                ('depth', zed_node_name_val + '/depth/depth_registered'),
+                ('depth_camera_info', zed_node_name_val + '/depth/camera_info')
             ],
-        extra_arguments=[{'use_intra_process_comms': True}]
+        #extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package
     )
 
     # ROS 2 Component Container
     container = ComposableNodeContainer(
-            name='zed_aruco_localization',
+            name='zed_depth_to_laserscan',
             namespace=camera_name_val,
             package='rclcpp_components',
             executable='component_container',
             composable_node_descriptions=[
                 zed_wrapper_component,
-                zed_aruco_component
+                zed_cvt_component
             ],
             output='screen',
     )
@@ -204,17 +200,13 @@ def generate_launch_description():
                 default_value='zed_node',
                 description='The name of the zed_wrapper node. All the topic will have the same prefix: `/<camera_name>/<zed_node_name>/`'),
             DeclareLaunchArgument(
-                'aruco_node_name',
-                default_value='aruco_node',
-                description='The name of the ArUco detection node.'),
-            DeclareLaunchArgument(
                 'config_path',
                 default_value=TextSubstitution(text=default_config_common),
                 description='Path to the YAML configuration file for the camera.'),
             DeclareLaunchArgument(
-                'config_path_aruco',
-                default_value=TextSubstitution(text=default_config_aruco),
-                description='Path to the YAML configuration file for the ArUco detector.'),
+                'config_path_cvt',
+                default_value=TextSubstitution(text=default_config_cvt),
+                description='Path to the YAML configuration file for the detpth to laser scan conversion.'),
             DeclareLaunchArgument(
                 'serial_number',
                 default_value='0',
@@ -223,26 +215,6 @@ def generate_launch_description():
                 'publish_urdf',
                 default_value='true',
                 description='Enable URDF processing and starts Robot State Published to propagate static TF.',
-                choices=['true', 'false']),
-            DeclareLaunchArgument(
-                'publish_tf',
-                default_value='true',
-                description='Enable publication of the `odom -> camera_link` TF.',
-                choices=['true', 'false']),
-            DeclareLaunchArgument(
-                'publish_map_tf',
-                default_value='true',
-                description='Enable publication of the `map -> odom` TF. Note: Ignored if `publish_tf` is False.',
-                choices=['true', 'false']),
-            DeclareLaunchArgument(
-                'publish_imu_tf',
-                default_value='true',
-                description='Enable publication of the IMU TF. Note: Ignored if `publish_tf` is False.',
-                choices=['true', 'false']),
-            DeclareLaunchArgument(
-                'gravity_alignment',
-                default_value='false',
-                description='Enable orientation alignment to the gravity vector. Note: if enabled the orientation of the markers must refer to Earth gravity.',
                 choices=['true', 'false']),
             DeclareLaunchArgument(
                 'xacro_path',
@@ -255,7 +227,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'rviz',
                 default_value='true',
-                description='Starts RVIZ2 preconfigured to show ArUco detection results',
+                description='Starts RVIZ2 preconfigured to show conversion results',
                 choices=['true', 'false']),
             OpaqueFunction(function=launch_setup)
         ]
