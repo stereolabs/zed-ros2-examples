@@ -15,7 +15,7 @@ You can disable RVIZ2 by using the launch parameter `rviz:=false`.
 You can also get the list of all the available launch parameters with 
 
 ```bash
-ros2 launch zed_wrapper zed_camera.launch.py -s
+ros2 launch zed_to_laser_scan zed_to_laser_scan.launch.py -s
 ```
 
 ![](./images/laserscan.jpg)
