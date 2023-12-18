@@ -29,10 +29,7 @@ else()
 endif()
 
 if(ROS2_FOUND)
-    if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
-        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_FOXY)
-    elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+    if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
@@ -73,18 +70,21 @@ file(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${extra_files})
 ###############################################################################
 
-set(MSG_FILES
-    "msg/BenchmarkStatsStamped.msg"
-)
+if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
+    set(MSG_FILES
+        "msg/BenchmarkStatsStamped.msg"
+    )
 
-set(SRV_FILES
-)
+    set(SRV_FILES
+    )
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-    ${MSG_FILES}
-    ${SRV_FILES}
-    DEPENDENCIES builtin_interfaces std_msgs
-)
+    rosidl_generate_interfaces(${PROJECT_NAME}
+        ${MSG_FILES}
+        ${SRV_FILES}
+        DEPENDENCIES builtin_interfaces std_msgs
+    )
 
-ament_export_dependencies(rosidl_default_runtime)
+    ament_export_dependencies(rosidl_default_runtime)
+endif()
+
 ament_package()
