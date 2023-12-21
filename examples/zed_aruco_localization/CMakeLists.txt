@@ -45,12 +45,12 @@ endif()
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 99)
 endif()
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14)
 endif()
 
 #if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -110,8 +110,8 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(zed_components)
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+find_package(ament_lint_auto REQUIRED)
+ament_lint_auto_find_test_dependencies()
 endif()
 
 ###############################################################################
@@ -123,72 +123,76 @@ add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 # create ament index resource which references the libraries in the binary dir
 set(node_plugins "")
 
-###############################################################################
-# SOURCES
+if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
+    ###############################################################################
+    # SOURCES
 
-set(INC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/aruco_loc_visibility_control.hpp
-)
+    set(INC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/aruco_loc_visibility_control.hpp
+    )
 
-set(INC_COMP
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_aruco_localization_component.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/aruco.hpp
-)
+    set(INC_COMP
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_aruco_localization_component.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/aruco.hpp
+    )
 
-set(SRC_COMP
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/aruco.cpp
-)
+    set(SRC_COMP
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/aruco.cpp
+    )
 
-###############################################################################
-# Bin and Install
+    ###############################################################################
+    # Bin and Install
 
-# Component
-add_library(${PROJECT_NAME}_component SHARED
-    ${INC}
-    ${INC_COMP}
-    ${SRC_COMP}
-)
-target_compile_definitions(${PROJECT_NAME}_component
-    PRIVATE "COMPOSITION_BUILDING_DLL"
-)
-target_include_directories(${PROJECT_NAME}_component
-    PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
-    ${OpenCV_INCLUDE_DIRS}
-)
-target_link_libraries(${PROJECT_NAME}_component
-    ${OpenCV_LIBS}
-)
-ament_target_dependencies(${PROJECT_NAME}_component
-    ${DEPENDENCIES_COMP}
-)
+    # Component
+    add_library(${PROJECT_NAME}_component SHARED
+        ${INC}
+        ${INC_COMP}
+        ${SRC_COMP}
+    )
+    target_compile_definitions(${PROJECT_NAME}_component
+        PRIVATE "COMPOSITION_BUILDING_DLL"
+    )
+    target_include_directories(${PROJECT_NAME}_component
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
+        ${OpenCV_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_component
+        ${OpenCV_LIBS}
+    )
+    ament_target_dependencies(${PROJECT_NAME}_component
+        ${DEPENDENCIES_COMP}
+    )
 
-rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedArucoLoc")
-set(node_plugins "${node_plugins}stereolabs::ZedArucoLoc;$<TARGET_FILE:${PROJECT_NAME}_component>\n")
+    rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedArucoLoc")
+    set(node_plugins "${node_plugins}stereolabs::ZedArucoLoc;$<TARGET_FILE:${PROJECT_NAME}_component>\n")
 
-# Install components
-install(TARGETS ${PROJECT_NAME}_component
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
+    # Install components
+    install(TARGETS ${PROJECT_NAME}_component
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION lib/${PROJECT_NAME}
+    )
 
-# Install header files
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
-    DESTINATION include/${PROJECT_NAME}/
-)
+    # Install header files
+    install(
+        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
+        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
+        DESTINATION include/${PROJECT_NAME}/
+    )
 
-# Install LAUNCH files
-install(DIRECTORY
-  launch config rviz2
-  DESTINATION share/${PROJECT_NAME}
-)
+    # Install LAUNCH files
+    install(DIRECTORY
+    launch config rviz2
+    DESTINATION share/${PROJECT_NAME}
+    )
 
-ament_export_include_directories(include)
-ament_export_libraries(${PROJECT_NAME}_component)
-ament_export_dependencies(${DEPENDENCIES_COMP})
+    ament_export_include_directories(include)
+    ament_export_libraries(${PROJECT_NAME}_component)
+    ament_export_dependencies(${DEPENDENCIES_COMP})
+endif()
+
+
 ament_package()
