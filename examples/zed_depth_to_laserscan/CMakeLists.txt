@@ -49,6 +49,7 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+find_package(zed_components)
 find_package(zed_wrapper)
 find_package(depthimage_to_laserscan)
 

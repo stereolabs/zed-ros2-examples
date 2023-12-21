@@ -10,12 +10,12 @@ ros2 launch zed_to_laser_scan zed_to_laser_scan.launch.py  camera_model:=<camera
 
 the launch file will start the ZED Wrapper node, the Depth Image to Laser Scan converter node, RVIZ2 for data visualization, and a Robot State Publisher node to broadcast the ZED camera static frames.
 
-You can disable RVIZ2 by using the launch parameter `rviz:=false`.
+You can disable RVIZ2 by using the launch argument `rviz:=false`.
 
 You can also get the list of all the available launch parameters with 
 
 ```bash
-ros2 launch zed_wrapper zed_camera.launch.py -s
+ros2 launch zed_to_laser_scan zed_to_laser_scan.launch.py -s
 ```
 
 ![](./images/laserscan.jpg)
@@ -24,7 +24,7 @@ ros2 launch zed_wrapper zed_camera.launch.py -s
 
 ## The launch file explained
 
-The launch files creates a ROS 2 container to run the two components:
+The launch file creates a ROS 2 container to run the two components:
 
 ```xml
 # ROS 2 Component Container
@@ -41,7 +41,7 @@ The launch files creates a ROS 2 container to run the two components:
     )
 ```
 
-The `zed_wrapper_component` variables defines the ZED node:
+The `zed_wrapper_component` variable defines the ZED node:
 
 ```xml
 # ZED Wrapper component
@@ -68,7 +68,7 @@ The `zed_wrapper_component` variables defines the ZED node:
 
 the parameters are loaded from the YAML files defined by the variables `config_common_path` and `config_camera_path`. Note that `camera_name`, `camera_model`, `svo_file`, and `serial_number` are overridden by the launch options, so their values in the YAML files are ignored.
 
-The `zed_cvt_component` variables defines the Depth Image to Laser Scan node:
+The `zed_cvt_component` variable defines the "Depth Image to Laser Scan" node:
 
 ```xml
 # Depth to Laser scan component
@@ -97,4 +97,4 @@ The topic names `depth` and `depth_camera_info` are remapped to match the topic 
 
 ## Known issues
 
-Unfortunately we cannot leverage the Intraprocess Communication behavior and improve data transmission performance with zero-copy because the default QoS setting of the `depthimage_to_laserscan::DepthImageToLaserScanROS` component are not compatible [see [issue](https://github.com/ros-perception/depthimage_to_laserscan/issues/75)]. If this will be fixed in the future you can uncomment the line `#extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package`.
+Unfortunately, we cannot leverage the Intraprocess Communication behavior and improve data transmission performance with zero-copy because the default QoS setting of the `depthimage_to_laserscan::DepthImageToLaserScanROS` component is not compatible [see [issue](https://github.com/ros-perception/depthimage_to_laserscan/issues/75)]. If this will be fixed in the future you can uncomment the line `#extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package`.

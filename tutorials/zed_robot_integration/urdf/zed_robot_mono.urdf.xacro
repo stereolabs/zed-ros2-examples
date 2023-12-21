@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<!--
+// Copyright 2023 Stereolabs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+-->
+
+<robot name="zedbot_scoutm" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="camera_name"   default="zed" />
+  <xacro:arg name="camera_model"  default="zedx" />
+  <xacro:arg name="use_zed_localization" default="true" />
+
+  <!-- Include the robot (e.g. AgileX Scout mini) -->
+  <xacro:include filename="$(find scout_description)/urdf/scout_mini.xacro" />
+
+  <!-- Add one ZED Camera -->
+  <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
+  <xacro:zed_camera name="$(arg camera_name)" model="$(arg camera_model)" />
+
+  <!-- Add a joint to connect the ZED Camera to the robot -->
+  <xacro:if value="$(arg use_zed_localization)">
+    <!-- ZED Localization -> The reference link is '$(arg camera_name)_camera_link' and 'base_link' is a child -->
+    <joint name="$(arg camera_name)_joint" type="fixed">
+      <parent link="$(arg camera_name)_camera_link"/>
+      <child link="base_link"/>
+      <origin
+        xyz="-0.12 0.0 -0.25"
+        rpy="0 0 0"
+      />
+    </joint>
+  </xacro:if>
+  <xacro:unless value="$(arg use_zed_localization)">
+    <!-- NO ZED Localization -> '$(arg camera_name)_camera_link' is a child of 'base_link' -->
+    <joint name="$(arg camera_name)_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="$(arg camera_name)_camera_link"/>
+      <origin
+        xyz="0.12 0.0 0.25"
+        rpy="0 0 0"
+      />
+    </joint>
+  </xacro:unless>
+  
+</robot>
