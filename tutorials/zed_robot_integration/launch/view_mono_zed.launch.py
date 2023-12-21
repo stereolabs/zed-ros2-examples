@@ -43,7 +43,7 @@ config_rviz2 = os.path.join(
 xacro_path = os.path.join(
     get_package_share_directory('zed_robot_integration'),
     'urdf',
-    'zedbot_scoutm_mono.urdf.xacro'
+    'zed_robot_mono.urdf.xacro'
 )
 
 def launch_setup(context, *args, **kwargs):

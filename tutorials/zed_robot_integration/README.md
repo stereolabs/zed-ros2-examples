@@ -7,9 +7,25 @@ There are two different configurations to use when adding a ZED to a robot, whic
 1. Localize the robot by using exclusively the ZED Positional Tracking 
 2. Localize the robot by using the ROS 2 tools (e.g. the [Robot Localization](https://index.ros.org/p/robot_localization/github-cra-ros-pkg-robot_localization/) package) to fuse different sources of odometry and pose estimation.
 
-For the scope of this tutorial we use the [AgileX Scout Mini](https://www.agilex.ai/chassis/11) 4WD robot as a reference, but the concepts apply to all the robots in the same way.
+## Install the dependencies
 
-## Combining URDF file by using xacro
+For the scope of this tutorial we use the [AgileX Scout Mini](https://www.agilex.ai/chassis/11) 4WD robot as a reference, but the explained concepts apply to all the robots in the same way.
+
+You can install the required packages by using the following commands:
+
+```bash
+cd <ros2_workspace>/src
+git clone https://github.com/stereolabs/scout_ros2.git
+git clone https://github.com/westonrobot/ugv_sdk.git
+git clone https://github.com/westonrobot/async_port.git
+cd ..
+sudo apt update
+rosdep install --from-paths src --ignore-src -r -y # install dependencies
+colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --parallel-workers $(nproc) # build the workspace
+source ~/.bashrc
+```
+
+## Create the URDF file by using xacro
 
 [xacro](https://docs.ros.org/en/humble/Tutorials/Intermediate/URDF/Using-Xacro-to-Clean-Up-a-URDF-File.html) is an XML macro language. With xacro, you can construct shorter and more readable XML files by using macros that expand to larger XML expressions.
 
@@ -115,9 +131,11 @@ This is the TF tree generated when `use_zed_localization` is disabled:
 
 ## Multi-Camera Configuration
 
-The xacro file `urdf/zed_robot_dual.urdf.xacro` defines the robot configuration to obtain the result in the following picture of a dual-camera configuration.
+The xacro file `urdf/zed_robot_dual.urdf.xacro` defines the robot configuration to obtain the result of the following picture in a dual-camera configuration.
 
 ![](./images/robot_viz_dual.jpg)
+
+The explained concepts can be generalized for N cameras.
 
 ### Set the parameters
 
@@ -133,6 +151,10 @@ It is required to specify the name and the model for each camera installed on th
   <xacro:arg name="use_zed_localization" default="true" />
   ```
 
+Each camera must have a **unique** name, while the model can be the same for each of them.
+
+Add additional enough lines to define `camera_name_N` and `camera_model_N` for each other camera of your configuration.
+
 ### Add all the ZED Cameras
 
 To use a ZED camera we must include the `xacro` file that describes the ZED camera static links and joints available in the `zed_wrapper` package of the [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper/tree/master/zed_wrapper) repository.
@@ -141,7 +163,7 @@ To use a ZED camera we must include the `xacro` file that describes the ZED came
   <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
 ```
 
-we must now add an instance of each camera, specifying the unique name and the model:
+we must now add an instance of each camera, specifying the **unique** name and the model:
 
 ```xml
   <!-- Add the first ZED Camera -->  
@@ -150,11 +172,13 @@ we must now add an instance of each camera, specifying the unique name and the m
   <xacro:zed_camera name="$(arg camera_name_2)" model="$(arg camera_model_2)" />
 ```
 
-Here you can notice the power of `xacro`, we are able to add more ZED Cameras with a simple line of code. We only need to define the values of two parameters for each of them, the name that allows to distinguish each camera, and the model to correctly define all the links and joints.
+Here you can notice the power of `xacro`: we are able to add more ZED Cameras with a simple line of code for each of them. We only need to define the values of two parameters, the **unique** name that allows to distinguish each camera, and the camera model to correctly define its links and joints.
 
 ### Add the joints to the URDF to place the ZED Cameras on the Robot
 
-We must now add the joints to connect each camera to the model of the robot. We consider the camera #1 as the main camera, so we must handle this camera in the same way we do in a mono-camera configuration: if `use_zed_localization` is enabled, the link `<camera_name_1>_camera_link` is the reference frame for the robot localization:
+We must now add the joints to connect each camera to the model of the robot. 
+
+We consider the camera #1 as the main camera, we must handle this camera in the same way we do in a mono-camera configuration: if `use_zed_localization` is enabled, the link `<camera_name_1>_camera_link` is the reference frame for the robot localization:
 
 ```xml
 <xacro:if value="$(arg use_zed_localization)">

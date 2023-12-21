@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(zedbot_scoutm_description)
+project(zed_robot_integration)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)

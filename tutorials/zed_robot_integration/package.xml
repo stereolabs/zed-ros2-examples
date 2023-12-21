@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema" ?>
 <package format="3">
-  <name>zedbot_scoutm_description</name>
+  <name>zed_robot_integration</name>
   <version>0.1.0</version>
   <description>Scout Mini URDF with ZED Description</description>
 
@@ -12,6 +12,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <exec_depend>zed_wrapper</exec_depend>
   <exec_depend>zed_interfaces</exec_depend>
   <exec_depend>scout_description</exec_depend>
   <exec_depend>xacro</exec_depend>
