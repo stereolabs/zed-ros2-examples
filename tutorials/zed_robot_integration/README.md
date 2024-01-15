@@ -20,6 +20,7 @@ git clone https://github.com/westonrobot/ugv_sdk.git
 git clone https://github.com/westonrobot/async_port.git
 cd ..
 sudo apt update
+rosdep update
 rosdep install --from-paths src --ignore-src -r -y # install dependencies
 colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --parallel-workers $(nproc) # build the workspace
 source ~/.bashrc
