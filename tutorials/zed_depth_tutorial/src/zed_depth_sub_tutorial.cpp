@@ -38,13 +38,13 @@ public:
     // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
     rclcpp::QoS depth_qos(10);
-    depth_qos.keep_last(10);
-    depth_qos.best_effort();
-    depth_qos.durability_volatile();
+
+    auto sub_opt = rclcpp::SubscriptionOptions();
 
     // Create depth map subscriber
     mDepthSub = create_subscription<sensor_msgs::msg::Image>(
-      "depth", depth_qos, std::bind(&MinimalDepthSubscriber::depthCallback, this, _1));
+      "depth", depth_qos,
+      std::bind(&MinimalDepthSubscriber::depthCallback, this, _1), sub_opt);
   }
 
 protected:

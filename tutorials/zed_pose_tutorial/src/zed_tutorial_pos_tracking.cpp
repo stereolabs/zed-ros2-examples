@@ -45,17 +45,18 @@ public:
     // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
     rclcpp::QoS qos(10);
-    qos.keep_last(10);
-    qos.best_effort();
-    qos.durability_volatile();
+
+    auto sub_opt = rclcpp::SubscriptionOptions();
 
     // Create pose subscriber
     mPoseSub = create_subscription<geometry_msgs::msg::PoseStamped>(
-      "pose", qos, std::bind(&MinimalPoseOdomSubscriber::poseCallback, this, _1));
+      "pose", qos,
+      std::bind(&MinimalPoseOdomSubscriber::poseCallback, this, _1), sub_opt);
 
     // Create odom subscriber
     mOdomSub = create_subscription<nav_msgs::msg::Odometry>(
-      "odom", qos, std::bind(&MinimalPoseOdomSubscriber::odomCallback, this, _1));
+      "odom", qos,
+      std::bind(&MinimalPoseOdomSubscriber::odomCallback, this, _1), sub_opt);
   }
 
 protected:
