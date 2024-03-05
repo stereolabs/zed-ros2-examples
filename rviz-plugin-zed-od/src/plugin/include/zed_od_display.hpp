@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ namespace displays
 typedef std::shared_ptr<ZedOdInfo> objectPtr;
 
 class ZED_OD_PLUGIN_PUBLIC ZedOdDisplay
-  : public rviz_common::MessageFilterDisplay<zed_interfaces::msg::ObjectsStamped>
+  : public rviz_common::MessageFilterDisplay<
+    zed_interfaces::msg::ObjectsStamped>
 {
   Q_OBJECT
 
@@ -45,7 +46,8 @@ public:
   void reset() override;
 
 private:
-  void processMessage(zed_interfaces::msg::ObjectsStamped::ConstSharedPtr msg) override;
+  void processMessage(
+    zed_interfaces::msg::ObjectsStamped::ConstSharedPtr msg) override;
   void createOrUpdateObject(zed_interfaces::msg::Object & obj);
   void invalidateObjs();
   void removeNotValidObjs();
@@ -60,7 +62,8 @@ private slots:
   void updateLabelScale();
 
 protected:
-  /** @brief Overridden from MessageFilterDisplay to get arrow/axes visibility correct. */
+  /** @brief Overridden from MessageFilterDisplay to get arrow/axes visibility
+   * correct. */
   void onEnable() override;
   void onDisable() override;
 

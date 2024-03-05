@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,31 +23,37 @@ namespace displays
 ZedOdDisplay::ZedOdDisplay()
 {
   mPropAlpha = new rviz_common::properties::FloatProperty(
-    "Transparency", 0.25f, "Structures transparency level [0 -> NONE, 1 -> Invisible]", this,
+    "Transparency", 0.25f,
+    "Structures transparency level [0 -> NONE, 1 -> Invisible]", this,
     SLOT(updateAlpha()));
   mPropAlpha->setMin(0);
   mPropAlpha->setMax(1);
 
   mPropShowSkeleton = new rviz_common::properties::BoolProperty(
-    "Show Skeletons", true, "Enable/Disable skeletons visualization (if available)", this,
+    "Show Skeletons", true,
+    "Enable/Disable skeletons visualization (if available)", this,
     SLOT(updateShowSkeleton()));
 
   mPropShowLabel = new rviz_common::properties::BoolProperty(
-    "Show Labels", true, "Enable/Disable ID + Label visualization", this, SLOT(updateShowLabel()));
+    "Show Labels", true, "Enable/Disable ID + Label visualization", this,
+    SLOT(updateShowLabel()));
 
   mPropShowBBox = new rviz_common::properties::BoolProperty(
-    "Show Bounding Boxes", true, "Enable/Disable Bounding boxes visualization", this,
+    "Show Bounding Boxes", true,
+    "Enable/Disable Bounding boxes visualization", this,
     SLOT(updateShowBBox()));
 
   mPropLinkSize = new rviz_common::properties::FloatProperty(
-    "Link Size", 0.05f, "Line size of the bounding box edges and skeleton links", this,
+    "Link Size", 0.05f,
+    "Line size of the bounding box edges and skeleton links", this,
     SLOT(updateLinkSize()));
 
   mPropLinkSize->setMin(0.01);
   mPropAlpha->setMax(1.0);
 
   mPropJointRadius = new rviz_common::properties::FloatProperty(
-    "Joint Radius", 0.1f, "Radius of the bounding box corners and skeleton joints", this,
+    "Joint Radius", 0.1f,
+    "Radius of the bounding box corners and skeleton joints", this,
     SLOT(updateJointRadius()));
 
   mPropLinkSize->setMin(0.01);
@@ -91,11 +97,15 @@ void ZedOdDisplay::removeNotValidObjs()
   }
 }
 
-void ZedOdDisplay::processMessage(zed_interfaces::msg::ObjectsStamped::ConstSharedPtr msg)
+void ZedOdDisplay::processMessage(
+  zed_interfaces::msg::ObjectsStamped::ConstSharedPtr msg)
 {
   Ogre::Vector3 position;
   Ogre::Quaternion orientation;
-  if (!context_->getFrameManager()->getTransform(msg->header, position, orientation)) {
+  if (!context_->getFrameManager()->getTransform(
+      msg->header, position,
+      orientation))
+  {
     setMissingTransformToFixedFrame(msg->header.frame_id);
     return;
   }
@@ -133,7 +143,9 @@ void ZedOdDisplay::createOrUpdateObject(zed_interfaces::msg::Object & obj)
   if (obj.tracking_available && obj.tracking_state != 1) {  // Tracking not OK?
     return;
   }
-  if (qIsNaN(obj.position[0]) || qIsNaN(obj.position[1]) || qIsNaN(obj.position[2])) {
+  if (qIsNaN(obj.position[0]) || qIsNaN(obj.position[1]) ||
+    qIsNaN(obj.position[2]))
+  {
     return;
   }
 
@@ -141,7 +153,8 @@ void ZedOdDisplay::createOrUpdateObject(zed_interfaces::msg::Object & obj)
 
   auto it = mObjects.find(id);
   if (it == mObjects.end() || id == -1) {
-    objectPtr newObj = std::make_shared<ZedOdInfo>(obj, scene_manager_, scene_node_);
+    objectPtr newObj =
+      std::make_shared<ZedOdInfo>(obj, scene_manager_, scene_node_);
     mObjects[id] = newObj;
     updateAlpha();
     updateShowLabel();
@@ -224,4 +237,6 @@ void ZedOdDisplay::updateLabelScale()
 }  // namespace rviz_plugin_zed_od
 
 #include <pluginlib/class_list_macros.hpp>  // NOLINT
-PLUGINLIB_EXPORT_CLASS(rviz_plugin_zed_od::displays::ZedOdDisplay, rviz_common::Display)
+PLUGINLIB_EXPORT_CLASS(
+  rviz_plugin_zed_od::displays::ZedOdDisplay,
+  rviz_common::Display)

@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@
 
 #include <QObject>
 #include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include <rviz_rendering/objects/billboard_line.hpp>
 #include <rviz_rendering/objects/movable_text.hpp>
 #include <rviz_rendering/objects/object.hpp>
 #include <rviz_rendering/objects/shape.hpp>
+#include <string>
+#include <utility>
+#include <vector>
 #include <zed_interfaces/msg/objects_stamped.hpp>
 
 #include "visibility_control.hpp"
@@ -50,7 +49,8 @@ class ZED_OD_PLUGIN_PUBLIC ZedOdInfo : public QObject
 
 public:
   explicit ZedOdInfo(
-    zed_interfaces::msg::Object & obj, Ogre::SceneManager * scene_manager,
+    zed_interfaces::msg::Object & obj,
+    Ogre::SceneManager * scene_manager,
     Ogre::SceneNode * parent_node = NULL);
   virtual ~ZedOdInfo();
 

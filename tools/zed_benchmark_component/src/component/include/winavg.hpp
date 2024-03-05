@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,8 +40,9 @@ public:
 private:
   size_t mWinSize;
 
-  std::deque<double> mVals;  // The values in the queue used to calculate the windowed average
-  double mSumVals = 0.0;     // The updated sum of the values in the queue
+  std::deque<double>
+  mVals;      // The values in the queue used to calculate the windowed average
+  double mSumVals = 0.0;  // The updated sum of the values in the queue
 
   std::mutex mQueueMux;
 };

@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,8 @@
 // limitations under the License.
 
 /**
- * This tutorial demonstrates simple receipt of ZED pose and odometry messages over the ROS system.
+ * This tutorial demonstrates simple receipt of ZED pose and odometry messages
+ * over the ROS system.
  */
 
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -34,13 +35,12 @@ public:
   MinimalPoseOdomSubscriber()
   : Node("zed_odom_pose_tutorial")
   {
-    /* Note: it is very important to use a QOS profile for the subscriber that is compatible
-         * with the QOS profile of the publisher.
-         * The ZED component node uses a default QoS profile with reliability set as "RELIABLE"
-         * and durability set as "VOLATILE".
-         * To be able to receive the subscribed topic the subscriber must use compatible
-         * parameters.
-         */
+    /* Note: it is very important to use a QOS profile for the subscriber that
+     * is compatible with the QOS profile of the publisher. The ZED component
+     * node uses a default QoS profile with reliability set as "RELIABLE" and
+     * durability set as "VOLATILE". To be able to receive the subscribed topic
+     * the subscriber must use compatible parameters.
+     */
 
     // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
@@ -68,9 +68,8 @@ protected:
     double tz = msg->pose.position.z;
 
     // Orientation quaternion
-    tf2::Quaternion q(
-      msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z,
-      msg->pose.orientation.w);
+    tf2::Quaternion q(msg->pose.orientation.x, msg->pose.orientation.y,
+      msg->pose.orientation.z, msg->pose.orientation.w);
 
     // 3x3 Rotation matrix from quaternion
     tf2::Matrix3x3 m(q);
@@ -82,10 +81,12 @@ protected:
     // Output the measure
     RCLCPP_INFO(
       get_logger(),
-      "Received pose in '%s' frame : X: %.2f Y: %.2f Z: %.2f - R: %.2f P: %.2f Y: %.2f - "
+      "Received pose in '%s' frame : X: %.2f Y: %.2f Z: %.2f - R: "
+      "%.2f P: %.2f Y: %.2f - "
       "Ts: %u.%u sec ",
-      msg->header.frame_id.c_str(), tx, ty, tz, roll * RAD2DEG, pitch * RAD2DEG, yaw * RAD2DEG,
-      msg->header.stamp.sec, msg->header.stamp.nanosec);
+      msg->header.frame_id.c_str(), tx, ty, tz, roll * RAD2DEG,
+      pitch * RAD2DEG, yaw * RAD2DEG, msg->header.stamp.sec,
+      msg->header.stamp.nanosec);
   }
 
   void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
@@ -97,8 +98,8 @@ protected:
 
     // Orientation quaternion
     tf2::Quaternion q(
-      msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z,
-      msg->pose.pose.orientation.w);
+      msg->pose.pose.orientation.x, msg->pose.pose.orientation.y,
+      msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
 
     // 3x3 Rotation matrix from quaternion
     tf2::Matrix3x3 m(q);
@@ -110,10 +111,12 @@ protected:
     // Output the measure
     RCLCPP_INFO(
       get_logger(),
-      "Received odometry in '%s' frame : X: %.2f Y: %.2f Z: %.2f - R: %.2f P: %.2f Y: %.2f - "
+      "Received odometry in '%s' frame : X: %.2f Y: %.2f Z: %.2f - "
+      "R: %.2f P: %.2f Y: %.2f - "
       "Ts: %u.%u sec ",
-      msg->header.frame_id.c_str(), tx, ty, tz, roll * RAD2DEG, pitch * RAD2DEG, yaw * RAD2DEG,
-      msg->header.stamp.sec, msg->header.stamp.nanosec);
+      msg->header.frame_id.c_str(), tx, ty, tz, roll * RAD2DEG,
+      pitch * RAD2DEG, yaw * RAD2DEG, msg->header.stamp.sec,
+      msg->header.stamp.nanosec);
   }
 
 private:
