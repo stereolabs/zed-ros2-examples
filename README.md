@@ -53,8 +53,8 @@ source ~/.bashrc
 
 ### Examples
 
-* [ZED Localization with ArUco markers](./zed_aruco_localization): use localized ArUco tags as a reference for localization.
-* [Convert ZED Depth map to virtual laser scan](./zed_depth_to_laserscan): convert ZED Depth maps into virtual Laser Scans using
+* [ZED Localization with ArUco markers](./examples/zed_aruco_localization): use localized ArUco tags as a reference for localization.
+* [Convert ZED Depth map to virtual laser scan](./examples/zed_depth_to_laserscan): convert ZED Depth maps into virtual Laser Scans using
 * [ROS 2 Composition](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Composition.html): use ROS 2 composition to convert BGRA images to BGR 
 
  ## Tools
