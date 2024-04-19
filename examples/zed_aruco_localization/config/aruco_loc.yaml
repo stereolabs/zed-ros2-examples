@@ -15,11 +15,11 @@
         refine_detection: false     # If enabled the corners of the detected markers will be processed to obtain sub-pixel precision
 
       debug:
-        active: false               # Enable debug messages
+        active: true               # Enable debug messages
 
       marker_000:
-        aruco_id: 43                 # ID of the ArUco tag as retrieved by the ArUco Detector code
-        position: [-1.08,-0.56,0.63] # Pose with respect to the World origin [m]
+        aruco_id: 40                 # ID of the ArUco tag as retrieved by the ArUco Detector code
+        position: [0.0,0.0,0.0] # Pose with respect to the World origin [m]
         orientation: [0.0,0.0,0.0]   # Orientation with respect to the World origin [rad]
 
       marker_001:

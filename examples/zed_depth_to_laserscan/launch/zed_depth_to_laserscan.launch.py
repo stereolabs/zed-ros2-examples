@@ -137,7 +137,7 @@ def launch_setup(context, *args, **kwargs):
             {
                 'general.camera_name': camera_name_val,
                 'general.camera_model': camera_model_val,
-                'general.svo_file': svo_path,
+                'svo.svo_path': svo_path,
                 'general.serial_number': serial_number
             }
         ],
@@ -194,7 +194,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'camera_model',
                 description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
-                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm']),
+                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'virtual']),
             DeclareLaunchArgument(
                 'zed_node_name',
                 default_value='zed_node',
@@ -223,7 +223,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'svo_path',
                 default_value=TextSubstitution(text='live'),
-                description='Path to an input SVO file. Note: overrides the parameter `general.svo_file` in `common.yaml`.'),
+                description='Path to an input SVO file.'),
             DeclareLaunchArgument(
                 'rviz',
                 default_value='true',

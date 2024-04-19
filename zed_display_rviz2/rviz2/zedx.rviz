@@ -1,31 +1,29 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 113
+    Help Height: 79
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
         - /RobotModel1/Description Topic1
+        - /Video1
         - /Video1/RGB Image1
-        - /Video1/RGB Image1/Topic1
-        - /Video1/Stereo1
         - /Video1/Stereo1/Topic1
+        - /Depth1
         - /Depth1/Depth Map1/Topic1
-        - /Depth1/Loc. Point Cloud1/Topic1
-        - /Position1/TF1
         - /Position1/TF1/Frames1
         - /Position1/Pose1/Topic1
         - /Position1/Pose Path1/Topic1
         - /Position1/Odom Path1/Topic1
-        - /Mapping1/Planes1
-        - /Mapping1/Planes1/Topic1
-        - /Mapping1/Planes1/Namespaces1
-        - /Objects1/ZedOdDisplay1
-        - /Objects1/ZedOdDisplay1/Topic1
+        - /Mapping1/Global 3D Map1/Topic1
+        - /Mapping1/Local Cost Map1/Topic1
+        - /Detection1/Objects1
         - /Sensors1/IMU Temperature1/Topic1
         - /Sensors1/Left Temperature1/Topic1
         - /Sensors1/Right Temperature1/Topic1
-      Splitter Ratio: 0.6057971119880676
-    Tree Height: 444
+        - /AerialMap1/Topic1
+      Splitter Ratio: 0.44949495792388916
+    Tree Height: 476
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -42,7 +40,7 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
-    - Alpha: 0.5
+    - Alpha: 0.30000001192092896
       Cell Size: 1
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
@@ -57,10 +55,10 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 200
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 0.5
+    - Alpha: 0.8999999761581421
       Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
       Description File: ""
@@ -127,26 +125,32 @@ Visualization Manager:
             Value: /zed/zed_node/rgb/image_rect_color
           Value: true
           Visibility:
+            AerialMap: false
             Depth:
               Confidence: true
               Depth Map: true
               Loc. Point Cloud: true
+              ROI Mask: true
               Value: false
+            Detection:
+              Bodies: true
+              Objects: true
+              Value: true
             Grid: false
             Mapping:
-              Map Point Cloud: true
+              Global 3D Map: true
+              Loc. Color Img: true
+              Loc. Elevation Img: true
+              Local Cost Map: true
+              Local GridMap: true
               Planes: true
               Value: true
-            Objects:
-              Value: true
-              ZedOdDisplay: true
             Position:
               Odom Path: true
               Pose: true
               Pose Path: true
               TF: true
               Value: false
-            ROI Mask: true
             RobotModel: false
             Sensors:
               Atm. Pressure: true
@@ -178,7 +182,21 @@ Visualization Manager:
     - Class: rviz_common/Group
       Displays:
         - Class: rviz_default_plugins/Image
-          Enabled: true
+          Enabled: false
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: ROI Mask
+          Normalize Range: true
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/roi_mask
+          Value: false
+        - Class: rviz_default_plugins/Image
+          Enabled: false
           Max Value: 10
           Median window: 5
           Min Value: 0
@@ -190,7 +208,7 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/depth/depth_registered
-          Value: true
+          Value: false
         - Class: rviz_default_plugins/Image
           Enabled: false
           Max Value: 100
@@ -226,7 +244,7 @@ Visualization Manager:
           Name: Loc. Point Cloud
           Position Transformer: XYZ
           Selectable: true
-          Size (Pixels): 2
+          Size (Pixels): 3
           Size (m): 0.009999999776482582
           Style: Points
           Topic:
@@ -257,7 +275,7 @@ Visualization Manager:
             zed_camera_link:
               Value: true
             zed_imu_link:
-              Value: false
+              Value: true
             zed_left_camera_frame:
               Value: true
             zed_left_camera_optical_frame:
@@ -266,7 +284,7 @@ Visualization Manager:
               Value: true
             zed_right_camera_optical_frame:
               Value: false
-          Marker Scale: 0.20000000298023224
+          Marker Scale: 0.15000000596046448
           Name: TF
           Show Arrows: true
           Show Axes: true
@@ -310,7 +328,7 @@ Visualization Manager:
           Buffer Length: 1
           Class: rviz_default_plugins/Path
           Color: 25; 255; 25
-          Enabled: false
+          Enabled: true
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.009999999776482582
@@ -333,12 +351,12 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/path_map
-          Value: false
+          Value: true
         - Alpha: 1
           Buffer Length: 1
           Class: rviz_default_plugins/Path
           Color: 255; 25; 25
-          Enabled: false
+          Enabled: true
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.009999999776482582
@@ -361,7 +379,7 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/path_odom
-          Value: false
+          Value: true
       Enabled: true
       Name: Position
     - Class: rviz_common/Group
@@ -378,28 +396,103 @@ Visualization Manager:
           Color: 255; 255; 255
           Color Transformer: RGB8
           Decay Time: 0
-          Enabled: true
+          Enabled: false
           Invert Rainbow: false
           Max Color: 255; 255; 255
           Max Intensity: 4096
           Min Color: 0; 0; 0
           Min Intensity: 0
-          Name: Map Point Cloud
+          Name: Global 3D Map
           Position Transformer: XYZ
           Selectable: false
           Size (Pixels): 3
-          Size (m): 0.10000000149011612
-          Style: Squares
+          Size (m): 0.05000000074505806
+          Style: Boxes
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
+            Filter size: 1
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/mapping/fused_cloud
           Use Fixed Frame: true
           Use rainbow: true
-          Value: true
+          Value: false
+        - Alpha: 0.75
+          Autocompute Intensity Bounds: true
+          Class: grid_map_rviz_plugin/GridMap
+          Color: 200; 200; 200
+          Color Layer: rgb
+          Color Transformer: ColorLayer
+          Enabled: false
+          Height Layer: elevation
+          Height Transformer: Layer
+          History Length: 1
+          Invert Rainbow: false
+          Max Color: 255; 255; 255
+          Max Intensity: 0.75
+          Min Color: 0; 0; 0
+          Min Intensity: -0.5
+          Name: Local GridMap
+          Show Grid Lines: true
+          Topic:
+            Depth: 1
+            Durability Policy: System Default
+            Filter size: 1
+            History Policy: System Default
+            Reliability Policy: System Default
+            Value: /zed/zed_node/local_map/gridmap
+          Use Rainbow: false
+          Value: false
+        - Alpha: 1
+          Class: rviz_default_plugins/Map
+          Color Scheme: costmap
+          Draw Behind: false
+          Enabled: false
+          Name: Local Cost Map
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /local_costmap/costmap
+          Update Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /local_costmap/costmap_updates
+          Use Timestamp: false
+          Value: false
+        - Class: rviz_default_plugins/Image
+          Enabled: false
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: Loc. Elevation Img
+          Normalize Range: true
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/local_map/elev_img
+          Value: false
+        - Class: rviz_default_plugins/Image
+          Enabled: false
+          Max Value: 1
+          Median window: 5
+          Min Value: 0
+          Name: Loc. Color Img
+          Normalize Range: true
+          Topic:
+            Depth: 5
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/local_map/col_img
+          Value: false
         - Class: rviz_default_plugins/Marker
           Enabled: true
           Name: Planes
@@ -422,7 +515,7 @@ Visualization Manager:
           Joint Radius: 0.07500000298023224
           Label Scale: 3.5
           Link Size: 0.05000000074505806
-          Name: ZedOdDisplay
+          Name: Objects
           Show Bounding Boxes: true
           Show Labels: true
           Show Skeletons: true
@@ -435,8 +528,26 @@ Visualization Manager:
             Value: /zed/zed_node/obj_det/objects
           Transparency: 0.25
           Value: true
-      Enabled: true
-      Name: Objects
+        - Class: rviz_plugin_zed_od/ZedOdDisplay
+          Enabled: false
+          Joint Radius: 0.07500000298023224
+          Label Scale: 3.5
+          Link Size: 0.05000000074505806
+          Name: Bodies
+          Show Bounding Boxes: true
+          Show Labels: true
+          Show Skeletons: true
+          Topic:
+            Depth: 1
+            Durability Policy: Volatile
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/body_trk/skeletons
+          Transparency: 0.25
+          Value: false
+      Enabled: false
+      Name: Detection
     - Class: rviz_common/Group
       Displays:
         - Alpha: 0.30000001192092896
@@ -577,23 +688,26 @@ Visualization Manager:
           Value: true
       Enabled: false
       Name: Sensors
-    - Class: rviz_default_plugins/Image
+    - Alpha: 0.699999988079071
+      Blocks: 3
+      Class: rviz_satellite/AerialMap
+      Draw Behind: true
       Enabled: true
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: ROI Mask
-      Normalize Range: true
+      Name: AerialMap
+      Object URI: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+      TF tolerance: 0.10000000149011612
+      Timeout: 3
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /zed/zed_node/roi_mask
+        Value: /zed/zed_node/pose/origin_fix
       Value: true
+      Zoom: 16
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 90; 90; 90
     Fixed Frame: map
     Frame Rate: 30
   Name: root
@@ -652,10 +766,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.015398268587887287
-      Target Frame: zed_camera_center
+      Pitch: 0.865398108959198
+      Target Frame: map
       Value: Orbit (rviz_default_plugins)
-      Yaw: 1.210396409034729
+      Yaw: 3.040400743484497
     Saved: ~
 Window Geometry:
   Confidence:
@@ -667,7 +781,11 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000019b0000039afc020000000ffb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005d00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003f0000026d000000cc00fffffffb0000000a0056006900650077007301000002b200000127000000a900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec00000151fb0000000a0049006d0061006700650100000312000000cb0000000000000000fb0000001400460072006f006e00740020005600690065007701000003a5000000170000000000000000fb00000012004200610063006b0020005600690065007701000003c2000000170000000000000000fb0000000c00430061006d006500720061010000028d0000014c000000000000000000000001000001cc0000039afc0200000007fb0000001200520047004200200049006d006100670065010000003f000001190000002900fffffffb00000012004400650070007400680020004d00610070010000015e000001170000002900fffffffb000000100052004f00490020004d00610073006b010000027b0000015e0000002900fffffffb0000000c00530074006500720065006f0000000215000000a50000002900fffffffb000000140043006f006e0066006900640065006e00630065000000032f000000b70000002900fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d006501000000000000045000000000000000000000040d0000039a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Loc. Color Img:
+    collapsed: false
+  Loc. Elevation Img:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd0000000400000000000002570000039afc020000000efb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005d00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003f0000026b000000cc00fffffffb0000000a0056006900650077007301000002b000000129000000a900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec00000151fb0000000a0049006d0061006700650100000312000000cb0000000000000000fb0000001400460072006f006e00740020005600690065007701000003a5000000170000000000000000fb00000012004200610063006b0020005600690065007701000003c200000017000000000000000000000001000001f50000039afc020000000bfb0000001e0045006c00650076006100740069006f006e00200049006d006100670065010000003f000001ca0000000000000000fb000000100052004f00490020004d00610073006b000000003f000001590000002900fffffffb00000012004400650070007400680020004d00610070000000003f000000f50000002900fffffffb0000000c00530074006500720065006f0000000174000000bd0000002900fffffffb000000140043006f006e0066006900640065006e006300650000000122000000720000002900fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fc0000003f000001e30000000000fffffffa000000000100000001fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000001200520047004200200049006d006100670065010000003f0000039a0000002900fffffffb0000001c004c006f0063002e00200043006f006c006f007200200049006d0067000000003f000001ed0000002900fffffffb00000024004c006f0063002e00200045006c00650076006100740069006f006e00200049006d0067000000003f0000039a0000002900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000780000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000003280000039a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   RGB Image:
     collapsed: false
   ROI Mask:

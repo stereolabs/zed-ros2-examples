@@ -20,13 +20,14 @@
   <xacro:arg name="camera_name"   default="zed" />
   <xacro:arg name="camera_model"  default="zedx" />
   <xacro:arg name="use_zed_localization" default="true" />
+  <xacro:arg name="baseline" default="0.0" />
 
   <!-- Include the robot (e.g. AgileX Scout mini) -->
   <xacro:include filename="$(find scout_description)/urdf/scout_mini.xacro" />
 
   <!-- Add one ZED Camera -->
   <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
-  <xacro:zed_camera name="$(arg camera_name)" model="$(arg camera_model)" />
+  <xacro:zed_camera name="$(arg camera_name)" model="$(arg camera_model)" baseline="$(arg baseline)"/>
 
   <!-- Add a joint to connect the ZED Camera to the robot -->
   <xacro:if value="$(arg use_zed_localization)">
