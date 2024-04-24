@@ -15,9 +15,11 @@
 #ifndef CVT_VISIBILITY_CONTROL_HPP_
 #define CVT_VISIBILITY_CONTROL_HPP_
 
+/* *INDENT-OFF* */
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* *INDENT-ON* */
 
 // This logic was borrowed (then namespaced) from the examples on the gcc wiki:
 //     https://gcc.gnu.org/wiki/Visibility
@@ -50,8 +52,10 @@ extern "C" {
 #define ZED_CVT_COMPONENT_PUBLIC_TYPE
 #endif
 
+/* *INDENT-OFF* */
 #ifdef __cplusplus
 }
 #endif
+/* *INDENT-ON* */
 
 #endif  // CVT_VISIBILITY_CONTROL_HPP_
