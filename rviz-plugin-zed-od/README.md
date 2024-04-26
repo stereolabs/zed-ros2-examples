@@ -31,7 +31,7 @@ Install the [zed-ros2-examples](https://github.com/stereolabs/zed-ros2-examples)
 
     $ ros2 launch zed_display_rviz2 display_zed_cam.launch.py camera_model:=<camera_model>
 
-Please replace `<camera_model>` with the model of the camera that you are using: `'zedm'`, `'zed2'`, `'zed2i'`, `'zedx'`, `'zedxm'`.
+Please replace `<camera_model>` with the model of the camera that you are using: `'zedm'`, `'zed2'`, `'zed2i'`, `'zedx'`, `'zedxm'`, `'virtual'`.
 
 **Note**: Object Detection and Body Tracking are not available with the "ZED" Gen.1 camera.
 

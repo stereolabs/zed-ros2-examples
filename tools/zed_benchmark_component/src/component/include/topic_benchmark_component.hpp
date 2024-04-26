@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@
 
 #include <atomic>
 #include <map>
-#include <string>
 #include <memory>
 #include <rclcpp/generic_subscription.hpp>  // Not available before ROS2 Humble
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialized_message.hpp>
+#include <string>
 
 #include "visibility_control.hpp"
 #include "winavg.hpp"
@@ -46,28 +46,31 @@ protected:
   // ----> Node Parameters
   template<typename T>
   void getParam(
-    std::string paramName, T defValue, T & outVal, std::string log_info = std::string(),
-    bool dynamic = false);
+    std::string paramName, T defValue, T & outVal,
+    std::string log_info = std::string(), bool dynamic = false);
 
   void getParameters();
   // ----> Node Parameters
 
-  void updateTopicInfo();  ///< Update the information to subscribe to the topic under benchmarking
+  void updateTopicInfo();  ///< Update the information to subscribe to the topic
+                           ///< under benchmarking
 
   void topicCallback(std::shared_ptr<rclcpp::SerializedMessage> msg);
 
 private:
-  double mSubFreqTot;  ///< Total of subscriber receiving frequency for average computation
+  double mSubFreqTot;  ///< Total of subscriber receiving frequency for average
+                       ///< computation
   double mSubFreqBw;   ///< Average topic bandwidth (topic_size x avg_freq)
 
   rclcpp::TimerBase::SharedPtr mTopicTimer;
 
   // Parameters
-  std::string mTopicName = DEFAULT_TOPIC_NAME;  ///< Name of the benchmarked topic
-  int mWinSize = 500;                           ///< Window size for frequency average
+  std::string mTopicName =
+    DEFAULT_TOPIC_NAME;    ///< Name of the benchmarked topic
+  int mWinSize = 500;      ///< Window size for frequency average
 
-  std::atomic<bool>
-  mTopicAvailable;    ///< Indicate if the benchmarked topic is published by other nodes
+  std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is
+                                      ///< published by other nodes
 
   // Topic subscriptions
   std::map<std::string, std::shared_ptr<rclcpp::GenericSubscription>> mSubMap;
@@ -79,7 +82,8 @@ private:
   std::chrono::steady_clock::time_point mLastRecTime;
 
   // Stats message publisher
-  std::shared_ptr<rclcpp::Publisher<zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>>
+  std::shared_ptr<rclcpp::Publisher<
+      zed_topic_benchmark_interfaces::msg::BenchmarkStatsStamped>>
   mPub;
   uint64_t mTopicCount = 0;
 };

@@ -1,4 +1,4 @@
-# Copyright 2023 Stereolabs
+# Copyright 2024 Stereolabs
 #
 # Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'camera_model',
                 description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
-                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm']),
+                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'virtual']),
             OpaqueFunction(function=launch_setup)
         ]
     )

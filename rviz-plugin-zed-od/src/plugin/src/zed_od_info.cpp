@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ const Ogre::ColourValue COLOR_TRACK_TERMINATED(1.0f, 1.0f, 1.0f);
 uint64_t ZedOdInfo::mObjIdx = 0;
 
 ZedOdInfo::ZedOdInfo(
-  zed_interfaces::msg::Object & obj, Ogre::SceneManager * scene_manager,
+  zed_interfaces::msg::Object & obj,
+  Ogre::SceneManager * scene_manager,
   Ogre::SceneNode * parent_node)
 {
   mSceneManager = scene_manager;
@@ -102,10 +103,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
     std::string nodeStr = std::string("Pivot") + std::to_string(mObjIdx);
     mPivotSceneNode = mSceneNode->createChildSceneNode(nodeStr.c_str());
 
-    mLabel =
-      std::make_shared<rviz_rendering::MovableText>(mObjName, "Liberation Sans", mLabelScale);
+    mLabel = std::make_shared<rviz_rendering::MovableText>(
+      mObjName, "Liberation Sans", mLabelScale);
     mLabel->setTextAlignment(
-      rviz_rendering::MovableText::H_CENTER, rviz_rendering::MovableText::V_CENTER);
+      rviz_rendering::MovableText::H_CENTER,
+      rviz_rendering::MovableText::V_CENTER);
 
     mPivot = std::make_shared<rviz_rendering::Shape>(
       rviz_rendering::Shape::Sphere, mSceneManager, mPivotSceneNode);
@@ -127,7 +129,8 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
   }
 
   mPivot->setPosition(pos);
-  // std::cout << "pivot: " << pos[0] << "," << pos[1] << ","  << pos[2] << std::endl;
+  // std::cout << "pivot: " << pos[0] << "," << pos[1] << ","  << pos[2] <<
+  // std::endl;
   // <---- Pivot and Label
 
   // ----> Bounding Box
@@ -187,7 +190,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
     size_t idx = 0;
 
     if (create) {
-      line = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mBBoxSceneNode);
+      line = std::make_shared<rviz_rendering::BillboardLine>(
+        mSceneManager,
+        mBBoxSceneNode);
       line->setColor(mColorBBox.r, mColorBBox.g, mColorBBox.b, mColorBBox.a);
       if (mShowBBox) {
         line->setLineWidth(mLinkSize);
@@ -201,12 +206,14 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     Ogre::Vector3 start, end;
     idx = i % 4;
-    zed_interfaces::msg::Keypoint3D cornerStart = obj.bounding_box_3d.corners[idx];
+    zed_interfaces::msg::Keypoint3D cornerStart =
+      obj.bounding_box_3d.corners[idx];
     start[0] = cornerStart.kp[0];
     start[1] = cornerStart.kp[1];
     start[2] = cornerStart.kp[2];
     idx = (i + 1) % 4;
-    zed_interfaces::msg::Keypoint3D cornerEnd = obj.bounding_box_3d.corners[idx];
+    zed_interfaces::msg::Keypoint3D cornerEnd =
+      obj.bounding_box_3d.corners[idx];
     end[0] = cornerEnd.kp[0];
     end[1] = cornerEnd.kp[1];
     end[2] = cornerEnd.kp[2];
@@ -220,7 +227,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
     size_t idx = 0;
 
     if (create) {
-      line = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mBBoxSceneNode);
+      line = std::make_shared<rviz_rendering::BillboardLine>(
+        mSceneManager,
+        mBBoxSceneNode);
       line->setColor(mColorBBox.r, mColorBBox.g, mColorBBox.b, mColorBBox.a);
       if (mShowBBox) {
         line->setLineWidth(mLinkSize);
@@ -234,12 +243,14 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     Ogre::Vector3 start, end;
     idx = i % 4 + 4;
-    zed_interfaces::msg::Keypoint3D cornerStart = obj.bounding_box_3d.corners[idx];
+    zed_interfaces::msg::Keypoint3D cornerStart =
+      obj.bounding_box_3d.corners[idx];
     start[0] = cornerStart.kp[0];
     start[1] = cornerStart.kp[1];
     start[2] = cornerStart.kp[2];
     idx = (i + 1) % 4 + 4;
-    zed_interfaces::msg::Keypoint3D cornerEnd = obj.bounding_box_3d.corners[idx];
+    zed_interfaces::msg::Keypoint3D cornerEnd =
+      obj.bounding_box_3d.corners[idx];
     end[0] = cornerEnd.kp[0];
     end[1] = cornerEnd.kp[1];
     end[2] = cornerEnd.kp[2];
@@ -253,7 +264,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
     size_t idx = 0;
 
     if (create) {
-      line = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mBBoxSceneNode);
+      line = std::make_shared<rviz_rendering::BillboardLine>(
+        mSceneManager,
+        mBBoxSceneNode);
       line->setColor(mColorBBox.r, mColorBBox.g, mColorBBox.b, mColorBBox.a);
       if (mShowBBox) {
         line->setLineWidth(mLinkSize);
@@ -267,12 +280,14 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     Ogre::Vector3 start, end;
     idx = i;
-    zed_interfaces::msg::Keypoint3D cornerStart = obj.bounding_box_3d.corners[idx];
+    zed_interfaces::msg::Keypoint3D cornerStart =
+      obj.bounding_box_3d.corners[idx];
     start[0] = cornerStart.kp[0];
     start[1] = cornerStart.kp[1];
     start[2] = cornerStart.kp[2];
     idx = i + 4;
-    zed_interfaces::msg::Keypoint3D cornerEnd = obj.bounding_box_3d.corners[idx];
+    zed_interfaces::msg::Keypoint3D cornerEnd =
+      obj.bounding_box_3d.corners[idx];
     end[0] = cornerEnd.kp[0];
     end[1] = cornerEnd.kp[1];
     end[2] = cornerEnd.kp[2];
@@ -321,7 +336,9 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
       } else {
         sphere->setScale(
           Ogre::Vector3(
-            mJointRadius * mSkelScale, mJointRadius * mSkelScale, mJointRadius * mSkelScale));
+            mJointRadius * mSkelScale,
+            mJointRadius * mSkelScale,
+            mJointRadius * mSkelScale));
         if (!pos.isNaN()) {
           sphere->setPosition(pos);
         }
@@ -334,8 +351,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         linePtr link;
 
         if (create) {
-          link = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mSkelSceneNode);
-          link->setColor(mColorSkel.r, mColorSkel.g, mColorSkel.b, mColorSkel.a);
+          link = std::make_shared<rviz_rendering::BillboardLine>(
+            mSceneManager, mSkelSceneNode);
+          link->setColor(
+            mColorSkel.r, mColorSkel.g, mColorSkel.b,
+            mColorSkel.a);
           link->setLineWidth(mLinkSize * mSkelScale);
           mSkelLinks.push_back(link);
         } else {
@@ -344,9 +364,12 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         idx++;
 
         Ogre::Vector3 start, end;
-        start[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
-        start[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
-        start[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
+        start[0] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
+        start[1] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
+        start[2] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
 
         end[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[0];
         end[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[1];
@@ -366,8 +389,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         linePtr link;
 
         if (create) {
-          link = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mSkelSceneNode);
-          link->setColor(mColorSkel.r, mColorSkel.g, mColorSkel.b, mColorSkel.a);
+          link = std::make_shared<rviz_rendering::BillboardLine>(
+            mSceneManager, mSkelSceneNode);
+          link->setColor(
+            mColorSkel.r, mColorSkel.g, mColorSkel.b,
+            mColorSkel.a);
           link->setLineWidth(mLinkSize * mSkelScale);
           mSkelLinks.push_back(link);
         } else {
@@ -376,9 +402,12 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         idx++;
 
         Ogre::Vector3 start, end;
-        start[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
-        start[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
-        start[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
+        start[0] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
+        start[1] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
+        start[2] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
 
         end[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[0];
         end[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[1];
@@ -398,8 +427,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         linePtr link;
 
         if (create) {
-          link = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mSkelSceneNode);
-          link->setColor(mColorSkel.r, mColorSkel.g, mColorSkel.b, mColorSkel.a);
+          link = std::make_shared<rviz_rendering::BillboardLine>(
+            mSceneManager, mSkelSceneNode);
+          link->setColor(
+            mColorSkel.r, mColorSkel.g, mColorSkel.b,
+            mColorSkel.a);
           link->setLineWidth(mLinkSize * mSkelScale);
           mSkelLinks.push_back(link);
         } else {
@@ -408,9 +440,12 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         idx++;
 
         Ogre::Vector3 start, end;
-        start[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
-        start[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
-        start[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
+        start[0] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
+        start[1] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
+        start[2] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
 
         end[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[0];
         end[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[1];
@@ -430,8 +465,11 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         linePtr link;
 
         if (create) {
-          link = std::make_shared<rviz_rendering::BillboardLine>(mSceneManager, mSkelSceneNode);
-          link->setColor(mColorSkel.r, mColorSkel.g, mColorSkel.b, mColorSkel.a);
+          link = std::make_shared<rviz_rendering::BillboardLine>(
+            mSceneManager, mSkelSceneNode);
+          link->setColor(
+            mColorSkel.r, mColorSkel.g, mColorSkel.b,
+            mColorSkel.a);
           link->setLineWidth(mLinkSize * mSkelScale);
           mSkelLinks.push_back(link);
         } else {
@@ -440,9 +478,12 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
         idx++;
 
         Ogre::Vector3 start, end;
-        start[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
-        start[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
-        start[2] = obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
+        start[0] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[0];
+        start[1] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[1];
+        start[2] =
+          obj.skeleton_3d.keypoints[static_cast<int>(limb.first)].kp[2];
 
         end[0] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[0];
         end[1] = obj.skeleton_3d.keypoints[static_cast<int>(limb.second)].kp[1];

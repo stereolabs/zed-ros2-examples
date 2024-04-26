@@ -58,7 +58,7 @@ The `zed_wrapper_component` variable defines the ZED node:
             {
                 'general.camera_name': camera_name_val,
                 'general.camera_model': camera_model_val,
-                'general.svo_file': svo_path,
+                'svo.svo_path': svo_path,
                 'general.serial_number': serial_number
             }
         ],

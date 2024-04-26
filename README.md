@@ -24,12 +24,16 @@ The `zed-ros-examples` repository is a collection of [colcon](http://design.ros2
 
 Open a terminal, clone the repository, update the dependencies and build the packages:
 
-    $ cd ~/ros2_ws/src/ #use your current ros2 workspace folder
-    $ git clone https://github.com/stereolabs/zed-ros2-examples.git
-    $ cd ../
-    $ rosdep install --from-paths src --ignore-src -r -y
-    $ colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
-    $ source ~/.bashrc
+```bash
+cd ~/ros2_ws/src/ #use your current ros2 workspace folder
+git clone https://github.com/stereolabs/zed-ros2-examples.git
+cd ../
+sudo apt update
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
+source ~/.bashrc
+```
 
 ## Tutorials and examples
 
@@ -45,11 +49,13 @@ Open a terminal, clone the repository, update the dependencies and build the pac
  - [Pose/Odometry subscription tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_pose_tutorial)
  - [ROS2 Composition + BGRA2BGR conversion tutorial](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_rgb_convert)
  - [Multi-camera](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_multi_camera)
+ - [Robot integration](https://github.com/stereolabs/zed-ros2-examples/tree/master/tutorials/zed_robot_integration)
 
 ### Examples
 
 * [ZED Localization with ArUco markers](./zed_aruco_localization): use localized ArUco tags as a reference for localization.
-* [Convert ZED Depth map to virtual laser scan](./zed_depth_to_laserscan): convert ZED Depth maps into virtual Laser Scans using [ROS 2 Composition](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Composition.html).
+* [Convert ZED Depth map to virtual laser scan](./zed_depth_to_laserscan): convert ZED Depth maps into virtual Laser Scans using
+* [ROS 2 Composition](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Composition.html): use ROS 2 composition to convert BGRA images to BGR 
 
  ## Tools
 

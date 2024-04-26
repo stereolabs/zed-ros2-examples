@@ -1,4 +1,4 @@
-// Copyright 2023 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,8 @@
 // limitations under the License.
 
 /**
- * This tutorial demonstrates simple receipt of ZED video messages over the ROS system.
+ * This tutorial demonstrates simple receipt of ZED video messages over the ROS
+ * system.
  */
 
 #include <rclcpp/qos.hpp>
@@ -23,23 +24,26 @@
 rclcpp::Node::SharedPtr g_node = nullptr;
 
 /**
- * Subscriber callbacks. The argument of the callback is a constant pointer to the received message
+ * Subscriber callbacks. The argument of the callback is a constant pointer to
+ * the received message
  */
 
 void imageRightRectifiedCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
   RCLCPP_INFO(
     g_node->get_logger(),
-    "Right Rectified image received from ZED\tSize: %dx%d - Ts: %u.%u sec ", msg->width,
-    msg->height, msg->header.stamp.sec, msg->header.stamp.nanosec);
+    "Right Rectified image received from ZED\tSize: %dx%d - Ts: %u.%u sec ",
+    msg->width, msg->height, msg->header.stamp.sec,
+    msg->header.stamp.nanosec);
 }
 
 void imageLeftRectifiedCallback(const sensor_msgs::msg::Image::SharedPtr msg)
 {
   RCLCPP_INFO(
     g_node->get_logger(),
-    "Left  Rectified image received from ZED\tSize: %dx%d - Ts: %u.%u sec ", msg->width,
-    msg->height, msg->header.stamp.sec, msg->header.stamp.nanosec);
+    "Left  Rectified image received from ZED\tSize: %dx%d - Ts: %u.%u sec ",
+    msg->width, msg->height, msg->header.stamp.sec,
+    msg->header.stamp.nanosec);
 }
 
 int main(int argc, char * argv[])
@@ -49,13 +53,12 @@ int main(int argc, char * argv[])
   // Create the node
   g_node = rclcpp::Node::make_shared("zed_video_tutorial");
 
-  /* Note: it is very important to use a QOS profile for the subscriber that is compatible
-     * with the QOS profile of the publisher.
-     * The ZED component node uses a default QoS profile with reliability set as "RELIABLE"
-     * and durability set as "VOLATILE".
-     * To be able to receive the subscribed topic the subscriber must use compatible
-     * parameters.
-     */
+  /* Note: it is very important to use a QOS profile for the subscriber that is
+   * compatible with the QOS profile of the publisher. The ZED component node
+   * uses a default QoS profile with reliability set as "RELIABLE" and
+   * durability set as "VOLATILE". To be able to receive the subscribed topic
+   * the subscriber must use compatible parameters.
+   */
 
   // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
 
