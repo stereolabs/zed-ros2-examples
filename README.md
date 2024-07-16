@@ -1,6 +1,7 @@
-![](./images/Picto+STEREOLABS_Black.jpg)
-
-# Stereolabs ZED Camera - ROS 2 Tutorials and Examples
+<h1 align="center">
+   <img src="./images/Picto+STEREOLABS_Black.jpg" alt="Stereolabs" title="Stereolabs" /><br \>
+   ROS 2 Tutorials and Examples
+</h1>
 
 This package is a collection of examples and tutorials to illustrate how to better use the ZED cameras in the ROS 2 framework
 
