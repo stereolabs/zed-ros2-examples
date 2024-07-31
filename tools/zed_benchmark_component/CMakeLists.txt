@@ -49,38 +49,37 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
       set(CMAKE_BUILD_TYPE Release)
   endif()
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
+  # Default to C++14
+  if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 14)
+  endif()
 
-# dependencies
-set(DEPENDENCIES
-  rclcpp
-  rclcpp_components
-  zed_topic_benchmark_interfaces
-)
+  # dependencies
+  set(DEPENDENCIES
+    rclcpp
+    rclcpp_components
+    zed_topic_benchmark_interfaces
+  )
 
-find_package(ament_cmake_auto REQUIRED)
-ament_auto_find_build_dependencies()
+  find_package(ament_cmake_auto REQUIRED)
+  ament_auto_find_build_dependencies()
 
-find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
-find_package(zed_topic_benchmark_interfaces REQUIRED)
+  find_package(rclcpp REQUIRED)
+  find_package(rclcpp_components REQUIRED)
+  find_package(zed_topic_benchmark_interfaces REQUIRED)
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-endif()
+  if(BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
+    ament_lint_auto_find_test_dependencies()
+  endif()
 
-###############################################################################
-# Add all files in subdirectories of the project in
-# a dummy_target so qtcreator have access to all files
-file(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
-add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
-###############################################################################
+  ###############################################################################
+  # Add all files in subdirectories of the project in
+  # a dummy_target so qtcreator have access to all files
+  file(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
+  add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
+  ###############################################################################
 
-if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
   ## Sources
   set(SRC_COMP
     src/component/src/topic_benchmark_component.cpp
@@ -123,6 +122,6 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   ament_package()
 endif()
 
-ament_package()
+
 
 
