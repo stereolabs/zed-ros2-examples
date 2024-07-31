@@ -11,7 +11,7 @@ set(ROS2_FOUND FALSE)
 if(DEFINED ENV{ROS_DISTRO})
     set(FOUND_ROS2_DISTRO $ENV{ROS_DISTRO})
     set(ROS2_FOUND TRUE)
-    message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
+    #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
 else()
     message("* ROS2 distro variable not set. Trying to figure it out...")
     set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;rolling")
@@ -29,14 +29,14 @@ else()
 endif()
 
 if(ROS2_FOUND)
-    if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
-        message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_FOXY)
-    elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
-        message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+    if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_IRON)
     else()
-        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by this package. Correct working is not guarantee.")
+        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by the package '${PROJECT_NAME}'. Correct operation is not guaranteed.")
     endif()
 else()
     message("*** WARNING *** ROS2 distro is unknown. This package could not work correctly.")
@@ -51,7 +51,9 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -68,18 +70,21 @@ file(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${extra_files})
 ###############################################################################
 
-set(MSG_FILES
-    "msg/BenchmarkStatsStamped.msg"
-)
+if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
+    set(MSG_FILES
+        "msg/BenchmarkStatsStamped.msg"
+    )
 
-set(SRV_FILES
-)
+    set(SRV_FILES
+    )
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-    ${MSG_FILES}
-    ${SRV_FILES}
-    DEPENDENCIES builtin_interfaces std_msgs
-)
+    rosidl_generate_interfaces(${PROJECT_NAME}
+        ${MSG_FILES}
+        ${SRV_FILES}
+        DEPENDENCIES builtin_interfaces std_msgs
+    )
 
-ament_export_dependencies(rosidl_default_runtime)
+    ament_export_dependencies(rosidl_default_runtime)
+endif()
+
 ament_package()

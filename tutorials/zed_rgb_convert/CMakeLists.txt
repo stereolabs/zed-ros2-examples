@@ -11,7 +11,7 @@ set(ROS2_FOUND FALSE)
 if(DEFINED ENV{ROS_DISTRO})
     set(FOUND_ROS2_DISTRO $ENV{ROS_DISTRO})
     set(ROS2_FOUND TRUE)
-    message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
+    #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
 else()
     message("* ROS2 distro variable not set. Trying to figure it out...")
     set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;rolling")
@@ -30,13 +30,16 @@ endif()
 
 if(ROS2_FOUND)
     if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
-        message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_FOXY)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
-        message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_IRON)
     else()
-        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by this package. Correct working is not guarantee.")
+        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by the package '${PROJECT_NAME}'. Correct operation is not guaranteed.")
     endif()
 else()
     message("*** WARNING *** ROS2 distro is unknown. This package could not work correctly.")
@@ -80,7 +83,7 @@ endif()
 # Dependencies
 
 find_package(OpenCV REQUIRED)
-find_package(ZED 3 REQUIRED)
+find_package(ZED 4 REQUIRED)
 find_package(CUDA REQUIRED)
 
 set(DEPENDENCIES_COMP
@@ -97,7 +100,9 @@ set(DEPENDENCIES_CONT
     zed_components
 )
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
 find_package(rcutils REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)

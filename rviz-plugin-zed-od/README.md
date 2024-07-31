@@ -14,9 +14,9 @@ is required to correctly execute the ROS node to acquire data from a Stereolabs 
 
 ### Prerequisites
 
-   - Ubuntu 20.04
-   - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.3 or later
-   - [ROS2 ROS 2 Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
+- ROS2 Foxy Fitxroy or ROS2 Humble Hawksbill: 
+  - [Foxy on Ubuntu 20.04](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
+  - [Humble on Ubuntu 22.04](https://docs.ros.org/en/humble/Installation/Linux-Install-Debians.html)
 
 ### Installation
 
@@ -29,9 +29,11 @@ Install the [zed-ros2-examples](https://github.com/stereolabs/zed-ros2-examples)
 
 ### Execution
 
-Available only if you own a ZED 2 camera:
+    $ ros2 launch zed_display_rviz2 display_zed_cam.launch.py camera_model:=<camera_model>
 
-    $ ros2 launch zed_display_rviz2 display_zed2.launch.py
+Please replace `<camera_model>` with the model of the camera that you are using: `'zedm'`, `'zed2'`, `'zed2i'`, `'zedx'`, `'zedxm'`, `'virtual'`.
+
+**Note**: Object Detection and Body Tracking are not available with the "ZED" Gen.1 camera.
 
 ![Object Detection parameters](images/rviz2_od_params.png)
 ![Bounding boxes and Skeleton visualization](images/rviz2_od_result.png)

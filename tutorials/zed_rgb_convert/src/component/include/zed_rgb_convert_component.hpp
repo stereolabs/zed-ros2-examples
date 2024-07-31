@@ -1,4 +1,4 @@
-// Copyright 2022 Stereolabs
+// Copyright 2024 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ private:
   image_transport::CameraSubscriber mSubBgra;
 
   // QoS parameters
-  rclcpp::QoS mVideoQos;
+  rclcpp::QoS mDefaultQoS;
 };
 
 }  // namespace stereolabs

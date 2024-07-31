@@ -11,7 +11,7 @@ set(ROS2_FOUND FALSE)
 if(DEFINED ENV{ROS_DISTRO})
     set(FOUND_ROS2_DISTRO $ENV{ROS_DISTRO})
     set(ROS2_FOUND TRUE)
-    message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
+    #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
 else()
     message("* ROS2 distro variable not set. Trying to figure it out...")
     set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;rolling")
@@ -30,13 +30,16 @@ endif()
 
 if(ROS2_FOUND)
     if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
-        message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_FOXY)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
-        message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_IRON)
     else()
-        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by this package. Correct working is not guarantee.")
+        message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by the package '${PROJECT_NAME}'. Correct operation is not guaranteed.")
     endif()
 else()
     message("*** WARNING *** ROS2 distro is unknown. This package could not work correctly.")
@@ -91,7 +94,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
 
 find_package(rviz_common REQUIRED)
 find_package(rviz_rendering REQUIRED)
@@ -115,20 +119,21 @@ add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 ###############################################################################
 # INCLUDES and LIBS
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include
 )
 ###############################################################################
 # SOURCES
-set(PLUGIN_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_display.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_info.cpp
+set(PLUGIN_SRC  
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_display.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/src/zed_od_info.cpp
 )
 
 set(PLUGIN_INC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/visibility_control.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_display.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_info.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/include/visibility_control.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_body_parts.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_display.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/plugin/include/zed_od_info.hpp
 )
 
 ###############################################################################

@@ -67,8 +67,8 @@ Visualization Manager:
         Depth: 1
         Durability Policy: Transient Local
         History Policy: Keep Last
-        Reliability Policy: Best Effort
-        Value: /zedm/robot_description
+        Reliability Policy: Reliable
+        Value: /zed/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -96,8 +96,8 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/rgb/image_rect_color
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/rgb/image_rect_color
           Value: true
           Visibility:
             Depth:
@@ -136,8 +136,8 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/stereo/image_rect_color
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/stereo/image_rect_color
           Value: true
       Enabled: true
       Name: Video
@@ -154,8 +154,8 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/depth/depth_registered
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/depth/depth_registered
           Value: true
         - Class: rviz_default_plugins/Image
           Enabled: false
@@ -168,8 +168,8 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/confidence/confidence_map
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/confidence/confidence_map
           Value: false
         - Alpha: 0.699999988079071
           Autocompute Intensity Bounds: true
@@ -200,8 +200,8 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/point_cloud/cloud_registered
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/point_cloud/cloud_registered
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -220,19 +220,19 @@ Visualization Manager:
               Value: true
             odom:
               Value: true
-            zedm_base_link:
+            zed_base_link:
               Value: true
-            zedm_camera_center:
+            zed_camera_center:
               Value: false
-            zedm_imu_link:
+            zed_imu_link:
               Value: false
-            zedm_left_camera_frame:
+            zed_left_camera_frame:
               Value: false
-            zedm_left_camera_optical_frame:
+            zed_left_camera_optical_frame:
               Value: false
-            zedm_right_camera_frame:
+            zed_right_camera_frame:
               Value: false
-            zedm_right_camera_optical_frame:
+            zed_right_camera_optical_frame:
               Value: false
           Marker Scale: 0.30000001192092896
           Name: TF
@@ -243,15 +243,15 @@ Visualization Manager:
             map:
               odom:
                 base_link:
-                  zedm_base_link:
-                    zedm_camera_center:
-                      zedm_left_camera_frame:
-                        zedm_imu_link:
+                  zed_base_link:
+                    zed_camera_center:
+                      zed_left_camera_frame:
+                        zed_imu_link:
                           {}
-                        zedm_left_camera_optical_frame:
+                        zed_left_camera_optical_frame:
                           {}
-                      zedm_right_camera_frame:
-                        zedm_right_camera_optical_frame:
+                      zed_right_camera_frame:
+                        zed_right_camera_optical_frame:
                           {}
           Update Interval: 0.20000000298023224
           Value: true
@@ -272,8 +272,8 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/pose
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/pose
           Value: false
         - Alpha: 1
           Buffer Length: 1
@@ -300,8 +300,8 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/path_map
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/path_map
           Value: false
         - Alpha: 1
           Buffer Length: 1
@@ -328,8 +328,8 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/path_odom
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/path_odom
           Value: false
       Enabled: true
       Name: Position
@@ -364,8 +364,8 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/mapping/fused_cloud
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/mapping/fused_cloud
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -379,8 +379,8 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/plane_marker
+            Reliability Policy: Reliable
+            Value: /zed/plane_marker
           Value: true
       Enabled: true
       Name: Mapping
@@ -400,15 +400,15 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Best Effort
-            Value: /zedm/zed_node/obj_det/objects
+            Reliability Policy: Reliable
+            Value: /zed/zed_node/obj_det/objects
           Transparency: 0.25
           Value: true
       Enabled: true
       Name: Objects
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 90; 90; 90
     Fixed Frame: map
     Frame Rate: 30
   Name: root
@@ -428,14 +428,14 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Best Effort
+        Reliability Policy: Reliable
         Value: /initialpose
     - Class: rviz_default_plugins/SetGoal
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Best Effort
+        Reliability Policy: Reliable
         Value: /goal_pose
     - Class: rviz_default_plugins/PublishPoint
       Single click: true
@@ -443,7 +443,7 @@ Visualization Manager:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Best Effort
+        Reliability Policy: Reliable
         Value: /clicked_point
   Transformation:
     Current:

@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rviz_plugin_zed_od</name>
-  <version>0.1.0</version>
+<version>4.1.0</version>
   <description>Plugin to display Object Detection results on Rviz2</description>
   <maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
 
@@ -13,6 +13,7 @@
   <url type="bugtracker">https://github.com/stereolabs/zed-ros2-wrapper/issues</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>ament_cmake_auto</build_depend>
 
   <build_depend>qtbase5-dev</build_depend>
   <build_depend>rviz_ogre_vendor</build_depend>
