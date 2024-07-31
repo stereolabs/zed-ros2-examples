@@ -35,7 +35,7 @@ camera_name_2 = 'zed_rear'
 camera_model_1 = 'zedx'
 camera_model_2 = 'zedxm'
 
-# Rviz2 Configurations to be loaded by ZED Node
+# RVIZ2 Configurations to be loaded by ZED Node
 config_rviz2 = os.path.join(
     get_package_share_directory('zed_robot_integration'),
     'rviz2','view_config.rviz'

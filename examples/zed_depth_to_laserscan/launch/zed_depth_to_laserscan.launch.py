@@ -86,7 +86,7 @@ def launch_setup(context, *args, **kwargs):
         camera_model_val + '.yaml'
     )
 
-    # Rviz2 Configurations to be loaded by ZED Node
+    # RVIZ2 Configurations to be loaded by ZED Node
     config_rviz2 = os.path.join(
         get_package_share_directory('zed_depth_to_laserscan'),
         'rviz2','zed_depth_to_laserscan.rviz'
