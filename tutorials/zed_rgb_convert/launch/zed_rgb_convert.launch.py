@@ -28,10 +28,10 @@ def generate_launch_description():
     #  - 'zed' for "ZED" camera
     #  - 'zedm' for "ZED mini" camera
     #  - 'zed2' for "ZED2" camera
-    camera_model = 'zed2'
+    camera_model = 'zed2i'
 
     # Camera name
-    camera_name = 'zed2'
+    camera_name = 'zed2i'
 
     # URDF/xacro file to be loaded by the Robot State Publisher node
     xacro_path = os.path.join(

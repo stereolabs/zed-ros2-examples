@@ -40,7 +40,7 @@ else()
 endif()
 ################################################
 
-if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
   # if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
   if(NOT CMAKE_BUILD_TYPE)
       set(CMAKE_BUILD_TYPE Release)
@@ -92,9 +92,6 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
   )
 
   ament_package()
-else()
-
-
 endif()
 
 
