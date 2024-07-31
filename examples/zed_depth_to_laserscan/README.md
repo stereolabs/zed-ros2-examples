@@ -5,7 +5,7 @@ This example demonstrates how to use [ROS 2 Composition](https://docs.ros.org/en
 Usage:
 
 ```bash
-ros2 launch zed_to_laser_scan zed_to_laser_scan.launch.py  camera_model:=<camera_model>
+ros2 launch zed_depth_to_laserscan zed_depth_to_laserscan.launch.py  camera_model:=<camera_model>
 ```
 
 the launch file will start the ZED Wrapper node, the Depth Image to Laser Scan converter node, RVIZ2 for data visualization, and a Robot State Publisher node to broadcast the ZED camera static frames.

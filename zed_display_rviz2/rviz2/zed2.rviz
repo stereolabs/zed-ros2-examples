@@ -9,10 +9,28 @@ Panels:
         - /Video1/Stereo1/Topic1
         - /Depth1/Depth Map1/Topic1
         - /Depth1/Loc. Point Cloud1
+<<<<<<< HEAD
+        - /Position1
+=======
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
         - /Position1/TF1/Frames1
         - /Position1/Pose1/Topic1
         - /Position1/Pose Path1/Topic1
         - /Position1/Odom Path1/Topic1
+<<<<<<< HEAD
+        - /Mapping1/Map Point Cloud1/Topic1
+        - /Mapping1/Planes1
+        - /Mapping1/Planes1/Topic1
+        - /Mapping1/Planes1/Namespaces1
+        - /Objects1
+        - /Objects1/ZedOdDisplay1
+        - /Objects1/ZedOdDisplay1/Topic1
+        - /Sensors1/IMU Temperature1/Topic1
+        - /Sensors1/Left Temperature1/Topic1
+        - /Sensors1/Right Temperature1/Topic1
+      Splitter Ratio: 0.4965358078479767
+    Tree Height: 471
+=======
         - /Mapping1/Global 3D Map1/Topic1
         - /Mapping1/Local Cost Map1/Topic1
         - /Detection1
@@ -22,6 +40,7 @@ Panels:
         - /Sensors1/Right Temperature1/Topic1
       Splitter Ratio: 0.6039325594902039
     Tree Height: 393
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -74,6 +93,8 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+<<<<<<< HEAD
+=======
         base_link:
           Alpha: 1
           Show Axes: false
@@ -122,6 +143,7 @@ Visualization Manager:
       Mass Properties:
         Inertia: false
         Mass: false
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -131,7 +153,6 @@ Visualization Manager:
       Displays:
         - Class: rviz_default_plugins/Camera
           Enabled: true
-          Far Plane Distance: 100
           Image Rendering: background
           Name: RGB Image
           Overlay Alpha: 0.5
@@ -190,8 +211,13 @@ Visualization Manager:
             Depth: 1
             Durability Policy: Volatile
             History Policy: Keep Last
+<<<<<<< HEAD
+            Reliability Policy: Best Effort
+            Value: /zed2/zed_node/stereo/image_rect_color
+=======
             Reliability Policy: Reliable
             Value: /zed/zed_node/stereo/image_rect_color
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
           Value: false
       Enabled: true
       Name: Video
@@ -252,7 +278,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/point_cloud/cloud_registered
@@ -268,6 +293,8 @@ Visualization Manager:
           Frame Timeout: 10
           Frames:
             All Enabled: false
+<<<<<<< HEAD
+=======
             base_link:
               Value: false
             map:
@@ -296,12 +323,16 @@ Visualization Manager:
               Value: true
             zed_temp_right_link:
               Value: true
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
           Marker Scale: 0.30000001192092896
           Name: TF
           Show Arrows: true
           Show Axes: true
           Show Names: true
           Tree:
+<<<<<<< HEAD
+            {}
+=======
             map:
               odom:
                 base_link:
@@ -323,6 +354,7 @@ Visualization Manager:
                           {}
                         zed_temp_right_link:
                           {}
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
           Update Interval: 0.20000000298023224
           Value: true
         - Alpha: 0.75
@@ -340,7 +372,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/pose
@@ -368,7 +399,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/path_map
@@ -396,7 +426,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/path_odom
@@ -432,7 +461,10 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
+<<<<<<< HEAD
+=======
             Filter size: 1
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/mapping/fused_cloud
@@ -522,7 +554,6 @@ Visualization Manager:
           Topic:
             Depth: 5
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/plane_marker
@@ -532,6 +563,16 @@ Visualization Manager:
     - Class: rviz_common/Group
       Displays:
         - Class: rviz_plugin_zed_od/ZedOdDisplay
+<<<<<<< HEAD
+          Enabled: false
+          Joint Radius: 0.05000000074505806
+          Label Scale: 5
+          Link Size: 0.02500000037252903
+          Name: ZedOdDisplay
+          Show Bounding Boxes: false
+          Show Labels: false
+          Show Skeletons: false
+=======
           Enabled: true
           Joint Radius: 0.07999999821186066
           Label Scale: 3.5
@@ -540,12 +581,17 @@ Visualization Manager:
           Show Bounding Boxes: true
           Show Labels: true
           Show Skeletons: true
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
+<<<<<<< HEAD
+            Value: /zed2/zed_node/obj_det/objects
+          Transparency: 0.25
+          Value: false
+=======
             Value: /zed/zed_node/obj_det/objects
           Transparency: 0
           Value: true
@@ -567,6 +613,7 @@ Visualization Manager:
             Value: /zed/zed_node/body_trk/skeletons
           Transparency: 0
           Value: true
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
       Enabled: true
       Name: Detection
     - Class: rviz_common/Group
@@ -598,7 +645,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/atm_press
@@ -632,7 +678,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/temperature/imu
@@ -666,7 +711,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/temperature/left
@@ -700,7 +744,6 @@ Visualization Manager:
           Topic:
             Depth: 1
             Durability Policy: Volatile
-            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /zed/zed_node/temperature/right
@@ -724,9 +767,6 @@ Visualization Manager:
     - Class: rviz_default_plugins/Measure
       Line color: 128; 128; 0
     - Class: rviz_default_plugins/SetInitialPose
-      Covariance x: 0.25
-      Covariance y: 0.25
-      Covariance yaw: 0.06853891909122467
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -755,7 +795,11 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
+<<<<<<< HEAD
+      Distance: 1.5654734373092651
+=======
       Distance: 11.199999809265137
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -770,10 +814,17 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
+<<<<<<< HEAD
+      Pitch: 0.34039831161499023
+      Target Frame: base_link
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 2.870396375656128
+=======
       Pitch: 0.08539874851703644
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
       Yaw: 2.960405111312866
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
     Saved: ~
 Window Geometry:
   Confidence:
@@ -785,11 +836,15 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
+<<<<<<< HEAD
+  QMainWindow State: 000000ff00000000fd00000004000000000000019f0000039efc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000285000000c900fffffffb0000000a0056006900650077007301000002c800000113000000a400fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec00000151fb000000140043006f006e0066006900640065006e0063006500000001ea000000780000002800fffffffb0000000c00530074006500720065006f00000002bf0000008b0000002800ffffff00000001000001cc0000039efc0200000008fb0000001200520047004200200049006d006100670065010000003d000002160000002800fffffffb00000012004400650070007400680020004d006100700100000259000001820000002800fffffffb0000000c00530074006500720065006f0100000215000000a50000000000000000fb000000140043006f006e0066006900640065006e00630065000000032f000000b70000000000000000fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb00000012004400650070007400680020004d00610070010000003d000001b50000000000000000fb0000001200520047004200200049006d00610067006501000001f8000001e30000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000003c10000039e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+=======
   Loc. Color Img:
     collapsed: false
   Loc. Elevation Img:
     collapsed: false
   QMainWindow State: 000000ff00000000fd00000004000000000000018f0000039afc020000000efb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005d00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003f0000023a000000cc00fffffffb0000000a00560069006500770073010000027f0000015a000000a900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061000000020c000001270000000000000000fb0000000a0049006d00610067006502000002800000027e000001ec00000151fb0000000a0049006d0061006700650100000312000000cb0000000000000000fb0000001400460072006f006e00740020005600690065007701000003a5000000170000000000000000fb00000012004200610063006b0020005600690065007701000003c200000017000000000000000000000001000001e20000039afc020000000afb0000001e0045006c00650076006100740069006f006e00200049006d006100670065010000003f000001ca0000000000000000fb00000012004400650070007400680020004d00610070010000003f000001f00000002900fffffffb0000000c00530074006500720065006f0000000215000000a50000002900fffffffb000000140043006f006e0066006900640065006e006300650000000122000000720000002900fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fc0000003f000001e30000000000fffffffa000000000100000001fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000001200520047004200200049006d0061006700650100000235000001a40000002900fffffffb0000001c004c006f0063002e00200043006f006c006f007200200049006d0067000000003f000001ed0000002900fffffffb00000024004c006f0063002e00200045006c00650076006100740069006f006e00200049006d0067000000003f0000039a0000002900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000780000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000004030000039a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
   RGB Image:
     collapsed: false
   Selection:
@@ -800,6 +855,12 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
+<<<<<<< HEAD
+  Width: 1848
+  X: 72
+  Y: 27
+=======
   Width: 1920
   X: 0
   Y: 430
+>>>>>>> 10e8e4490a786645fe8e4821fb011fb65901c419
