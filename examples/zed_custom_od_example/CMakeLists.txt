@@ -14,7 +14,7 @@ if(DEFINED ENV{ROS_DISTRO})
     #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
 else()
     message("* ROS2 distro variable not set. Trying to figure it out...")
-    set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;rolling")
+    set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;jazzy;rolling")
     set(ROS2_FOUND FALSE)
     foreach(distro ${ROS2_DISTROS})
         if(NOT ROS2_FOUND)
@@ -96,6 +96,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(image_transport REQUIRED)
+find_package(OpenCV 4 REQUIRED)
 
 
 if(BUILD_TESTING)
@@ -121,63 +122,65 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
     )
 
     set(INC_COMP
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_aruco_localization_component.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/custom_od_component_base.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/yolo_detector.hpp
     )
 
     set(SRC_COMP
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_aruco_localization_component.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/custom_od_component_base.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/yolo_detector.cpp
     )
 
     ###############################################################################
     # Bin and Install
 
     # Component
-    add_library(${PROJECT_NAME}_component SHARED
+    add_library(zed_yolo_detector_component SHARED
         ${INC}
         ${INC_COMP}
         ${SRC_COMP}
     )
-    target_compile_definitions(${PROJECT_NAME}_component
+    target_compile_definitions(zed_yolo_detector_component
         PRIVATE "COMPOSITION_BUILDING_DLL"
     )
-    target_include_directories(${PROJECT_NAME}_component
+    target_include_directories(zed_yolo_detector_component
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
         ${OpenCV_INCLUDE_DIRS}
     )
-    target_link_libraries(${PROJECT_NAME}_component
+    target_link_libraries(zed_yolo_detector_component
         ${OpenCV_LIBS}
     )
-    ament_target_dependencies(${PROJECT_NAME}_component
+    ament_target_dependencies(zed_yolo_detector_component
         ${DEPENDENCIES_COMP}
     )
 
-    rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedArucoLoc")
-    set(node_plugins "${node_plugins}stereolabs::ZedArucoLoc;$<TARGET_FILE:${PROJECT_NAME}_component>\n")
+    rclcpp_components_register_nodes(zed_yolo_detector_component "stereolabs::ZedYoloDetector")
+    set(node_plugins "${node_plugins}stereolabs::ZedYoloDetector;$<TARGET_FILE:zed_yolo_detector_component>\n")
 
     # Install components
-    install(TARGETS ${PROJECT_NAME}_component
+    install(TARGETS zed_yolo_detector_component
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
+    RUNTIME DESTINATION lib/zed_yolo_detector
     )
 
     # Install header files
     install(
         DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
         DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
-        DESTINATION include/${PROJECT_NAME}/
+        DESTINATION include/zed_yolo_detector/
     )
 
     # Install LAUNCH files
     install(DIRECTORY
     launch config
-    DESTINATION share/${PROJECT_NAME}
+    DESTINATION share/zed_yolo_detector
     )
 
     ament_export_include_directories(include)
-    ament_export_libraries(${PROJECT_NAME}_component)
+    ament_export_libraries(zed_yolo_detector_component)
     ament_export_dependencies(${DEPENDENCIES_COMP})
 endif()
 
