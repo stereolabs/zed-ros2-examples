@@ -40,6 +40,7 @@ public:
 protected:
   /*!
    * @brief Initialize the custom inference engine
+   *        This is a pure virtual function.
    *
    */
   virtual void init() = 0;
@@ -47,6 +48,7 @@ protected:
   /*!
    * @brief Perform the inference on the latest available image and
    *        publish the bounding boxes to the ZED Wrapper node
+   *        This is a pure virtual function.
    *
    */
   virtual void doInference() = 0;
