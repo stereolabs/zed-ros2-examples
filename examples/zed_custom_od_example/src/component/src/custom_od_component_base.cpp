@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "custom_od_component_base.hpp"
+#include <sensor_msgs/image_encodings.hpp>
 
 using namespace std::placeholders;
 
@@ -42,7 +43,22 @@ ZedCustomOd::ZedCustomOd(const rclcpp::NodeOptions & options)
     get_logger(),
     "Subscribed to topic: " << _subImage.getInfoTopic());
   // ----> Create camera image subscriber
+}
 
+void ZedCustomOd::camera_callback(
+  const sensor_msgs::msg::Image::ConstSharedPtr & img,
+  const sensor_msgs::msg::CameraInfo::ConstSharedPtr & cam_info)
+{
+  // ----> Check for correct input image encoding
+  if (img->encoding != sensor_msgs::image_encodings::BGRA8) {
+    RCLCPP_ERROR(
+      get_logger(),
+      "The input topic image requires 'BGRA8' encoding");
+    exit(EXIT_FAILURE);
+  }
+  // <---- Check for correct input image encoding
+
+  RCLCPP_INFO(this->get_logger(), "Image Received");
 }
 
 }  // namespace stereolabs

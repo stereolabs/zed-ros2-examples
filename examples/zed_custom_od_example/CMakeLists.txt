@@ -83,6 +83,7 @@ set(DEPENDENCIES_COMP
     rclcpp
     rclcpp_components
     builtin_interfaces
+    sensor_msgs
     vision_msgs
     image_transport
 )
@@ -95,6 +96,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(vision_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(OpenCV 4 REQUIRED)
 
@@ -156,33 +158,33 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
         ${DEPENDENCIES_COMP}
     )
 
+    # Register the ZedYoloDetector component as a plugin
     rclcpp_components_register_nodes(zed_yolo_detector_component "stereolabs::ZedYoloDetector")
     set(node_plugins "${node_plugins}stereolabs::ZedYoloDetector;$<TARGET_FILE:zed_yolo_detector_component>\n")
 
     # Install components
     install(TARGETS zed_yolo_detector_component
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION lib/zed_yolo_detector
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION lib/${PROJECT_NAME}
     )
 
     # Install header files
     install(
         DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
         DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
-        DESTINATION include/zed_yolo_detector/
+        DESTINATION include/${PROJECT_NAME}/
     )
 
     # Install LAUNCH files
     install(DIRECTORY
-    launch config
-    DESTINATION share/zed_yolo_detector
+        launch config rviz2
+        DESTINATION share/${PROJECT_NAME}
     )
 
     ament_export_include_directories(include)
     ament_export_libraries(zed_yolo_detector_component)
     ament_export_dependencies(${DEPENDENCIES_COMP})
 endif()
-
 
 ament_package()

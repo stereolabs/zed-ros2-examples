@@ -6,4 +6,5 @@
     ros__parameters:
 
       general:
+        engine_model: 'model.model'
         
