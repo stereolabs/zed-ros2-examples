@@ -21,11 +21,14 @@
 namespace stereolabs
 {
 
+/*!
+ * @brief
+ */
 class ZedYoloDetector : public ZedCustomOd
 {
 public:
   ZED_CUSTOM_OD_COMPONENT_PUBLIC
-  ZedYoloDetector(const rclcpp::NodeOptions & options);
+  explicit ZedYoloDetector(const rclcpp::NodeOptions & options);
 
   virtual ~ZedYoloDetector() {}
 

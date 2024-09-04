@@ -39,6 +39,13 @@ default_config_common = os.path.join(
     'common.yaml'
 )
 
+# CommonCustom OD Configurations to be loaded by detector Node
+default_config_custom_od_common = os.path.join(
+    get_package_share_directory('zed_custom_od_example'),
+    'config',
+    'common.yaml'
+)
+
 # Custom OD Configurations to be loaded by detector Node
 default_config_custom_od = os.path.join(
     get_package_share_directory('zed_custom_od_example'),
@@ -66,9 +73,11 @@ def launch_setup(context, *args, **kwargs):
     custom_od_node_name = LaunchConfiguration('custom_od_node_name')
 
     config_common_path = LaunchConfiguration('config_path')
+    config_path_custom_od_common = LaunchConfiguration('config_path_custom_od_common')
     config_path_custom_od = LaunchConfiguration('config_path_custom_od')
 
     serial_number = LaunchConfiguration('serial_number')
+    detection_topic = LaunchConfiguration('detection_topic')
 
     publish_urdf = LaunchConfiguration('publish_urdf')
     xacro_path = LaunchConfiguration('xacro_path')
@@ -137,7 +146,9 @@ def launch_setup(context, *args, **kwargs):
                 'general.camera_name': camera_name_val,
                 'general.camera_model': camera_model_val,
                 'svo.svo_path': svo_path,
-                'general.serial_number': serial_number
+                'general.serial_number': serial_number,
+                'object_detection.custom_od_node_name': custom_od_node_name,
+                'object_detection.custom_od_topic': detection_topic
             }
         ],
         extra_arguments=[{'use_intra_process_comms': True}]
@@ -149,7 +160,15 @@ def launch_setup(context, *args, **kwargs):
         namespace=camera_name_val,
         plugin='stereolabs::ZedYoloDetector',
         name=custom_od_node_name,
-        parameters=[config_path_custom_od],
+        parameters=[
+            config_path_custom_od_common,
+            config_path_custom_od,
+             # Overriding
+            {
+                'general.main_node_name': zed_node_name,
+                'general.detection_topic': detection_topic
+            }
+        ],
         extra_arguments=[{'use_intra_process_comms': True}]
     )
 
@@ -198,6 +217,10 @@ def generate_launch_description():
                 default_value=TextSubstitution(text=default_config_common),
                 description='Path to the YAML configuration file for the camera.'),
             DeclareLaunchArgument(
+                'config_path_custom_od_common',
+                default_value=TextSubstitution(text=default_config_custom_od_common),
+                description='Path to the Common YAML configuration file for the Custom OD YOLO node.'),
+            DeclareLaunchArgument(
                 'config_path_custom_od',
                 default_value=TextSubstitution(text=default_config_custom_od),
                 description='Path to the YAML configuration file for the Custom OD YOLO node.'),
@@ -205,6 +228,10 @@ def generate_launch_description():
                 'serial_number',
                 default_value='0',
                 description='The serial number of the camera to be opened.'),
+            DeclareLaunchArgument(
+                'detection_topic',
+                default_value='detections',
+                description='The name of the topic for the custom detection messages.'),
             DeclareLaunchArgument(
                 'publish_urdf',
                 default_value='true',

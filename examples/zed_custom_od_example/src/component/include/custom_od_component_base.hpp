@@ -22,6 +22,9 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <image_transport/camera_subscriber.hpp>
 #include <image_transport/image_transport.hpp>
+#include <vision_msgs/msg/detection2_d_array.hpp>
+
+#include <mutex>
 
 namespace stereolabs
 {
@@ -53,6 +56,11 @@ protected:
    */
   virtual void doInference() = 0;
 
+  template<typename T>
+  void getParam(
+    std::string paramName, T defValue, T & outVal,
+    std::string log_info, bool dynamic);
+
 private:
   void camera_callback(
     const sensor_msgs::msg::Image::ConstSharedPtr & img,
@@ -60,12 +68,24 @@ private:
 
   void publishResult();
 
+  void readCommonParams();
+
 private:
+  // ----> Common Node Parameters
+  std::string _mainNodeName = "zed_node";
+  // <---- Common Node Parameters
+
   // ----> ROS Messages
+  std::string _subTopicName = "rgb/image_rect_color";
   image_transport::CameraSubscriber _subImage;  // ZED Image subscriber
   rclcpp::QoS _defaultQoS;                      // QoS parameters
+  std::string _pubTopicName = "detections";
+  std::shared_ptr<rclcpp::Publisher<vision_msgs::msg::Detection2DArray>> _pubDet2dArray;
   // <---- ROS Messages
 
+  std::mutex _detMux;
+  std::vector<vision_msgs::msg::Detection2D> _detections;
+  std::frame _detFrameId;
 };
 
 }  // namespace stereolabs
