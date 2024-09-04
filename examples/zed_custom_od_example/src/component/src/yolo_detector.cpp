@@ -19,6 +19,8 @@ void ZedYoloDetector::init()
 void ZedYoloDetector::doInference()
 {}
 
+} // namespace stereolabs
+
 // *************************************************************************
 #include "rclcpp_components/register_node_macro.hpp"
 
@@ -27,5 +29,3 @@ void ZedYoloDetector::doInference()
 // discoverable when its library is being loaded into a running process.
 RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::ZedYoloDetector)
 // *************************************************************************
-
-} // namespace stereolabs

@@ -43,6 +43,7 @@ ZedCustomOd::ZedCustomOd(const rclcpp::NodeOptions & options)
     get_logger(),
     "Subscribed to topic: " << _subImage.getInfoTopic());
   // ----> Create camera image subscriber
+
 }
 
 void ZedCustomOd::camera_callback(
