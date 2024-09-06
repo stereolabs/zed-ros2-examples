@@ -11,13 +11,27 @@ ZedYoloDetector::ZedYoloDetector(const rclcpp::NodeOptions & options)
   RCLCPP_INFO(get_logger(), " * namespace: %s", get_namespace());
   RCLCPP_INFO(get_logger(), " * node name: %s", get_name());
   RCLCPP_INFO(get_logger(), "***********************************");
+
+  // Initialize the custom detector
+  init();
+}
+
+void ZedYoloDetector::readParams()
+{
+  RCLCPP_INFO(get_logger(), "*** YOLO Detector Parameters ***");
+
+
 }
 
 void ZedYoloDetector::init()
-{}
+{
+  readParams();
+}
 
 void ZedYoloDetector::doInference()
-{}
+{
+  RCLCPP_INFO_STREAM(get_logger(), "ZedYoloDetector::doInference()");
+}
 
 } // namespace stereolabs
 

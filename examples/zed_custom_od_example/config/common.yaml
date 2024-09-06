@@ -1,4 +1,4 @@
-# config/acustom_od.yaml
+# config/custom_od.yaml
 # Parameters for Custom Object Detection component
 
 ---
@@ -8,4 +8,4 @@
       general:
         main_node_name: 'zed_node'
         detection_topic: 'detections'
-        
+        loop_frequency: 150.0

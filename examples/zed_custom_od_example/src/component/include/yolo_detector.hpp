@@ -35,6 +35,8 @@ public:
 protected:
   virtual void init() override;
   virtual void doInference() override;
+
+  void readParams();
 };
 
 } // namespace stereolabs

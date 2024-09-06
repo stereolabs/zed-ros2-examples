@@ -14,6 +14,7 @@
 
 #include "custom_od_component_base.hpp"
 #include <sensor_msgs/image_encodings.hpp>
+#include <opencv2/opencv.hpp>
 
 using namespace std::placeholders;
 
@@ -32,10 +33,17 @@ ZedCustomOd::ZedCustomOd(const rclcpp::NodeOptions & options)
   RCLCPP_INFO(get_logger(), " * node name: %s", get_name());
   RCLCPP_INFO(get_logger(), "********************************************");
 
+  _newImage = false;
+
+  // Initialize times for stats
+  _lastImgTime = get_clock()->now();
+  _lastInferenceTime = get_clock()->now();
+
+  // Read common parameters
   readCommonParams();
 
-  std::string topic_prefix = _mainNodeName + "/";
   // ----> Create camera image subscriber
+  std::string topic_prefix = _mainNodeName + "/";
   RCLCPP_INFO(get_logger(), "*** Common Subscribers ***");
 
   std::string sub_topic = topic_prefix + _subTopicName;
@@ -66,6 +74,14 @@ ZedCustomOd::ZedCustomOd(const rclcpp::NodeOptions & options)
     get_logger(),
     " * Advertised on topic: " << _pubDet2dArray->get_topic_name());
   // <---- Create detection publisher
+
+  // ----> Start the processing loop
+  int64_t proc_period_msec = static_cast<int64_t>(std::round(1000.f / _loopFreq));
+  _elabTimer = create_wall_timer(
+    std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::milliseconds(proc_period_msec)),
+    std::bind(&ZedCustomOd::processing_callback, this));
+  // <---- Start the processing loop
 }
 
 template<typename T>
@@ -96,14 +112,35 @@ void ZedCustomOd::readCommonParams()
 {
   RCLCPP_INFO(get_logger(), "*** Common Parameters ***");
 
-  getParam("general.main_node_name", _mainNodeName, _mainNodeName, " * Main node name:\t", false);
-  getParam("general.detection_topic", _pubTopicName, _pubTopicName, " * Detection topic:\t", false);
+  getParam("general.main_node_name", _mainNodeName, _mainNodeName, " * Main node name:\t\t", false);
+  getParam(
+    "general.detection_topic", _pubTopicName, _pubTopicName, " * Detection topic:\t\t",
+    false);
+  getParam("general.loop_frequency", _loopFreq, _loopFreq, " * Loop frequency [Hz]:\t", false);
 }
 
 void ZedCustomOd::camera_callback(
   const sensor_msgs::msg::Image::ConstSharedPtr & img,
   const sensor_msgs::msg::CameraInfo::ConstSharedPtr & cam_info)
 {
+  // ----> Stats
+  auto imgTime = get_clock()->now();
+  double img_elapsed_sec = (imgTime - _lastImgTime).nanoseconds() / 1e9;
+  _lastImgTime = imgTime;
+  double img_freq = 1.0 / img_elapsed_sec;
+  RCLCPP_INFO_STREAM(this->get_logger(), "Image topic freq: " << img_freq << " Hz");
+  // <---- Stats
+
+  if (_inferenceRunning) { // No new images while processing the latest received
+    return;
+  }
+
+  if (_newImage) { // While the latest image has not been processed, we ignore the oncoming
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(_detMux);
+
   // ----> Check for correct input image encoding
   if (img->encoding != sensor_msgs::image_encodings::BGRA8) {
     RCLCPP_ERROR(
@@ -115,21 +152,61 @@ void ZedCustomOd::camera_callback(
 
   RCLCPP_INFO(this->get_logger(), "Image Received");
 
+  // Set the frame id of the detection to be the same as the image frame id
   _detFrameId = img->header.frame_id;
+
+  // ----> Convert BGRA image for processing by using OpenCV
+  void * data =
+    const_cast<void *>(reinterpret_cast<const void *>(&img->data[0]));
+  cv::Mat bgra(img->height, img->width, CV_8UC4, data);
+
+  cv::cvtColor(bgra, _zedImg, cv::COLOR_BGRA2BGR);
+  // ----> Convert BGRA image for processing by using OpenCV
+
+  // At the end of the function
+  _newImage = true;
 }
 
 void ZedCustomOd::publishResult()
 {
-  std::lock_guard<std::mutex> lock(_detMux);
-
   std::unique_ptr<vision_msgs::msg::Detection2DArray> msg =
     std::make_unique<vision_msgs::msg::Detection2DArray>();
 
   msg->header.frame_id = _detFrameId;
-  msg->header.stamp = get_clock()->now();
+  msg->header.stamp = get_clock()->now(); // TODO(Walt) Check if it's better to set the timestamp just after the inference returned
   msg->detections = _detections;
 
   _pubDet2dArray->publish(std::move(msg));
+}
+
+void ZedCustomOd::processing_callback()
+{
+  if (!_newImage) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(_detMux);
+
+  // ----> Stats
+  auto procTime = get_clock()->now();
+  double proc_elapsed_sec = (procTime - _lastInferenceTime).nanoseconds() / 1e9;
+  _lastInferenceTime = procTime;
+  double proc_freq = 1.0 / proc_elapsed_sec;
+  RCLCPP_INFO_STREAM(this->get_logger(), "Inference freq: " << proc_freq << " Hz");
+  // <---- Stats
+
+  // Call the custom inference
+  _inferenceRunning = true;
+  doInference();
+  _inferenceRunning = false;
+  _newImage = false;
+  double inference_duration_sec = (get_clock()->now() - procTime).nanoseconds() / 1e9;
+  RCLCPP_INFO_STREAM(
+    this->get_logger(),
+    "Inference duration: " << inference_duration_sec << " sec");
+
+  // Publish the detection results
+  publishResult();
 }
 
 }  // namespace stereolabs

@@ -42,17 +42,19 @@ public:
 
 protected:
   /*!
-   * @brief Initialize the custom inference engine
-   *        This is a pure virtual function.
-   *
+   * @brief Initialize the custom inference engine.
+   *        This function is automatically called by
+   *        the constructor, so it's not required to call it.
+   *        This is a pure virtual function.   *
    */
   virtual void init() = 0;
 
   /*!
    * @brief Perform the inference on the latest available image and
-   *        publish the bounding boxes to the ZED Wrapper node
+   *        publish the bounding boxes to the ZED Wrapper node.
+   *        This function is automatically executed in the node loop,
+   *        so it's not required to call it.
    *        This is a pure virtual function.
-   *
    */
   virtual void doInference() = 0;
 
@@ -62,6 +64,7 @@ protected:
     std::string log_info, bool dynamic);
 
 private:
+  void processing_callback();
   void camera_callback(
     const sensor_msgs::msg::Image::ConstSharedPtr & img,
     const sensor_msgs::msg::CameraInfo::ConstSharedPtr & cam_info);
@@ -70,22 +73,36 @@ private:
 
   void readCommonParams();
 
+protected:
+  cv::Mat _zedImg; //!< This is the RGB image to be used as input for the inference
+
 private:
   // ----> Common Node Parameters
   std::string _mainNodeName = "zed_node";
+  std::string _pubTopicName = "detections";
+  float _loopFreq = 150.0f;
   // <---- Common Node Parameters
 
   // ----> ROS Messages
   std::string _subTopicName = "rgb/image_rect_color";
   image_transport::CameraSubscriber _subImage;  // ZED Image subscriber
   rclcpp::QoS _defaultQoS;                      // QoS parameters
-  std::string _pubTopicName = "detections";
+
   std::shared_ptr<rclcpp::Publisher<vision_msgs::msg::Detection2DArray>> _pubDet2dArray;
   // <---- ROS Messages
 
   std::mutex _detMux;
+
   std::vector<vision_msgs::msg::Detection2D> _detections;
-  std::frame _detFrameId;
+  std::string _detFrameId;
+  rclcpp::TimerBase::SharedPtr _elabTimer;
+
+  // ----> Running variables
+  rclcpp::Time _lastImgTime;  // Time of the latest received image
+  rclcpp::Time _lastInferenceTime;  // Time of the latest processed image
+  std::atomic<bool> _newImage; // Indicates that a new image is available
+  std::atomic<bool> _inferenceRunning; // Indicates that an inference processing is running
+  // <---- Running variables
 };
 
 }  // namespace stereolabs
