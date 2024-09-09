@@ -99,11 +99,14 @@ find_package(vision_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(OpenCV 4 REQUIRED)
+find_package(CUDA REQUIRED)
+
+
 
 
 if(BUILD_TESTING)
-find_package(ament_lint_auto REQUIRED)
-ament_lint_auto_find_test_dependencies()
+    find_package(ament_lint_auto REQUIRED)
+    ament_lint_auto_find_test_dependencies()
 endif()
 
 ###############################################################################
@@ -124,6 +127,8 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
     )
 
     set(INC_COMP
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/utils.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/logging.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/custom_od_component_base.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/yolo_detector.hpp
     )
@@ -135,6 +140,12 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
 
     ###############################################################################
     # Bin and Install
+
+    # TensorRT
+    set(TRT_LIBS nvinfer nvonnxparser)
+
+    # CUDA
+    set(CUDA_LIBS ${CUDA_LIBRARY} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
 
     # Component
     add_library(zed_yolo_detector_component SHARED
@@ -150,9 +161,17 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
         ${OpenCV_INCLUDE_DIRS}
+        ${CUDA_INCLUDE_DIRS}
+        /usr/include/x86_64-linux-gnu/ # TensorRT
+    )
+    target_link_directories(zed_yolo_detector_component
+        PUBLIC
+        /usr/lib/x86_64-linux-gnu/ # TensorRT
     )
     target_link_libraries(zed_yolo_detector_component
         ${OpenCV_LIBS}
+        ${TRT_LIBS}
+        ${CUDA_LIBS}
     )
     ament_target_dependencies(zed_yolo_detector_component
         ${DEPENDENCIES_COMP}
