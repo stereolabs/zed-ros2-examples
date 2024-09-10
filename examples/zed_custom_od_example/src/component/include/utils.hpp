@@ -60,4 +60,26 @@ inline bool readFile(std::string filename, std::vector<uint8_t> & file_content)
   return false;
 }
 
+std::string expand_home_dir(const std::string & path)
+{
+  std::string home_dir = std::getenv("HOME");
+  std::string retval = path;
+
+  if (!home_dir.empty()) {
+    size_t index = 0;
+
+    while (true) {
+      index = retval.find("~", index);
+      if (index == std::string::npos) {
+        break;
+      }
+
+      retval.replace(index, 1, home_dir);
+      index += home_dir.size();
+    }
+  }
+
+  return retval;
+}
+
 #endif // UTILS_HPP_

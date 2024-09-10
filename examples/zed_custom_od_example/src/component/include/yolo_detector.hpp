@@ -47,37 +47,17 @@ struct OptimDim
   nvinfer1::Dims4 size;
   std::string tensor_name;
 
-  bool setFromString(const std::string & arg)
+  bool setFromImgSize(int img_size)
   {
-    // "images:1x3x512x512"
-    std::vector<std::string> v_ = split_str(arg, ":");
-    if (v_.size() != 2) {return true;}
-
-    std::string dims_str = v_.back();
-    std::vector<std::string> v = split_str(dims_str, "x");
-
     size.nbDims = 4;
     // assuming batch is 1 and channel is 3
     size.d[0] = 1;
     size.d[1] = 3;
+    size.d[2] = img_size;
+    size.d[3] = img_size;
 
-    if (v.size() == 2) {
-      size.d[2] = stoi(v[0]);
-      size.d[3] = stoi(v[1]);
-    } else if (v.size() == 3) {
-      size.d[2] = stoi(v[1]);
-      size.d[3] = stoi(v[2]);
-    } else if (v.size() == 4) {
-      size.d[2] = stoi(v[2]);
-      size.d[3] = stoi(v[3]);
-    } else {return true;}
-
-    if (size.d[2] != size.d[3]) {
-      std::cerr << "Warning only squared input are currently supported" << std::endl;
-    }
-
-    tensor_name = v_.front();
-    return false;
+    tensor_name = "images";
+    return true;
   }
 };
 
@@ -97,18 +77,23 @@ protected:
   virtual void doInference() override;
 
   void readParams();
+  void readEngineParams();
 
 private:
-  int build_engine(std::string onnx_path, std::string engine_path, OptimDim dyn_dim_profile);
+  bool build_engine(std::string onnx_path, std::string engine_path, OptimDim dyn_dim_profile);
 
 private:
   // ----> Parameters
-  std::string _onnxPath;
+  bool _buildEngine = false;
+  std::string _onnxFullPath;
   std::string _enginePath;
   std::string _engineName;
+  int _imgSize = 512;
   float _nms = 0.4;
   std::string _yoloModelVersion;
   // <---- Parameters
+
+  std::string _engineFullPath;
 
   // Get input dimension size
   std::string input_binding_name = "images";   // input

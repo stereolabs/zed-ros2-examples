@@ -163,7 +163,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             config_path_custom_od_common,
             config_path_custom_od,
-             # Overriding
+            # Overriding
             {
                 'general.main_node_name': zed_node_name,
                 'general.detection_topic': detection_topic

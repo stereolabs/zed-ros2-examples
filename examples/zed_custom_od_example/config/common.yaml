@@ -9,3 +9,4 @@
         main_node_name: 'zed_node'
         detection_topic: 'detections'
         loop_frequency: 150.0
+        

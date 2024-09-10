@@ -1,10 +1,14 @@
-# config/acustom_od.yaml
-# Parameters for Custom Object Detection component
+# config/zed_yolo.yaml
+# Parameters for YOLO Custom Object Detection component
 
 ---
 /**:
     ros__parameters:
 
-      general:
-        engine_model: 'model.model'
-        
+      yolo_engine:
+        build_engine: false
+        onnx_model: '~/Downloads/yolov8n.onnx'  # YOLO ONNX model full file path
+        engine_path: '~/zed_custom_od'  # Generated YOLO engine path
+        engine_name: 'zed_yolo.engine'  # Generated YOLO engine NAME
+        img_size: 608 # Image size, squared: "size x size"
+
