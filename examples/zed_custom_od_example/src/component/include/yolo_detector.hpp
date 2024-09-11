@@ -30,19 +30,22 @@ enum class YOLO_MODEL_VERSION_OUTPUT_STYLE
   YOLOV8_V5
 };
 
-struct BBox
+typedef struct _bbox
 {
-  float x1, y1, x2, y2;
-};
+  float x1;
+  float y1;
+  float x2;
+  float y2;
+} BBox;
 
-struct BBoxInfo
+typedef struct _bboxInfo
 {
   BBox box;
   int label;
   float prob;
-};
+} BBoxInfo;
 
-struct OptimDim
+typedef struct _optimDim
 {
   nvinfer1::Dims4 size;
   std::string tensor_name;
@@ -59,10 +62,11 @@ struct OptimDim
     tensor_name = "images";
     return true;
   }
-};
+} OptimDim;
 
 /*!
- * @brief
+ * @brief Implement a YOLO Detector nodethat subscribes to ZED Left image
+ *        topic and returns a vector of 2D detections
  */
 class ZedYoloDetector : public ZedCustomOd
 {
@@ -70,17 +74,19 @@ public:
   ZED_CUSTOM_OD_COMPONENT_PUBLIC
   explicit ZedYoloDetector(const rclcpp::NodeOptions & options);
 
-  virtual ~ZedYoloDetector() {}
+  virtual ~ZedYoloDetector();
 
 protected:
   virtual void init() override;
   virtual void doInference() override;
 
   void readParams();
+  void readGeneralParams();
   void readEngineParams();
 
 private:
   bool build_engine(std::string onnx_path, std::string engine_path, OptimDim dyn_dim_profile);
+  void applyNonMaximumSuppression();
 
 private:
   // ----> Parameters
@@ -88,8 +94,9 @@ private:
   std::string _onnxFullPath;
   std::string _enginePath;
   std::string _engineName;
-  int _imgSize = 512;
-  float _nms = 0.4;
+  int _imgProcSize = 512;
+  float _nmsThresh = 0.4f;
+  float _confThresh = 0.3f;
   std::string _yoloModelVersion;
   // <---- Parameters
 
@@ -119,7 +126,8 @@ private:
   nvinfer1::IExecutionContext * context;
   cudaStream_t stream;
 
-  bool is_init = false;
+  bool _initialized = false;
+  std::vector<BBoxInfo> _inferenceResult;
 };
 
 } // namespace stereolabs

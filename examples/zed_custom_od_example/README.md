@@ -7,6 +7,10 @@ To minimize latency, the example shows how to leverace Composition and Intra Pro
 
 ## Custom YOLO DETECTOR example
 
+### ROS 2 Composition to minimize latency
+
+### Generate a Custom YOLO detection model
+
 To explain how to create your Custom Detector we added an example based on Ultralytics [YOLO](https://docs.ultralytics.com/).
 
 The example is using a TensorRT optimized ONNX model. It is compatible with YOLOv8, YOLOv5 and YOLOv6. It can be used with the default model trained on COCO dataset (80 classes) provided by the framework maintainers.
@@ -57,7 +61,11 @@ We created the ZED YOLO node such that it can automatically generate a TensorRT 
 5. Set the parameter `yolo_engine.engine_name` with the name of the generated engine file
 6. Set the parameter `yolo_engine.img_size` with the size of the input images. **Note**: only square input image are supported
 
-When you start the node, the initialization process will automatically generate the TensorRT engine.
+When you start the node, the initialization process will automatically generate the TensorRT engine:
+
+```bash
+ros2 launch zed_custom_od_example zed_yolo.launch.py camera_model:=<camera_model>
+```
 
 ### Use an existing TensorRT Engine
 
@@ -69,4 +77,8 @@ The TensorRT generation process can take a few minutes so we usually want to gen
 4. Set the parameter `yolo_engine.engine_name` with the name of the previously generated engine file
 5. Set the parameter `yolo_engine.img_size` with the size of the input images used while generating the engine file
 
-Now you can start the node and load a ready TensorRT Inference Engine file.
+Now you can start the node and load a ready TensorRT Inference Engine file:
+
+```bash
+ros2 launch zed_custom_od_example zed_yolo.launch.py camera_model:=<camera_model>
+```

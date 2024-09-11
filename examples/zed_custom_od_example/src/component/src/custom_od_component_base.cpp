@@ -84,7 +84,6 @@ ZedCustomOd::ZedCustomOd(const rclcpp::NodeOptions & options)
   // <---- Start the processing loop
 }
 
-
 void ZedCustomOd::readCommonParams()
 {
   RCLCPP_INFO(get_logger(), "*** Common Parameters ***");

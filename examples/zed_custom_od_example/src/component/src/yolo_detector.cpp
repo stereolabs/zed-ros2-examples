@@ -27,7 +27,7 @@ ZedYoloDetector::ZedYoloDetector(const rclcpp::NodeOptions & options)
   // Build the engine if required
   if (_buildEngine) {
     OptimDim dyn_dim_profile;
-    dyn_dim_profile.setFromImgSize(_imgSize);
+    dyn_dim_profile.setFromImgSize(_imgProcSize);
     if (!build_engine(_onnxFullPath, _engineFullPath, dyn_dim_profile) ) {
       exit(EXIT_FAILURE);
     }
@@ -41,9 +41,40 @@ ZedYoloDetector::ZedYoloDetector(const rclcpp::NodeOptions & options)
       get_fully_qualified_name()) << " ready ***");
 }
 
+ZedYoloDetector::~ZedYoloDetector()
+{
+  if (_initialized) {
+    // Release stream and buffers
+    cudaStreamDestroy(stream);
+    CUDA_CHECK(cudaFree(d_input));
+    CUDA_CHECK(cudaFree(d_output));
+    // Destroy the engine
+    context->destroy();
+    engine->destroy();
+    runtime->destroy();
+
+    delete[] h_input;
+    delete[] h_output;
+  }
+  _initialized = false;
+}
+
 void ZedYoloDetector::readParams()
 {
+  readGeneralParams();
   readEngineParams();
+}
+
+void ZedYoloDetector::readGeneralParams()
+{
+  RCLCPP_INFO(get_logger(), "*** YOLO Detector General Parameters ***");
+
+  getParam(
+    "general.conf_thresh", _confThresh, _confThresh,
+    " * Confidence thresh.: ", true);
+  getParam(
+    "general.nms_thresh", _nmsThresh, _nmsThresh,
+    " * NMS thresh.: ", true);
 }
 
 void ZedYoloDetector::readEngineParams()
@@ -73,7 +104,9 @@ void ZedYoloDetector::readEngineParams()
   RCLCPP_INFO_STREAM(get_logger(), " + Engine full path: " << _engineFullPath);
   // <---- Create Engine Full Path
 
-  ZedCustomOd::getParam("yolo_engine.img_size", _imgSize, _imgSize, " * Image size: ", false);
+  ZedCustomOd::getParam(
+    "yolo_engine.img_size", _imgProcSize, _imgProcSize,
+    " * Image size: ", false);
 }
 
 bool ZedYoloDetector::build_engine(
@@ -293,10 +326,10 @@ void ZedYoloDetector::init()
     if (engine->bindingIsInput(i)) {
       input_binding_name = engine->getBindingName(i);
       Dims bind_dim = engine->getBindingDimensions(i);
-      input_width = bind_dim.d[3];
+      _imgProcSize = bind_dim.d[3];
       input_height = bind_dim.d[2];
       inputIndex = i;
-      RCLCPP_INFO_STREAM(get_logger(), "Inference size : " << input_height << "x" << input_width);
+      RCLCPP_INFO_STREAM(get_logger(), "Inference size : " << input_height << "x" << _imgProcSize);
     }    //if (engine->getTensorIOMode(engine->getBindingName(i)) == TensorIOMode::kOUTPUT)
     else {
       output_name = engine->getBindingName(i);
@@ -329,7 +362,7 @@ void ZedYoloDetector::init()
     }
   }
   output_size = out_dim * (out_class_number + out_box_struct_number);
-  h_input = new float[batch_size * 3 * input_height * input_width];
+  h_input = new float[batch_size * 3 * input_height * _imgProcSize];
   h_output = new float[batch_size * output_size];
   // In order to bind the buffers, we need to know the names of the input and output tensors.
   // Note that indices are guaranteed to be less than IEngine::getNbBindings()
@@ -339,7 +372,7 @@ void ZedYoloDetector::init()
   CUDA_CHECK(
     cudaMalloc(
       reinterpret_cast<void **>(&d_input),
-      batch_size * 3 * input_height * input_width * sizeof(float)));
+      batch_size * 3 * input_height * _imgProcSize * sizeof(float)));
   CUDA_CHECK(
     cudaMalloc(
       reinterpret_cast<void **>(&d_output),
@@ -351,14 +384,305 @@ void ZedYoloDetector::init()
     RCLCPP_ERROR_STREAM(get_logger(), "batch > 1 not supported");
     exit(EXIT_FAILURE);                      // This sample only support batch 1 for now
   }
-  is_init = true;
+  _initialized = true;
 }
 
 void ZedYoloDetector::doInference()
 {
   RCLCPP_INFO_STREAM(get_logger(), "ZedYoloDetector::doInference()");
+
+  if (_zedImg.empty()) {
+    RCLCPP_WARN(get_logger(), "ZedYoloDetector::doInference() -> Received an empty image");
+    return;
+  }
+
+  // ----> Preparing inference
+  int img_w = _zedImg.cols;
+  int img_h = _zedImg.rows;
+  size_t frame_s = _imgProcSize * _imgProcSize;
+
+  // letterbox BGR to RGB
+  cv::Mat pr_img = preprocess_img(_zedImg, _imgProcSize, _imgProcSize);
+
+  int idx = 0;
+  int batch = 0;
+  for (int row = 0; row < _imgProcSize; ++row) {
+    uchar * uc_pixel = pr_img.data + row * pr_img.step;
+    for (int col = 0; col < _imgProcSize; ++col) {
+      h_input[batch * 3 * frame_s + idx] = (float)uc_pixel[2] / 255.0f;
+      h_input[batch * 3 * frame_s + idx + frame_s] = (float)uc_pixel[1] / 255.0f;
+      h_input[batch * 3 * frame_s + idx + 2 * frame_s] =
+        (float)uc_pixel[0] / 255.0f;
+      uc_pixel += 3;
+      ++idx;
+    }
+  }
+  // <---- Preparing inference
+
+  // ----> Inference
+  // DMA input batch data to device, infer on the batch asynchronously, and DMA output back to host
+  CUDA_CHECK(
+    cudaMemcpyAsync(
+      d_input, h_input, batch_size * 3 * frame_s * sizeof(float),
+      cudaMemcpyHostToDevice, stream));
+
+  std::vector<void *> d_buffers_nvinfer(2);
+  d_buffers_nvinfer[inputIndex] = d_input;
+  d_buffers_nvinfer[outputIndex] = d_output;
+  context->enqueueV2(&d_buffers_nvinfer[0], stream, nullptr);
+
+  CUDA_CHECK(
+    cudaMemcpyAsync(
+      h_output, d_output, batch_size * output_size * sizeof(float),
+      cudaMemcpyDeviceToHost, stream));
+  cudaStreamSynchronize(stream);
+  // <---- Inference
+
+  // ----> Extraction
+  float scalingFactor =
+    std::min(static_cast<float>(_imgProcSize) / img_w, static_cast<float>(input_height) / img_h);
+  float xOffset = (_imgProcSize - scalingFactor * img_w) * 0.5f;
+  float yOffset = (input_height - scalingFactor * img_h) * 0.5f;
+  scalingFactor = 1.f / scalingFactor;
+  float scalingFactor_x = scalingFactor;
+  float scalingFactor_y = scalingFactor;
+
+  switch (yolo_model_version) {
+    default:
+    case YOLO_MODEL_VERSION_OUTPUT_STYLE::YOLOV8_V5:
+      {
+        // https://github.com/triple-Mu/YOLOv8-TensorRT/blob/df11cec3abaab7fefb28fb760f1cebbddd5ec826/csrc/detect/normal/include/yolov8.hpp#L343
+        auto num_channels = out_class_number + out_box_struct_number;
+        auto num_anchors = out_dim;
+        auto num_labels = out_class_number;
+
+        auto & dw = xOffset;
+        auto & dh = yOffset;
+
+        auto & width = img_w;
+        auto & height = img_h;
+
+        cv::Mat output = cv::Mat(
+          num_channels,
+          num_anchors,
+          CV_32F,
+          static_cast<float *>(h_output)
+        );
+        output = output.t();
+        for (int i = 0; i < num_anchors; i++) {
+          auto row_ptr = output.row(i).ptr<float>();
+          auto bboxes_ptr = row_ptr;
+          auto scores_ptr = row_ptr + out_box_struct_number;
+          auto max_s_ptr = std::max_element(scores_ptr, scores_ptr + num_labels);
+          float score = *max_s_ptr;
+          if (score > _confThresh) {
+            int label = max_s_ptr - scores_ptr;
+
+            BBoxInfo bbi;
+
+            float x = *bboxes_ptr++ - dw;
+            float y = *bboxes_ptr++ - dh;
+            float w = *bboxes_ptr++;
+            float h = *bboxes_ptr;
+
+            float x0 = clamp((x - 0.5f * w) * scalingFactor_x, 0.f, width);
+            float y0 = clamp((y - 0.5f * h) * scalingFactor_y, 0.f, height);
+            float x1 = clamp((x + 0.5f * w) * scalingFactor_x, 0.f, width);
+            float y1 = clamp((y + 0.5f * h) * scalingFactor_y, 0.f, height);
+
+            cv::Rect_<float> bbox;
+            bbox.x = x0;
+            bbox.y = y0;
+            bbox.width = x1 - x0;
+            bbox.height = y1 - y0;
+
+            bbi.box.x1 = x0;
+            bbi.box.y1 = y0;
+            bbi.box.x2 = x1;
+            bbi.box.y2 = y1;
+
+            if ((bbi.box.x1 > bbi.box.x2) || (bbi.box.y1 > bbi.box.y2)) {break;}
+
+            bbi.label = label;
+            bbi.prob = score;
+
+            _inferenceResult.push_back(bbi);
+          }
+        }
+        break;
+      }
+    case YOLO_MODEL_VERSION_OUTPUT_STYLE::YOLOV6:
+      {
+        // https://github.com/DefTruth/lite.ai.toolkit/blob/1267584d5dae6269978e17ffd5ec29da496e503e/lite/ort/cv/yolov6.cpp#L97
+
+        auto & dw_ = xOffset;
+        auto & dh_ = yOffset;
+
+        auto & width = img_w;
+        auto & height = img_h;
+
+        const unsigned int num_anchors = out_dim;     // n = ?
+        const unsigned int num_classes = out_class_number;     // - out_box_struct_number; // 80
+
+        for (unsigned int i = 0; i < num_anchors; ++i) {
+          const float * offset_obj_cls_ptr = h_output + (i * (num_classes + 5));      // row ptr
+          float obj_conf = offset_obj_cls_ptr[4];       /*always == 1 for some reasons*/
+          float cls_conf = offset_obj_cls_ptr[5];
+
+          // The confidence is remapped because it output basically garbage with conf < ~0.1 and we don't want to clamp it either
+          const float conf_offset = 0.1;
+          const float input_start = 0;
+          const float output_start = input_start;
+          const float output_end = 1;
+          const float input_end = output_end - conf_offset;
+
+          float conf = (obj_conf * cls_conf) - conf_offset;
+          if (conf < 0) {conf = 0;}
+          conf = (conf - input_start) / (input_end - input_start) * (output_end - output_start) +
+            output_start;
+
+          if (conf > _confThresh) {
+
+            unsigned int label = 0;
+            for (unsigned int j = 0; j < num_classes; ++j) {
+              float tmp_conf = offset_obj_cls_ptr[j + 5];
+              if (tmp_conf > cls_conf) {
+                cls_conf = tmp_conf;
+                label = j;
+              }
+            }         // argmax
+
+            BBoxInfo bbi;
+
+            float cx = offset_obj_cls_ptr[0];
+            float cy = offset_obj_cls_ptr[1];
+            float w = offset_obj_cls_ptr[2];
+            float h = offset_obj_cls_ptr[3];
+            float x1 = ((cx - w / 2.f) - (float) dw_) * scalingFactor_x;
+            float y1 = ((cy - h / 2.f) - (float) dh_) * scalingFactor_y;
+            float x2 = ((cx + w / 2.f) - (float) dw_) * scalingFactor_x;
+            float y2 = ((cy + h / 2.f) - (float) dh_) * scalingFactor_y;
+
+            bbi.box.x1 = std::max(0.f, x1);
+            bbi.box.y1 = std::max(0.f, y1);
+            bbi.box.x2 = std::min(x2, (float) width - 1.f);
+            bbi.box.y2 = std::min(y2, (float) height - 1.f);
+
+            if ((bbi.box.x1 > bbi.box.x2) || (bbi.box.y1 > bbi.box.y2)) {break;}
+
+            bbi.label = label;
+            bbi.prob = conf;
+
+            _inferenceResult.push_back(bbi);
+          }
+        }
+        break;
+      }
+  }
+  // <---- Extraction
+
+  /// NMS
+  applyNonMaximumSuppression();
+
+  RCLCPP_INFO_STREAM(get_logger(), " * Detected " << _inferenceResult.size() << " objects.");
 }
 
+#define WEIGHTED_NMS
+
+void ZedYoloDetector::applyNonMaximumSuppression()
+{
+  auto overlap1D = [](float x1min, float x1max, float x2min, float x2max) -> float {
+      if (x1min > x2min) {
+        std::swap(x1min, x2min);
+        std::swap(x1max, x2max);
+      }
+      return x1max < x2min ? 0 : std::min(x1max, x2max) - x2min;
+    };
+
+  auto computeIoU = [&overlap1D](BBox & bbox1, BBox & bbox2) -> float {
+      float overlapX = overlap1D(bbox1.x1, bbox1.x2, bbox2.x1, bbox2.x2);
+      float overlapY = overlap1D(bbox1.y1, bbox1.y2, bbox2.y1, bbox2.y2);
+      float area1 = (bbox1.x2 - bbox1.x1) * (bbox1.y2 - bbox1.y1);
+      float area2 = (bbox2.x2 - bbox2.x1) * (bbox2.y2 - bbox2.y1);
+      float overlap2D = overlapX * overlapY;
+      float u = area1 + area2 - overlap2D;
+      return u == 0 ? 0 : overlap2D / u;
+    };
+
+  std::stable_sort(
+    _inferenceResult.begin(), _inferenceResult.end(), [](const BBoxInfo & b1, const BBoxInfo & b2) {
+      return b1.prob > b2.prob;
+    });
+
+  std::vector<BBoxInfo> out;
+
+#if defined(WEIGHTED_NMS)
+  std::vector<std::vector<BBoxInfo>> weigthed_nms_candidates;
+#endif
+  for (auto & i : _inferenceResult) {
+    bool keep = true;
+
+#if defined(WEIGHTED_NMS)
+    int j_index = 0;
+#endif
+
+    for (auto & j : out) {
+      if (keep) {
+        float overlap = computeIoU(i.box, j.box);
+        keep = overlap <= _nmsThresh;
+#if defined(WEIGHTED_NMS)
+        if (!keep && fabs(j.prob - i.prob) < 0.52f) {       // add label similarity check
+          weigthed_nms_candidates[j_index].push_back(i);
+        }
+#endif
+      } else {
+        break;
+      }
+
+#if defined(WEIGHTED_NMS)
+      j_index++;
+#endif
+
+    }
+    if (keep) {
+      out.push_back(i);
+#if defined(WEIGHTED_NMS)
+      weigthed_nms_candidates.emplace_back();
+      weigthed_nms_candidates.back().clear();
+#endif
+    }
+  }
+
+#if defined(WEIGHTED_NMS)
+
+  for (int i = 0; i < out.size(); i++) {
+    // the best confidence
+    BBoxInfo & best = out[i];
+    float sum_tl_x = best.box.x1 * best.prob;
+    float sum_tl_y = best.box.y1 * best.prob;
+    float sum_br_x = best.box.x2 * best.prob;
+    float sum_br_y = best.box.y2 * best.prob;
+
+    float weight = best.prob;
+    for (auto & it : weigthed_nms_candidates[i]) {
+      sum_tl_x += it.box.x1 * it.prob;
+      sum_tl_y += it.box.y1 * it.prob;
+      sum_br_x += it.box.x2 * it.prob;
+      sum_br_y += it.box.y2 * it.prob;
+      weight += it.prob;
+    }
+
+    weight = 1.f / weight;
+    best.box.x1 = sum_tl_x * weight;
+    best.box.y1 = sum_tl_y * weight;
+    best.box.x2 = sum_br_x * weight;
+    best.box.y2 = sum_br_y * weight;
+  }
+
+#endif
+
+  _inferenceResult = out;
+}
 
 } // namespace stereolabs
 
