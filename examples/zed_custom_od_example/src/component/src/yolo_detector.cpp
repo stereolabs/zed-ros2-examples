@@ -4,6 +4,7 @@
 #include "logging.hpp"
 
 #include <filesystem>
+#include <sensor_msgs/image_encodings.hpp>
 
 using namespace nvinfer1;
 namespace fs = std::filesystem;
@@ -23,6 +24,21 @@ ZedYoloDetector::ZedYoloDetector(const rclcpp::NodeOptions & options)
 
   // Read the parameters
   readParams();
+
+  // ----> Create debug publisher
+  if (_publishDebugImg) {
+    auto pub_opt = rclcpp::PublisherOptions();
+    pub_opt.qos_overriding_options =
+      rclcpp::QosOverridingOptions::with_default_policies();
+    std::string pub_topic_name = std::string("~/") + "debug_image";
+    _pubDebugImg = create_publisher<
+      sensor_msgs::msg::Image>(
+      pub_topic_name, rclcpp::QoS(10), pub_opt);
+    RCLCPP_INFO_STREAM(
+      get_logger(),
+      " * Advertised on topic: " << _pubDebugImg->get_topic_name());
+  }
+  // <---- Create debug publisher
 
   // Build the engine if required
   if (_buildEngine) {
@@ -327,9 +343,9 @@ void ZedYoloDetector::init()
       input_binding_name = engine->getBindingName(i);
       Dims bind_dim = engine->getBindingDimensions(i);
       _imgProcSize = bind_dim.d[3];
-      input_height = bind_dim.d[2];
+      //input_height = bind_dim.d[2];
       inputIndex = i;
-      RCLCPP_INFO_STREAM(get_logger(), "Inference size : " << input_height << "x" << _imgProcSize);
+      RCLCPP_INFO_STREAM(get_logger(), "Inference size : " << _imgProcSize << "x" << _imgProcSize);
     }    //if (engine->getTensorIOMode(engine->getBindingName(i)) == TensorIOMode::kOUTPUT)
     else {
       output_name = engine->getBindingName(i);
@@ -362,7 +378,7 @@ void ZedYoloDetector::init()
     }
   }
   output_size = out_dim * (out_class_number + out_box_struct_number);
-  h_input = new float[batch_size * 3 * input_height * _imgProcSize];
+  h_input = new float[batch_size * 3 * _imgProcSize * _imgProcSize];
   h_output = new float[batch_size * output_size];
   // In order to bind the buffers, we need to know the names of the input and output tensors.
   // Note that indices are guaranteed to be less than IEngine::getNbBindings()
@@ -372,7 +388,7 @@ void ZedYoloDetector::init()
   CUDA_CHECK(
     cudaMalloc(
       reinterpret_cast<void **>(&d_input),
-      batch_size * 3 * input_height * _imgProcSize * sizeof(float)));
+      batch_size * 3 * _imgProcSize * _imgProcSize * sizeof(float)));
   CUDA_CHECK(
     cudaMalloc(
       reinterpret_cast<void **>(&d_output),
@@ -397,6 +413,7 @@ void ZedYoloDetector::doInference()
   }
 
   // ----> Preparing inference
+  _inferenceResult.clear(); // Clear the previous result
   int img_w = _zedImg.cols;
   int img_h = _zedImg.rows;
   size_t frame_s = _imgProcSize * _imgProcSize;
@@ -440,9 +457,9 @@ void ZedYoloDetector::doInference()
 
   // ----> Extraction
   float scalingFactor =
-    std::min(static_cast<float>(_imgProcSize) / img_w, static_cast<float>(input_height) / img_h);
+    std::min(static_cast<float>(_imgProcSize) / img_w, static_cast<float>(_imgProcSize) / img_h);
   float xOffset = (_imgProcSize - scalingFactor * img_w) * 0.5f;
-  float yOffset = (input_height - scalingFactor * img_h) * 0.5f;
+  float yOffset = (_imgProcSize - scalingFactor * img_h) * 0.5f;
   scalingFactor = 1.f / scalingFactor;
   float scalingFactor_x = scalingFactor;
   float scalingFactor_y = scalingFactor;
@@ -581,10 +598,71 @@ void ZedYoloDetector::doInference()
   }
   // <---- Extraction
 
-  /// NMS
+  // NMS
   applyNonMaximumSuppression();
 
+  // BBoxInfo to Detection2D
+  generateRosMsg();
+
   RCLCPP_INFO_STREAM(get_logger(), " * Detected " << _inferenceResult.size() << " objects.");
+}
+
+void ZedYoloDetector::generateRosMsg()
+{
+  _detections.clear();
+
+  cv::Mat resImg;
+  _zedImg.copyTo(resImg);
+
+  for (const auto & det : _inferenceResult) {
+    vision_msgs::msg::Detection2D rosDet;
+
+    rosDet.id = ""; // No unique ID at this level
+
+    // Note: results must be published with normalized values to be image size agnostic
+    rosDet.bbox.size_x = static_cast<double>(fabs(det.box.x2 - det.box.x1)) / _zedImg.cols;
+    rosDet.bbox.size_y = static_cast<double>(fabs(det.box.y2 - det.box.y1)) / _zedImg.rows;
+    rosDet.bbox.center.position.x = (static_cast<double>(det.box.x1) + (0.5 * rosDet.bbox.size_x)) /
+      _zedImg.cols;
+    rosDet.bbox.center.position.y = (static_cast<double>(det.box.y1) + (0.5 * rosDet.bbox.size_y)) /
+      _zedImg.rows;
+
+    vision_msgs::msg::ObjectHypothesisWithPose obj;
+    obj.hypothesis.class_id = std::to_string(det.label);
+    obj.hypothesis.score = det.prob;
+
+    rosDet.results.push_back(obj);
+
+    _detections.push_back(rosDet);
+
+    if (_pubDebugImg) {
+      cv::Rect r;
+      r.x = det.box.x1;
+      r.y = det.box.y1;
+      r.width = det.box.x2 - det.box.x1;
+      r.height = det.box.y2 - det.box.y1;
+      cv::rectangle(resImg, r, cv::Scalar(220, 180, 20), 2);
+    }
+  }
+
+  if (_pubDebugImg) {
+    std::unique_ptr<sensor_msgs::msg::Image> msg = std::make_unique<sensor_msgs::msg::Image>();
+
+    msg->header.frame_id = _detFrameId;
+    msg->header.stamp = this->get_clock()->now();
+    msg->encoding = sensor_msgs::image_encodings::BGR8;
+    msg->width = resImg.cols;
+    msg->height = resImg.rows;
+    msg->step = resImg.step;
+    int num = 1;  // for endianness detection
+    msg->is_bigendian = !(*reinterpret_cast<char *>(&num) == 1);
+
+    size_t size = msg->step * msg->height;
+    msg->data.resize(size);
+    memcpy(reinterpret_cast<char *>((&msg->data[0])), &resImg.data[0], size);
+
+    _pubDebugImg->publish(std::move(msg));
+  }
 }
 
 #define WEIGHTED_NMS

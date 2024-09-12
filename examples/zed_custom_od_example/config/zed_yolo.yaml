@@ -8,6 +8,7 @@
       general:
         conf_thresh: 0.3 # [DYNAMIC] Detection confidence threshold
         nms_thresh: 0.4 # [DYNAMIC] Non-Maximum Suppression threshold
+        publish_debug_img: true # Publish a debug image showing the detected object bounding boxes
 
       yolo_engine:
         build_engine: false

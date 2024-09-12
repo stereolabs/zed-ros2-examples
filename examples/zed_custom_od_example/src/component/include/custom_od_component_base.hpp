@@ -75,6 +75,9 @@ private:
 
 protected:
   cv::Mat _zedImg; //!< This is the RGB image to be used as input for the inference
+  std::vector<vision_msgs::msg::Detection2D> _detections;
+  std::string _detFrameId;
+  rclcpp::QoS _defaultQoS;                      // QoS parameters
 
 private:
   // ----> Common Node Parameters
@@ -86,15 +89,11 @@ private:
   // ----> ROS Messages
   std::string _subTopicName = "rgb/image_rect_color";
   image_transport::CameraSubscriber _subImage;  // ZED Image subscriber
-  rclcpp::QoS _defaultQoS;                      // QoS parameters
 
   std::shared_ptr<rclcpp::Publisher<vision_msgs::msg::Detection2DArray>> _pubDet2dArray;
   // <---- ROS Messages
 
   std::mutex _detMux;
-
-  std::vector<vision_msgs::msg::Detection2D> _detections;
-  std::string _detFrameId;
   rclcpp::TimerBase::SharedPtr _elabTimer;
 
   // ----> Running variables

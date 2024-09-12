@@ -87,6 +87,7 @@ protected:
 private:
   bool build_engine(std::string onnx_path, std::string engine_path, OptimDim dyn_dim_profile);
   void applyNonMaximumSuppression();
+  void generateRosMsg();
 
 private:
   // ----> Parameters
@@ -98,6 +99,7 @@ private:
   float _nmsThresh = 0.4f;
   float _confThresh = 0.3f;
   std::string _yoloModelVersion;
+  bool _publishDebugImg = true;
   // <---- Parameters
 
   std::string _engineFullPath;
@@ -106,7 +108,7 @@ private:
   std::string input_binding_name = "images";   // input
   std::string output_name = "classes";
   int inputIndex, outputIndex;
-  size_t input_width = 0, input_height = 0, batch_size = 1;
+  size_t batch_size = 1;
   // Yolov6 1x8400x85 //  85=5+80=cxcy+cwch+obj_conf+cls_conf //https://github.com/DefTruth/lite.ai.toolkit/blob/1267584d5dae6269978e17ffd5ec29da496e503e/lite/ort/cv/yolov6.cpp#L97
   // Yolov8/yolov5 1x84x8400
   size_t out_dim = 8400;
@@ -128,6 +130,8 @@ private:
 
   bool _initialized = false;
   std::vector<BBoxInfo> _inferenceResult;
+
+  std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Image>> _pubDebugImg;
 };
 
 } // namespace stereolabs
