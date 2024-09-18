@@ -74,18 +74,19 @@ private:
   void readCommonParams();
 
 protected:
+  // ----> Common Node Parameters
+  std::string _mainNodeName = "zed_node";
+  std::string _pubTopicName = "detections";
+  float _loopFreq = 150.0f;
+  bool _debugMode = false;
+  // <---- Common Node Parameters
+
   cv::Mat _zedImg; //!< This is the RGB image to be used as input for the inference
   std::vector<vision_msgs::msg::Detection2D> _detections;
   std::string _detFrameId;
   rclcpp::QoS _defaultQoS;                      // QoS parameters
 
 private:
-  // ----> Common Node Parameters
-  std::string _mainNodeName = "zed_node";
-  std::string _pubTopicName = "detections";
-  float _loopFreq = 150.0f;
-  // <---- Common Node Parameters
-
   // ----> ROS Messages
   std::string _subTopicName = "rgb/image_rect_color";
   image_transport::CameraSubscriber _subImage;  // ZED Image subscriber

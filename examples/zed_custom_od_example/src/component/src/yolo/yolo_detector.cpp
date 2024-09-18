@@ -1,13 +1,30 @@
+// Copyright 2024 Stereolabs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "yolo_detector.hpp"
+#include "yolo_utils.hpp"
 #include "NvOnnxParser.h"
 
 #include "logging.hpp"
 
 #include <filesystem>
 #include <sensor_msgs/image_encodings.hpp>
+#include <rclcpp/utilities.hpp>
 
 using namespace nvinfer1;
 namespace fs = std::filesystem;
+
 namespace stereolabs
 {
 
@@ -91,6 +108,9 @@ void ZedYoloDetector::readGeneralParams()
   getParam(
     "general.nms_thresh", _nmsThresh, _nmsThresh,
     " * NMS thresh.: ", true);
+  getParam("general.publish_detection_img", _publishDebugImg, _publishDebugImg);
+  RCLCPP_INFO_STREAM(
+    get_logger(), " * Publish det. image: " << (_publishDebugImg ? "TRUE" : "FALSE"));
 }
 
 void ZedYoloDetector::readEngineParams()
@@ -129,11 +149,11 @@ bool ZedYoloDetector::build_engine(
   std::string onnx_path, std::string engine_path,
   OptimDim dyn_dim_profile)
 {
-  RCLCPP_INFO(
+  RCLCPP_DEBUG(
     get_logger(),
     "*** Creating the Inference Engine from the ONNX model... ");
 
-  RCLCPP_INFO(get_logger(), " * File path check");
+  RCLCPP_DEBUG(get_logger(), " * File path check");
   // ----> Create the engine path if not existing
   if (!fs::exists(_enginePath)) {
     if (!fs::create_directories(_enginePath)) {
@@ -155,7 +175,7 @@ bool ZedYoloDetector::build_engine(
   }
   // <---- Verify the presence of an engine file with the same name
 
-  RCLCPP_INFO(get_logger(), " * Read ONNX File");
+  RCLCPP_DEBUG(get_logger(), " * Read ONNX File");
   std::vector<uint8_t> onnx_file_content;
   if (readFile(onnx_path, onnx_file_content)) {
     RCLCPP_ERROR_STREAM(get_logger(), " Cannot read the ONNX model file: " << onnx_path);
@@ -164,7 +184,7 @@ bool ZedYoloDetector::build_engine(
 
   if ((!onnx_file_content.empty())) {
 
-    RCLCPP_INFO(get_logger(), " * Create Infer Builder");
+    RCLCPP_DEBUG(get_logger(), " * Create Infer Builder");
     ICudaEngine * engine;
     // Create engine (onnx)
     gLogger.setReportableSeverity(Severity::kINFO);
@@ -174,7 +194,7 @@ bool ZedYoloDetector::build_engine(
       return false;
     }
 
-    RCLCPP_INFO(get_logger(), " * Create Network");
+    RCLCPP_DEBUG(get_logger(), " * Create Network");
     auto explicitBatch = 1U <<
       static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
     auto network = builder->createNetworkV2(explicitBatch);
@@ -184,7 +204,7 @@ bool ZedYoloDetector::build_engine(
       return false;
     }
 
-    RCLCPP_INFO(get_logger(), " * Create Builder Config");
+    RCLCPP_DEBUG(get_logger(), " * Create Builder Config");
     auto config = builder->createBuilderConfig();
     if (!config) {
       RCLCPP_ERROR_STREAM(get_logger(), "createBuilderConfig failed");
@@ -194,7 +214,7 @@ bool ZedYoloDetector::build_engine(
     ////////// Dynamic dimensions handling : support only 1 size at a time
     if (!dyn_dim_profile.tensor_name.empty()) {
 
-      RCLCPP_INFO_STREAM(
+      RCLCPP_DEBUG_STREAM(
         get_logger(), " * Create Optimization Profile: '" <<
           dyn_dim_profile.tensor_name << ":" <<
           dyn_dim_profile.size.d[0] << "x" <<
@@ -216,14 +236,14 @@ bool ZedYoloDetector::build_engine(
       builder->setMaxBatchSize(1);
     }
 
-    RCLCPP_INFO(get_logger(), " * Create Parser");
+    RCLCPP_DEBUG(get_logger(), " * Create Parser");
     auto parser = nvonnxparser::createParser(*network, gLogger);
     if (!parser) {
       RCLCPP_ERROR_STREAM(get_logger(), "nvonnxparser::createParser failed");
       return false;
     }
 
-    RCLCPP_INFO(get_logger(), " * Parse ONNX file");
+    RCLCPP_DEBUG(get_logger(), " * Parse ONNX file");
     bool parsed = false;
     unsigned char * onnx_model_buffer = onnx_file_content.data();
     size_t onnx_model_buffer_size = onnx_file_content.size() * sizeof(char);
@@ -235,7 +255,7 @@ bool ZedYoloDetector::build_engine(
     }
 
     if (builder->platformHasFastFp16()) {
-      RCLCPP_INFO_STREAM(get_logger(), "FP16 enabled!");
+      RCLCPP_DEBUG_STREAM(get_logger(), "FP16 enabled!");
       config->setFlag(BuilderFlag::kFP16);
     }
 
@@ -252,7 +272,7 @@ bool ZedYoloDetector::build_engine(
       return false;
     }
 
-    RCLCPP_INFO(get_logger(), " * Serialize Engine");
+    RCLCPP_DEBUG(get_logger(), " * Serialize Engine");
     IHostMemory * ptr = engine->serialize();
     assert(ptr);
     if (ptr == nullptr) {return 1;}
@@ -405,7 +425,7 @@ void ZedYoloDetector::init()
 
 void ZedYoloDetector::doInference()
 {
-  RCLCPP_INFO_STREAM(get_logger(), "ZedYoloDetector::doInference()");
+  RCLCPP_DEBUG_STREAM(get_logger(), "ZedYoloDetector::doInference()");
 
   if (_zedImg.empty()) {
     RCLCPP_WARN(get_logger(), "ZedYoloDetector::doInference() -> Received an empty image");
@@ -507,12 +527,6 @@ void ZedYoloDetector::doInference()
             float x1 = clamp((x + 0.5f * w) * scalingFactor_x, 0.f, width);
             float y1 = clamp((y + 0.5f * h) * scalingFactor_y, 0.f, height);
 
-            cv::Rect_<float> bbox;
-            bbox.x = x0;
-            bbox.y = y0;
-            bbox.width = x1 - x0;
-            bbox.height = y1 - y0;
-
             bbi.box.x1 = x0;
             bbi.box.y1 = y0;
             bbi.box.x2 = x1;
@@ -601,18 +615,25 @@ void ZedYoloDetector::doInference()
   // NMS
   applyNonMaximumSuppression();
 
+  idx = 0;
+  for (const auto & det : _inferenceResult) {
+    RCLCPP_DEBUG_STREAM(
+      get_logger(),
+      "#" << idx++ << " " << det.label << " - [" <<
+        det.box.x1 << "," << det.box.y1 << "] " <<
+        det.box.x2 - det.box.x1 << "x" <<
+        det.box.y2 - det.box.y1);
+  }
+
   // BBoxInfo to Detection2D
   generateRosMsg();
 
-  RCLCPP_INFO_STREAM(get_logger(), " * Detected " << _inferenceResult.size() << " objects.");
+  RCLCPP_DEBUG_STREAM(get_logger(), " * Detected " << _inferenceResult.size() << " objects.");
 }
 
 void ZedYoloDetector::generateRosMsg()
 {
   _detections.clear();
-
-  cv::Mat resImg;
-  _zedImg.copyTo(resImg);
 
   for (const auto & det : _inferenceResult) {
     vision_msgs::msg::Detection2D rosDet;
@@ -620,12 +641,12 @@ void ZedYoloDetector::generateRosMsg()
     rosDet.id = ""; // No unique ID at this level
 
     // Note: results must be published with normalized values to be image size agnostic
-    rosDet.bbox.size_x = static_cast<double>(fabs(det.box.x2 - det.box.x1)) / _zedImg.cols;
-    rosDet.bbox.size_y = static_cast<double>(fabs(det.box.y2 - det.box.y1)) / _zedImg.rows;
-    rosDet.bbox.center.position.x = (static_cast<double>(det.box.x1) + (0.5 * rosDet.bbox.size_x)) /
-      _zedImg.cols;
-    rosDet.bbox.center.position.y = (static_cast<double>(det.box.y1) + (0.5 * rosDet.bbox.size_y)) /
-      _zedImg.rows;
+    rosDet.bbox.size_x = static_cast<double>(det.box.x2 - det.box.x1) / _zedImg.cols;
+    rosDet.bbox.size_y = static_cast<double>(det.box.y2 - det.box.y1) / _zedImg.rows;
+    rosDet.bbox.center.position.x = static_cast<double>(det.box.x1) / _zedImg.cols +
+      (0.5 * rosDet.bbox.size_x);
+    rosDet.bbox.center.position.y = static_cast<double>(det.box.y1) / _zedImg.rows +
+      (0.5 * rosDet.bbox.size_y);
 
     vision_msgs::msg::ObjectHypothesisWithPose obj;
     obj.hypothesis.class_id = std::to_string(det.label);
@@ -634,18 +655,12 @@ void ZedYoloDetector::generateRosMsg()
     rosDet.results.push_back(obj);
 
     _detections.push_back(rosDet);
-
-    if (_pubDebugImg) {
-      cv::Rect r;
-      r.x = det.box.x1;
-      r.y = det.box.y1;
-      r.width = det.box.x2 - det.box.x1;
-      r.height = det.box.y2 - det.box.y1;
-      cv::rectangle(resImg, r, cv::Scalar(220, 180, 20), 2);
-    }
   }
 
   if (_pubDebugImg) {
+    cv::Mat resImg;
+    draw_objects(_zedImg, resImg, _inferenceResult);
+
     std::unique_ptr<sensor_msgs::msg::Image> msg = std::make_unique<sensor_msgs::msg::Image>();
 
     msg->header.frame_id = _detFrameId;

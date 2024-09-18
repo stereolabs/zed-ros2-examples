@@ -130,12 +130,19 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/utils.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/logging.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/custom_od_component_base.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/yolo_detector.hpp
     )
 
     set(SRC_COMP
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/custom_od_component_base.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/yolo_detector.cpp
+    )
+
+    set(INC_YOLO
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/yolo/yolo_utils.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/yolo/yolo_detector.hpp
+    )
+
+    set(SRC_YOLO
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/yolo/yolo_detector.cpp
     )
 
     ###############################################################################
@@ -152,6 +159,8 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
         ${INC}
         ${INC_COMP}
         ${SRC_COMP}
+        ${INC_YOLO}
+        ${SRC_YOLO}
     )
     target_compile_definitions(zed_yolo_detector_component
         PRIVATE "COMPOSITION_BUILDING_DLL"
@@ -160,6 +169,7 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/yolo
         ${OpenCV_INCLUDE_DIRS}
         ${CUDA_INCLUDE_DIRS}
         /usr/include/x86_64-linux-gnu/ # TensorRT

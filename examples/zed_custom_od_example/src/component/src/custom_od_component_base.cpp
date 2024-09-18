@@ -93,6 +93,27 @@ void ZedCustomOd::readCommonParams()
     "general.detection_topic", _pubTopicName, _pubTopicName, " * Detection topic:\t\t",
     false);
   getParam("general.loop_frequency", _loopFreq, _loopFreq, " * Loop frequency [Hz]:\t", false);
+
+  getParam("general.debug_mode", _debugMode, _debugMode);
+  RCLCPP_INFO_STREAM(get_logger(), " * Debug mode: " << (_debugMode ? "TRUE" : "FALSE"));
+
+  if (_debugMode) {
+    rcutils_ret_t res = rcutils_logging_set_logger_level(
+      get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG);
+
+    if (res != RCUTILS_RET_OK) {
+      RCLCPP_WARN(get_logger(), "Error setting DEBUG level for logger");
+    } else {
+      RCLCPP_INFO(get_logger(), " + Debug Mode enabled +");
+    }
+  } else {
+    rcutils_ret_t res = rcutils_logging_set_logger_level(
+      get_logger().get_name(), RCUTILS_LOG_SEVERITY_INFO);
+
+    if (res != RCUTILS_RET_OK) {
+      RCLCPP_WARN(get_logger(), "Error setting INFO level for logger");
+    }
+  }
 }
 
 void ZedCustomOd::camera_callback(
@@ -104,7 +125,7 @@ void ZedCustomOd::camera_callback(
   double img_elapsed_sec = (imgTime - _lastImgTime).nanoseconds() / 1e9;
   _lastImgTime = imgTime;
   double img_freq = 1.0 / img_elapsed_sec;
-  RCLCPP_INFO_STREAM(this->get_logger(), "Image topic freq: " << img_freq << " Hz");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "Image topic freq: " << img_freq << " Hz");
   // <---- Stats
 
   if (_inferenceRunning) { // No new images while processing the latest received
@@ -126,7 +147,7 @@ void ZedCustomOd::camera_callback(
   }
   // <---- Check for correct input image encoding
 
-  RCLCPP_INFO(this->get_logger(), "Image Received");
+  RCLCPP_DEBUG(this->get_logger(), "Image Received");
 
   // Set the frame id of the detection to be the same as the image frame id
   _detFrameId = img->header.frame_id;
@@ -168,7 +189,7 @@ void ZedCustomOd::processing_callback()
   double proc_elapsed_sec = (procTime - _lastInferenceTime).nanoseconds() / 1e9;
   _lastInferenceTime = procTime;
   double proc_freq = 1.0 / proc_elapsed_sec;
-  RCLCPP_INFO_STREAM(this->get_logger(), "Inference freq: " << proc_freq << " Hz");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "Inference freq: " << proc_freq << " Hz");
   // <---- Stats
 
   // Call the custom inference
@@ -177,7 +198,7 @@ void ZedCustomOd::processing_callback()
   _inferenceRunning = false;
   _newImage = false;
   double inference_duration_sec = (get_clock()->now() - procTime).nanoseconds() / 1e9;
-  RCLCPP_INFO_STREAM(
+  RCLCPP_DEBUG_STREAM(
     this->get_logger(),
     "Inference duration: " << inference_duration_sec << " sec");
 

@@ -99,7 +99,7 @@ private:
   float _nmsThresh = 0.4f;
   float _confThresh = 0.3f;
   std::string _yoloModelVersion;
-  bool _publishDebugImg = true;
+  bool _publishDebugImg = false;
   // <---- Parameters
 
   std::string _engineFullPath;
