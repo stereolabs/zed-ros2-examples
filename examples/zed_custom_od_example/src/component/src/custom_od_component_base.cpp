@@ -147,7 +147,10 @@ void ZedCustomOd::camera_callback(
   }
   // <---- Check for correct input image encoding
 
-  RCLCPP_DEBUG(this->get_logger(), "Image Received");
+  RCLCPP_DEBUG_STREAM(
+    this->get_logger(),
+    "Image Received [" << static_cast<uint64_t>(static_cast<double>(img->header.stamp.sec) * 1e9) + img->header.stamp.nanosec <<
+      "]");
 
   // Set the frame id of the detection to be the same as the image frame id
   _detFrameId = img->header.frame_id;
@@ -184,26 +187,27 @@ void ZedCustomOd::processing_callback()
 
   std::lock_guard<std::mutex> lock(_detMux);
 
-  // ----> Stats
-  auto procTime = get_clock()->now();
-  double proc_elapsed_sec = (procTime - _lastInferenceTime).nanoseconds() / 1e9;
-  _lastInferenceTime = procTime;
-  double proc_freq = 1.0 / proc_elapsed_sec;
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "Inference freq: " << proc_freq << " Hz");
-  // <---- Stats
-
   // Call the custom inference
+  auto startInferenceTime = get_clock()->now();
   _inferenceRunning = true;
   doInference();
   _inferenceRunning = false;
   _newImage = false;
-  double inference_duration_sec = (get_clock()->now() - procTime).nanoseconds() / 1e9;
+  double inference_duration_sec = (get_clock()->now() - startInferenceTime).nanoseconds() / 1e9;
   RCLCPP_DEBUG_STREAM(
     this->get_logger(),
     "Inference duration: " << inference_duration_sec << " sec");
 
   // Publish the detection results
   publishResult();
+
+  // ----> Stats
+  auto now = get_clock()->now();
+  double proc_elapsed_sec = (now - _lastInferenceTime).nanoseconds() / 1e9;
+  _lastInferenceTime = now;
+  double proc_freq = 1.0 / proc_elapsed_sec;
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "Inference freq: " << proc_freq << " Hz");
+  // <---- Stats
 }
 
 }  // namespace stereolabs
