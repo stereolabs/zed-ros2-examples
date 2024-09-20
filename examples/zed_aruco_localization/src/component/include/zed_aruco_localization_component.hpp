@@ -25,7 +25,6 @@
 #include <image_transport/camera_subscriber.hpp>
 #include <image_transport/image_transport.hpp>
 #include <map>
-#include <opencv2/opencv.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
