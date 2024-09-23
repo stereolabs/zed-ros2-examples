@@ -24,7 +24,10 @@ namespace stereolabs
 const int QOS_QUEUE_SIZE = 100;
 
 ZedCustomOd::ZedCustomOd(const rclcpp::NodeOptions & options)
-: Node("zed_custom_od_node", options), _defaultQoS(1)
+: Node("zed_custom_od_node", options)
+  , _defaultQoS(1)
+  , _newImage(false)
+  , _inferenceRunning(false)
 {
   RCLCPP_INFO(get_logger(), "********************************************");
   RCLCPP_INFO(get_logger(), " ZED Custom Object Detection Base Component ");
@@ -128,10 +131,14 @@ void ZedCustomOd::camera_callback(
   RCLCPP_DEBUG_STREAM(this->get_logger(), "Image topic freq: " << img_freq << " Hz");
   // <---- Stats
 
+  RCLCPP_DEBUG_STREAM(
+    this->get_logger(),
+    "_inferenceRunning: " << (_inferenceRunning ? "TRUE" : "FALSE"));
   if (_inferenceRunning) { // No new images while processing the latest received
     return;
   }
 
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "_newImage: " << (_newImage ? "TRUE" : "FALSE"));
   if (_newImage) { // While the latest image has not been processed, we ignore the oncoming
     return;
   }
@@ -147,10 +154,10 @@ void ZedCustomOd::camera_callback(
   }
   // <---- Check for correct input image encoding
 
-  RCLCPP_DEBUG_STREAM(
-    this->get_logger(),
-    "Image Received [" << static_cast<uint64_t>(static_cast<double>(img->header.stamp.sec) * 1e9) + img->header.stamp.nanosec <<
-      "]");
+  _lastImageTs = static_cast<uint64_t>(static_cast<double>(img->header.stamp.sec) * 1e9) +
+    img->header.stamp.nanosec;
+
+  RCLCPP_DEBUG_STREAM(get_logger(), "[" << _lastImageTs << "]" << "Image Received");
 
   // Set the frame id of the detection to be the same as the image frame id
   _detFrameId = img->header.frame_id;
@@ -195,8 +202,8 @@ void ZedCustomOd::processing_callback()
   _newImage = false;
   double inference_duration_sec = (get_clock()->now() - startInferenceTime).nanoseconds() / 1e9;
   RCLCPP_DEBUG_STREAM(
-    this->get_logger(),
-    "Inference duration: " << inference_duration_sec << " sec");
+    get_logger(), "[" << _lastImageTs << "]" <<
+      "Inference duration: " << inference_duration_sec << " sec");
 
   // Publish the detection results
   publishResult();
@@ -206,7 +213,8 @@ void ZedCustomOd::processing_callback()
   double proc_elapsed_sec = (now - _lastInferenceTime).nanoseconds() / 1e9;
   _lastInferenceTime = now;
   double proc_freq = 1.0 / proc_elapsed_sec;
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "Inference freq: " << proc_freq << " Hz");
+  RCLCPP_DEBUG_STREAM(
+    get_logger(), "[" << _lastImageTs << "]" << "Inference freq: " << proc_freq << " Hz");
   // <---- Stats
 }
 

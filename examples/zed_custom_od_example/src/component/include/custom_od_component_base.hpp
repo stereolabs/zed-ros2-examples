@@ -86,6 +86,8 @@ protected:
   std::string _detFrameId;
   rclcpp::QoS _defaultQoS;                      // QoS parameters
 
+  uint64_t _lastImageTs;
+
 private:
   // ----> ROS Messages
   std::string _subTopicName = "rgb/image_rect_color";

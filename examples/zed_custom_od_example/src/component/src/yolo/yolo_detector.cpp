@@ -215,7 +215,7 @@ bool ZedYoloDetector::build_engine(
     if (!dyn_dim_profile.tensor_name.empty()) {
 
       RCLCPP_DEBUG_STREAM(
-        get_logger(), " * Create Optimization Profile: '" <<
+        get_logger(), "[" << _lastImageTs << "]" << " * Create Optimization Profile: '" <<
           dyn_dim_profile.tensor_name << ":" <<
           dyn_dim_profile.size.d[0] << "x" <<
           dyn_dim_profile.size.d[1] << "x" <<
@@ -255,7 +255,7 @@ bool ZedYoloDetector::build_engine(
     }
 
     if (builder->platformHasFastFp16()) {
-      RCLCPP_DEBUG_STREAM(get_logger(), "FP16 enabled!");
+      RCLCPP_DEBUG_STREAM(get_logger(), "[" << _lastImageTs << "]" << "FP16 enabled!");
       config->setFlag(BuilderFlag::kFP16);
     }
 
@@ -425,7 +425,7 @@ void ZedYoloDetector::init()
 
 void ZedYoloDetector::doInference()
 {
-  RCLCPP_DEBUG_STREAM(get_logger(), "ZedYoloDetector::doInference()");
+  RCLCPP_DEBUG_STREAM(get_logger(), "[" << _lastImageTs << "]" << "ZedYoloDetector::doInference()");
 
   if (_zedImg.empty()) {
     RCLCPP_WARN(get_logger(), "ZedYoloDetector::doInference() -> Received an empty image");
@@ -619,7 +619,7 @@ void ZedYoloDetector::doInference()
   for (const auto & det : _inferenceResult) {
     RCLCPP_DEBUG_STREAM(
       get_logger(),
-      "#" << idx++ << " " << det.label << " - [" <<
+      "[" << _lastImageTs << "]" << "#" << idx++ << " " << det.label << " - [" <<
         det.box.x1 << "," << det.box.y1 << "] " <<
         det.box.x2 - det.box.x1 << "x" <<
         det.box.y2 - det.box.y1);
