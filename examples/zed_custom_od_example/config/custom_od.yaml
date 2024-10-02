@@ -1,9 +1,0 @@
-# config/acustom_od.yaml
-# Parameters for Custom Object Detection component
-
----
-/**:
-    ros__parameters:
-
-      general:
-        
