@@ -544,7 +544,7 @@ Visualization Manager:
             Value: /zed/zed_node/body_trk/skeletons
           Transparency: 0.25
           Value: false
-      Enabled: false
+      Enabled: true
       Name: Detection
     - Class: rviz_common/Group
       Displays:
@@ -739,18 +739,18 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.3152167797088623
-        Y: -0.4720282554626465
-        Z: 0.9213131666183472
+        X: 2.039557933807373
+        Y: 0.03161259740591049
+        Z: -0.42519325017929077
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9853981733322144
+      Pitch: 0.3003988265991211
       Target Frame: map
       Value: Orbit (rviz_default_plugins)
-      Yaw: 3.210404396057129
+      Yaw: 3.145402669906616
     Saved: ~
 Window Geometry:
   Confidence:
