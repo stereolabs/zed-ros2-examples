@@ -49,22 +49,6 @@ def launch_setup(context, *args, **kwargs):
     'urdf',
     'zed_multi.urdf.xacro')
 
-    robot_description = Command(['xacro', ' ', multi_zed_xacro_path]).perform(context)
-
-    # Robot State Publisher node
-    # this will publish the static reference link for a multi-camera configuration
-    # and all the joints. See 'urdf/zed_dual.urdf.xacro' as an example
-    multi_rsp_node = Node(
-        package='robot_state_publisher',
-        namespace='zed_multi',
-        executable='robot_state_publisher',
-        name='zed_multi_state_publisher',
-        output='screen',
-        parameters=[{
-            'robot_description': robot_description
-        }]
-    )
-
     names = LaunchConfiguration('cam_names')
     models = LaunchConfiguration('cam_models')
     serials = LaunchConfiguration('cam_serials')
@@ -89,11 +73,11 @@ def launch_setup(context, *args, **kwargs):
                 text='The size of the `serials` param array must be equal to the size of `names`'))
         ]
 
-    # Add the robot_state_publisher node to the list of nodes to be started
-    actions = [multi_rsp_node]
-
     # Set the first camera idx
     cam_idx = 0
+
+    # List of nodes to be started
+    actions = [] 
 
     for name in names_arr:
         model = models_arr[cam_idx]
@@ -131,9 +115,39 @@ def launch_setup(context, *args, **kwargs):
             }.items()
         )
 
-        actions.append(zed_wrapper_launch)
+        actions.append(zed_wrapper_launch)       
 
         cam_idx += 1
+
+    # Create the Xacro command with correct camera names
+    xacro_command = []
+    xacro_command.append('xacro')
+    xacro_command.append(' ')
+    xacro_command.append(multi_zed_xacro_path)
+    xacro_command.append(' ')
+    cam_idx = 0
+    for name in names_arr:
+        xacro_command.append('camera_name_'+str(cam_idx)+':=')
+        xacro_command.append(name)
+        xacro_command.append(' ')
+        cam_idx+=1
+
+    # Robot State Publisher node
+    # this will publish the static reference link for a multi-camera configuration
+    # and all the joints. See 'urdf/zed_dual.urdf.xacro' as an example
+    multi_rsp_node = Node(
+        package='robot_state_publisher',
+        namespace='zed_multi',
+        executable='robot_state_publisher',
+        name='zed_multi_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': Command(xacro_command).perform(context)
+        }]
+    )
+
+    # Add the robot_state_publisher node to the list of nodes to be started
+    actions.append(multi_rsp_node)
 
     return actions
 
