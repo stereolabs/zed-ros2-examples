@@ -1,3 +1,8 @@
+--- 
+This fork contains lightweight version of the original package - no nodes, no additional
+configuration files, just RVIZ2 node with specified dependencies and one config file for the ZED X.
+---
+
 <h1 align="center">
    <img src="./images/Picto+STEREOLABS_Black.jpg" alt="Stereolabs" title="Stereolabs" /><br \>
    ROS 2 Tutorials and Examples
