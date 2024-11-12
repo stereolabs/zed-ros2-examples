@@ -103,7 +103,7 @@ find_package(rviz_ogre_vendor REQUIRED)
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets Test)
 
-find_package(zed_interfaces REQUIRED)
+find_package(zed_msgs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -148,7 +148,7 @@ target_include_directories(rviz_plugin_zed_od PUBLIC
   $<INSTALL_INTERFACE:include>
   ${rviz_rendering_INCLUDE_DIRS}
   ${rviz_common_INCLUDE_DIRS}
-  ${zed_interfaces_INCLUDE_DIRS}
+  ${zed_msgs_INCLUDE_DIRS}
   ${OGRE_INCLUDE_DIRS}
   ${Qt5Widgets_INCLUDE_DIRS}
   ${resource_retriever_INCLUDE_DIRS}
@@ -171,7 +171,7 @@ pluginlib_export_plugin_description_file(rviz_common plugins_description.xml)
 
 ament_target_dependencies(rviz_plugin_zed_od
   PUBLIC
-  zed_interfaces
+  zed_msgs
   rclcpp
   rviz_common
 )
@@ -188,7 +188,7 @@ ament_export_dependencies(
   Qt5
   rviz_common
   rclcpp
-  zed_interfaces
+  zed_msgs
   rviz_rendering
 )
 

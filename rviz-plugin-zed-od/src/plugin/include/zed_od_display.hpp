@@ -20,7 +20,7 @@
 #include <rviz_common/message_filter_display.hpp>
 #include <rviz_common/properties/bool_property.hpp>
 #include <rviz_common/properties/float_property.hpp>
-#include <zed_interfaces/msg/objects_stamped.hpp>
+#include <zed_msgs/msg/objects_stamped.hpp>
 
 #include "visibility_control.hpp"
 #include "zed_od_info.hpp"
@@ -33,8 +33,7 @@ namespace displays
 typedef std::shared_ptr<ZedOdInfo> objectPtr;
 
 class ZED_OD_PLUGIN_PUBLIC ZedOdDisplay
-  : public rviz_common::MessageFilterDisplay<
-    zed_interfaces::msg::ObjectsStamped>
+  : public rviz_common::MessageFilterDisplay<zed_msgs::msg::ObjectsStamped>
 {
   Q_OBJECT
 
@@ -47,8 +46,8 @@ public:
 
 private:
   void processMessage(
-    zed_interfaces::msg::ObjectsStamped::ConstSharedPtr msg) override;
-  void createOrUpdateObject(zed_interfaces::msg::Object & obj);
+    zed_msgs::msg::ObjectsStamped::ConstSharedPtr msg) override;
+  void createOrUpdateObject(zed_msgs::msg::Object & obj);
   void invalidateObjs();
   void removeNotValidObjs();
 
