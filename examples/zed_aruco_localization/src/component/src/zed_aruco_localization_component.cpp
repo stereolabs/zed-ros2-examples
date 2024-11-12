@@ -118,7 +118,7 @@ ZedArucoLoc::ZedArucoLoc(const rclcpp::NodeOptions & options)
     "Subscribed to topic: " << _subImage.getInfoTopic());
 
   // Create service caller
-  _setPoseClient = create_client<zed_interfaces::srv::SetPose>("set_pose");
+  _setPoseClient = create_client<zed_msgs::srv::SetPose>("set_pose");
 }
 
 template<typename T>
@@ -802,7 +802,7 @@ bool ZedArucoLoc::resetZedPose(tf2::Transform & new_pose)
 {
   RCLCPP_INFO(get_logger(), "*** Calling ZED 'set_pose' service ***");
 
-  auto request = std::make_shared<zed_interfaces::srv::SetPose::Request>();
+  auto request = std::make_shared<zed_msgs::srv::SetPose::Request>();
   request->pos[0] = new_pose.getOrigin().x();
   request->pos[1] = new_pose.getOrigin().y();
   request->pos[2] = new_pose.getOrigin().z();
@@ -838,7 +838,7 @@ bool ZedArucoLoc::resetZedPose(tf2::Transform & new_pose)
   // immediately from this method and allow other work to be done by the
   // executor.
   using ServiceResponseFuture =
-    rclcpp::Client<zed_interfaces::srv::SetPose>::SharedFuture;
+    rclcpp::Client<zed_msgs::srv::SetPose>::SharedFuture;
   auto response_received_callback = [this](ServiceResponseFuture future) {
       auto result = future.get();
       RCLCPP_INFO_STREAM(

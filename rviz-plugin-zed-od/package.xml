@@ -26,7 +26,7 @@
   <exec_depend>libqt5-widgets</exec_depend>
   <exec_depend>rviz_ogre_vendor</exec_depend>
 
-  <depend>zed_interfaces</depend>
+<depend>zed_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

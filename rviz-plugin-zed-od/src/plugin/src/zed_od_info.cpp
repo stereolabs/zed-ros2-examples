@@ -33,7 +33,7 @@ const Ogre::ColourValue COLOR_TRACK_TERMINATED(1.0f, 1.0f, 1.0f);
 uint64_t ZedOdInfo::mObjIdx = 0;
 
 ZedOdInfo::ZedOdInfo(
-  zed_interfaces::msg::Object & obj,
+  zed_msgs::msg::Object & obj,
   Ogre::SceneManager * scene_manager,
   Ogre::SceneNode * parent_node)
 {
@@ -67,7 +67,7 @@ ZedOdInfo::~ZedOdInfo()
   }
 }
 
-void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
+void ZedOdInfo::updateInfo(zed_msgs::msg::Object & obj)
 {
   // Check if scene must be created
   bool create = (mSceneNode == nullptr);
@@ -141,7 +141,7 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
   for (int i = 0; i < 8; i++) {
     Ogre::Vector3 pos;
-    zed_interfaces::msg::Keypoint3D corner = obj.bounding_box_3d.corners[i];
+    zed_msgs::msg::Keypoint3D corner = obj.bounding_box_3d.corners[i];
     pos[0] = corner.kp[0];
     pos[1] = corner.kp[1];
     pos[2] = corner.kp[2];
@@ -206,14 +206,12 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     Ogre::Vector3 start, end;
     idx = i % 4;
-    zed_interfaces::msg::Keypoint3D cornerStart =
-      obj.bounding_box_3d.corners[idx];
+    zed_msgs::msg::Keypoint3D cornerStart = obj.bounding_box_3d.corners[idx];
     start[0] = cornerStart.kp[0];
     start[1] = cornerStart.kp[1];
     start[2] = cornerStart.kp[2];
     idx = (i + 1) % 4;
-    zed_interfaces::msg::Keypoint3D cornerEnd =
-      obj.bounding_box_3d.corners[idx];
+    zed_msgs::msg::Keypoint3D cornerEnd = obj.bounding_box_3d.corners[idx];
     end[0] = cornerEnd.kp[0];
     end[1] = cornerEnd.kp[1];
     end[2] = cornerEnd.kp[2];
@@ -243,14 +241,12 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     Ogre::Vector3 start, end;
     idx = i % 4 + 4;
-    zed_interfaces::msg::Keypoint3D cornerStart =
-      obj.bounding_box_3d.corners[idx];
+    zed_msgs::msg::Keypoint3D cornerStart = obj.bounding_box_3d.corners[idx];
     start[0] = cornerStart.kp[0];
     start[1] = cornerStart.kp[1];
     start[2] = cornerStart.kp[2];
     idx = (i + 1) % 4 + 4;
-    zed_interfaces::msg::Keypoint3D cornerEnd =
-      obj.bounding_box_3d.corners[idx];
+    zed_msgs::msg::Keypoint3D cornerEnd = obj.bounding_box_3d.corners[idx];
     end[0] = cornerEnd.kp[0];
     end[1] = cornerEnd.kp[1];
     end[2] = cornerEnd.kp[2];
@@ -280,14 +276,12 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     Ogre::Vector3 start, end;
     idx = i;
-    zed_interfaces::msg::Keypoint3D cornerStart =
-      obj.bounding_box_3d.corners[idx];
+    zed_msgs::msg::Keypoint3D cornerStart = obj.bounding_box_3d.corners[idx];
     start[0] = cornerStart.kp[0];
     start[1] = cornerStart.kp[1];
     start[2] = cornerStart.kp[2];
     idx = i + 4;
-    zed_interfaces::msg::Keypoint3D cornerEnd =
-      obj.bounding_box_3d.corners[idx];
+    zed_msgs::msg::Keypoint3D cornerEnd = obj.bounding_box_3d.corners[idx];
     end[0] = cornerEnd.kp[0];
     end[1] = cornerEnd.kp[1];
     end[2] = cornerEnd.kp[2];
@@ -310,7 +304,7 @@ void ZedOdInfo::updateInfo(zed_interfaces::msg::Object & obj)
 
     for (int i = 0; i < size; i++) {
       Ogre::Vector3 pos;
-      zed_interfaces::msg::Keypoint3D joint = obj.skeleton_3d.keypoints[i];
+      zed_msgs::msg::Keypoint3D joint = obj.skeleton_3d.keypoints[i];
       pos[0] = joint.kp[0];
       pos[1] = joint.kp[1];
       pos[2] = joint.kp[2];

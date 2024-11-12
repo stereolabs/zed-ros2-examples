@@ -28,7 +28,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <zed_interfaces/srv/set_pose.hpp>
+#include <zed_msgs/srv/set_pose.hpp>
 
 #include "aruco_loc_visibility_control.hpp"
 
@@ -82,7 +82,7 @@ private:
   // <---- ROS Messages
 
   // Service client
-  rclcpp::Client<zed_interfaces::srv::SetPose>::SharedPtr _setPoseClient;
+  rclcpp::Client<zed_msgs::srv::SetPose>::SharedPtr _setPoseClient;
 
   // ----> Running variables
   rclcpp::Time _detTime;  // Time of the latest detection

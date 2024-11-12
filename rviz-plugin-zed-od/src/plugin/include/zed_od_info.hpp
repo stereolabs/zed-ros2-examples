@@ -24,7 +24,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <zed_interfaces/msg/objects_stamped.hpp>
+#include <zed_msgs/msg/objects_stamped.hpp>
 
 #include "visibility_control.hpp"
 #include "zed_body_parts.hpp"
@@ -49,14 +49,14 @@ class ZED_OD_PLUGIN_PUBLIC ZedOdInfo : public QObject
 
 public:
   explicit ZedOdInfo(
-    zed_interfaces::msg::Object & obj,
+    zed_msgs::msg::Object & obj,
     Ogre::SceneManager * scene_manager,
     Ogre::SceneNode * parent_node = NULL);
   virtual ~ZedOdInfo();
 
   void updateShowLabel(bool show);
   void updateAlpha(float alpha);
-  void updateInfo(zed_interfaces::msg::Object & obj);
+  void updateInfo(zed_msgs::msg::Object & obj);
   void updateShowBBox(bool show);
   void updateShowSkeleton(bool show);
   void updateLinkSize(float newval);

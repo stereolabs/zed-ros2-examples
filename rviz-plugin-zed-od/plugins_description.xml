@@ -5,6 +5,6 @@
     <description>
       Displays the results of the Object Detection module of the Stereolabs ZED SDK.
     </description>
-    <message_type>zed_interfaces/msg/Objects</message_type>
+<message_type>zed_msgs/msg/Objects</message_type>
   </class>
 </library>

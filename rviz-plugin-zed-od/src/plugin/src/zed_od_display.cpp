@@ -98,7 +98,7 @@ void ZedOdDisplay::removeNotValidObjs()
 }
 
 void ZedOdDisplay::processMessage(
-  zed_interfaces::msg::ObjectsStamped::ConstSharedPtr msg)
+  zed_msgs::msg::ObjectsStamped::ConstSharedPtr msg)
 {
   Ogre::Vector3 position;
   Ogre::Quaternion orientation;
@@ -134,7 +134,7 @@ void ZedOdDisplay::processMessage(
   }
 }
 
-void ZedOdDisplay::createOrUpdateObject(zed_interfaces::msg::Object & obj)
+void ZedOdDisplay::createOrUpdateObject(zed_msgs::msg::Object & obj)
 {
   int16_t id = obj.label_id;
   if (id == -1 && obj.tracking_available) {  // Not a valid ID?
