@@ -36,14 +36,14 @@ from launch_ros.descriptions import ComposableNode
 default_config_common = os.path.join(
     get_package_share_directory('zed_wrapper'),
     'config',
-    'common.yaml'
+    'common_stereo.yaml'
 )
 
 # CommonCustom OD Configurations to be loaded by detector Node
 default_config_custom_od_common = os.path.join(
     get_package_share_directory('zed_custom_od_example'),
     'config',
-    'common.yaml'
+    'common_stereo.yaml'
 )
 
 # Custom OD Configurations to be loaded by detector Node

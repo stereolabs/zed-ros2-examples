@@ -43,7 +43,7 @@ def generate_launch_description():
     config_common = os.path.join(
         get_package_share_directory('zed_wrapper'),
         'config',
-        'common.yaml'
+        'common_stereo.yaml'
     )
 
     config_camera = os.path.join(

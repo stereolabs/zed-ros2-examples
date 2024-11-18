@@ -36,7 +36,7 @@ from launch_ros.descriptions import ComposableNode
 default_config_common = os.path.join(
     get_package_share_directory('zed_wrapper'),
     'config',
-    'common.yaml'
+    'common_stereo.yaml'
 )
 
 # Depth Image to laser scan config file
