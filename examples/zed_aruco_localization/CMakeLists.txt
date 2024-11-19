@@ -89,7 +89,7 @@ set(DEPENDENCIES_COMP
     builtin_interfaces
     sensor_msgs
     image_transport
-    zed_interfaces
+    zed_msgs
     tf2
     tf2_ros
     tf2_geometry_msgs
