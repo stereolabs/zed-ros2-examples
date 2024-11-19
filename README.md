@@ -36,6 +36,12 @@ colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
 source ~/.bashrc
 ```
 
+>:pushpin: **Note:** If you encounter an error during the linking process due to missing `libnvinfer` and `nvonnxparser`, you need to [install TensorRT](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html). Alternatively, if this example is not required, you can build the repository while ignoring it:
+>
+>```bash
+> colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --packages-ignore zed_custom_od_example
+>```
+
 ## Tutorials and examples
 
 ### Rviz visualization examples
