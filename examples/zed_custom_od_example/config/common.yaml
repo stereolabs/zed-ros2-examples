@@ -1,0 +1,13 @@
+# config/custom_od.yaml
+# Parameters for Custom Object Detection component
+
+---
+/**:
+    ros__parameters:
+
+      general:
+        main_node_name: 'zed_node'
+        detection_topic: 'detections'
+        loop_frequency: 60.0
+        debug_mode: true # Enable debug messages
+        
