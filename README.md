@@ -35,13 +35,6 @@ rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
 source ~/.bashrc
 ```
-
->:pushpin: **Note:** If you encounter an error during the linking process due to missing `libnvinfer` and `nvonnxparser`, you need to [install TensorRT](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html). Alternatively, if this example is not required, you can build the repository while ignoring it:
->
->```bash
-> colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --packages-ignore zed_custom_od_example
->```
-
 ## Tutorials and examples
 
 ### Rviz visualization examples
@@ -63,7 +56,6 @@ source ~/.bashrc
 - [ZED Localization with ArUco markers](./examples/zed_aruco_localization): use localized ArUco tags as a reference for localization.
 - [Convert ZED Depth map to virtual laser scan](./examples/zed_depth_to_laserscan): convert ZED Depth maps into virtual Laser Scans using
 - [ROS 2 Composition](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Composition.html): use ROS 2 composition to convert BGRA images to BGR
-- [zed_custom_od_example](./zed_custom_od_example): use a custom ONNX YOLO detector engine
 
  ## Tools
 
