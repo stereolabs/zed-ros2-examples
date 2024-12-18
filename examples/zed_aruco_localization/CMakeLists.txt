@@ -179,7 +179,7 @@ if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iro
     # Install header files
     install(
         DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
-        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
         DESTINATION include/${PROJECT_NAME}/
     )
 
