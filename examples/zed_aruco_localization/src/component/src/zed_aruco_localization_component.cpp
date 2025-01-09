@@ -770,12 +770,14 @@ void ZedArucoLoc::initTFs()
 
   // ----> ArUco coordinate system to Image coordinate system, and viceversa
   basis = tf2::Matrix3x3(-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0);
+  _img2aruco.setIdentity();
   _img2aruco.setBasis(basis);
   _aruco2img = _img2aruco.inverse();
   // <---- ArUco coordinate system to Image coordinate system, and viceversa
 
   // ----> ROS coordinate system to Image coordinate system, and viceversa
   basis = tf2::Matrix3x3(0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0);
+  _ros2img.setIdentity();
   _ros2img.setBasis(basis);
   _img2ros = _ros2img.inverse();
   // <---- ROS coordinate system to Image coordinate system, and viceversa
