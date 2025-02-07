@@ -7,11 +7,30 @@ using its serial number and precisely set the position and the orientation of ea
 
 ## The launch file explained
 
-The example launch file `zed_multi_camera.launch.py` allows to dynamically configure a robotics system equipped with multiple different models of ZED cameras 
+The example launch file `zed_multi_camera.launch.py` allows to dynamically configure a robotics system equipped with multiple different models of ZED cameras.
 
-The launch file starts a Robot State Publisher node that defines the position and orientation of each camera in the multi-camera system,  a Robot State Publisher node for each camera that broadcast all the static frames of the camera, and a ZED node for each camera.
+The launch file starts a Robot State Publisher node that defines the position and orientation of each camera in the multi-camera system, a Robot State Publisher node for each camera that broadcast all the static frames of the camera, and a ZED node for each camera.
 
 The number of ZED nodes to start is infered by the size of the parameters passed to the launch file from the command line.
+
+All the ZED nodes are loaded in the same ROS 2 container using [Composition](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Composition.html#composition). It is possible to load other ROS 2 components in the same container to leverage zero copy Intra-Process Communication (IPC).
+
+You can retrieve the name of the container and check the components that are running in the same process by using the command 
+
+```bash
+ros2 component list
+```
+
+for example:
+
+```bash
+$ ros2 component list
+/zed_multi/zed_multi_container
+  1  /zed_multi/zedx_front
+  2  /zed_multi/zedx_rear
+```
+
+> :pushpin: **Note**: all the nodes run in the same namespace `zed_multi`.
 
 ### Launch parameters
 
@@ -27,7 +46,7 @@ All the parameter arrays must have the same size:
 Launch the dual camera nodes by using the following command
 
 ```bash
-$ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[zed2i,zed2]' cam_serials:='[31234567,21234567]'
+ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[zed2i,zed2]' cam_serials:='[31234567,21234567]'
 ```
 
 **Info:** to retrieve the serial number of each connected camera you can use the command `$ ZED_Explorer --all`.
@@ -37,7 +56,7 @@ $ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front
 Example:
 
 ```bash
-$ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[<front_camera_model>,<rear_camera_model>]' cam_serials:='[<front_camera_serial>,<rear_camera_serial>]'
+ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[<front_camera_model>,<rear_camera_model>]' cam_serials:='[<front_camera_serial>,<rear_camera_serial>]'
 ```
 
 ### The Multi Camera URDF
@@ -85,13 +104,4 @@ the first camera is the reference for visual odometry processing and in ROS a jo
 
 The following image display the TF tree generated for the dual camera configuration of this tutorial:
 
-![](./image/frames.png)
-
-
-
-
-
-
-
-
-
+![TF Frames](./image/frames.png)
