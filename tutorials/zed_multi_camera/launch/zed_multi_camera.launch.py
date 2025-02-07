@@ -24,7 +24,6 @@ from launch.actions import (
     IncludeLaunchDescription,
     LogInfo
 )
-from launch.conditions import IfCondition
 from launch.substitutions import (
     LaunchConfiguration,
     Command,
@@ -34,7 +33,6 @@ from launch_ros.actions import (
     Node,
     ComposableNodeContainer
 )
-from launch_ros.descriptions import ComposableNode
 
 def parse_array_param(param):
     str = param.replace('[', '')
