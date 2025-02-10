@@ -1,4 +1,4 @@
-# Tutorial - Robot integration
+# TUTORIAL - Robot integration
 
 This tutorial explains how to use the [xacro](https://index.ros.org/p/xacro/) tool to add the ZED camera to the URDF of a robot.
 
@@ -9,7 +9,7 @@ There are two different configurations to use when adding a ZED to a robot, whic
 
 ## Install the dependencies
 
-For the scope of this tutorial we use the [AgileX Scout Mini](https://www.agilex.ai/chassis/11) 4WD robot as a reference, but the explained concepts apply to all the robots in the same way.
+For the scope of this tutorial, we use the [AgileX Scout Mini](https://www.agilex.ai/chassis/11) 4WD robot as a reference, but the explained concepts apply to all the robots in the same way.
 
 You can install the required packages by using the following commands:
 
