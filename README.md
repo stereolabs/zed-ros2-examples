@@ -50,7 +50,7 @@ source ~/.bashrc
 - [Pose/Odometry subscription tutorial](./tutorials/zed_pose_tutorial)
 - [ROS 2 Composition + BGRA2BGR conversion tutorial](./tutorials/zed_rgb_convert)
 - [Multi-camera](./tutorials/zed_multi_camera)
-- [Multi-Camera + Intra Process Communication](./tutorials/zed_ipc) : `zed_ipc - in this tutorial you will learn how to use the provided launch file to start a multi-camera configuration, and load a new processing node in the same process to leverage Intra Process Communication with ROS 2composition.
+- [Multi-Camera + Intra Process Communication](./tutorials/zed_ipc)
 - [Robot integration](./tutorials/zed_robot_integration)
 
 ### Examples
