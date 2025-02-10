@@ -1,5 +1,5 @@
-# ZED pose subscription tutorial
+# TUTORIAL - ZED pose subscription
 
-In this tutorial you will learn how to write a simple node that subscribes to messages of type `nav_msgs/Odometry` and `geometry_msgs/PoseStamped` to retrieve the Odometry and Pose referred to `base_line` frame.
+In this tutorial, you will learn how to write a simple node that subscribes to messages of type `nav_msgs/Odometry` and `geometry_msgs/PoseStamped` to retrieve the Odometry and Pose referred to `base_line` frame.
 
-The complete documentation is available on the [Stereolabs website](https://www.stereolabs.com/docs/ros2/position/)
+The complete documentation is available on the [Stereolabs website](https://www.stereolabs.com/docs/ros2/060_positional-tracking)
