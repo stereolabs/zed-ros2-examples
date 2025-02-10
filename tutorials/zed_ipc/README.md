@@ -25,7 +25,7 @@ The `zed_ipc.launch.py` launch file is designed to facilitate the setup of multi
 To use the `zed_ipc.launch.py` launch file, execute the following command:
 
 ```bash
-ros2 launch zed_ipc zed_ipc.launch.py
+ros2 launch zed_ipc zed_ipc.launch.py cam_names:=[<camera_name_array>] cam_models:=[<camera_model_array>] cam_serials:=[<camera_serial_array>]
 ```
 
 This command will start the launch file, initializing the ZED Camera nodes and the custom subscriber node within the same process.
@@ -91,4 +91,26 @@ The launch file must create a correct remapping between `pointcloud_X` and each 
         target_container='/zed_multi/zed_multi_container'
     )
     actions.append(load_pc_node)
+```
+
+You can verify that all the nodes are now running into the same container process by using the command `ros2 component list`.
+
+#### Example
+
+Here's an example for two ZED X cameras named `zedx_front` and `zedx_rear`:
+
+- Launch command:
+
+```bash
+ros2 launch zed_ipc zed_ipc.launch.py cam_names:=[zedx_front,zedx_rear] cam_models:=[zedx,zedx] cam_serials:=[xxxxxxxxx,yyyyyyyy]
+```
+
+- Running check:
+
+```bash
+$ ros2 component list
+/zed_multi/zed_multi_container
+  1  /zed_multi/zedx_front
+  2  /zed_multi/zedx_rear
+  3  /zed_multi/ipc_point_cloud
 ```
