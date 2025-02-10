@@ -32,4 +32,63 @@ This command will start the launch file, initializing the ZED Camera nodes and t
 
 ### The code explained
 
-[TODO]
+First step: create a ROS 2 Container and load the two ZED camera nodes inside it:
+
+```python
+    # Call the multi-camera launch file
+    multi_camera_launch_file = os.path.join(
+        get_package_share_directory('zed_multi_camera'),
+        'launch',
+        'zed_multi_camera.launch.py'
+    )
+    zed_multi_camera = IncludeLaunchDescription(
+        launch_description_source=PythonLaunchDescriptionSource(multi_camera_launch_file),
+        launch_arguments={
+            'cam_names': names,
+            'cam_models': models,
+            'cam_serials': serials,
+            'disable_tf': disable_tf
+        }.items()
+    )
+    actions.append(zed_multi_camera)
+```
+
+Second step: remap the topic names. The demo node that receives the Point Cloud messagges subscribes to generic `pointcloud_X` topic names.
+The launch file must create a correct remapping between `pointcloud_X` and each ZED nore point cloud topic name `/zed_multi/<camera_name/point_cloud/cloud_registered`.
+
+```python
+    # Create topic remappings for the point cloud node
+    remappings = []
+    name_array = parse_array_param(names.perform(context))
+    for i in range(cam_count):
+        base_topic = 'pointcloud_' + str(i)
+        remap = '/zed_multi/' + name_array[i] + '/point_cloud/cloud_registered'
+        remapping = (base_topic, remap)
+        remappings.append(remapping)
+```
+
+Third step: create the component node that subscribes to the Point Cloud topics and process the relative messages.
+
+```python
+    pc_node = ComposableNode(
+        package='zed_ipc',
+        plugin='stereolabs::PointCloudComponent',
+        name='ipc_point_cloud',
+        namespace='zed_multi',
+        parameters=[{
+            'cam_count': cam_count
+        }],
+        remappings=remappings,
+        extra_arguments=[{'use_intra_process_comms': True}]
+    )
+```
+
+Final step: load the Point Cloud component node in the existing ZED Container to leverage Intra Process Communication.
+
+```python
+    load_pc_node = LoadComposableNodes(
+        composable_node_descriptions=[pc_node],
+        target_container='/zed_multi/zed_multi_container'
+    )
+    actions.append(load_pc_node)
+```
