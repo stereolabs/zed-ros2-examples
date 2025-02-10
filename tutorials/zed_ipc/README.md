@@ -32,7 +32,7 @@ This command will start the launch file, initializing the ZED Camera nodes and t
 
 ### The code explained
 
-First step: create a ROS 2 Container and load the two ZED camera nodes inside it:
+**First step**: create a ROS 2 Container and load the two ZED camera components nodes inside it. Here we use the multi-camera launch file described in the [multi-camera tutorial](../zed_multi_camera).
 
 ```python
     # Call the multi-camera launch file
@@ -53,8 +53,8 @@ First step: create a ROS 2 Container and load the two ZED camera nodes inside it
     actions.append(zed_multi_camera)
 ```
 
-Second step: remap the topic names. The demo node that receives the Point Cloud messagges subscribes to generic `pointcloud_X` topic names.
-The launch file must create a correct remapping between `pointcloud_X` and each ZED nore point cloud topic name `/zed_multi/<camera_name/point_cloud/cloud_registered`.
+**Second step**: remap the topic names. The demo node that receives the Point Cloud messages subscribes to generic `pointcloud_X` topic names.
+The launch file must create a correct remapping between `pointcloud_X` and each ZED node Point Cloud topic name `/zed_multi/<camera_name/point_cloud/cloud_registered`.
 
 ```python
     # Create topic remappings for the point cloud node
@@ -67,7 +67,7 @@ The launch file must create a correct remapping between `pointcloud_X` and each 
         remappings.append(remapping)
 ```
 
-Third step: create the component node that subscribes to the Point Cloud topics and process the relative messages.
+**Third step**: create the demo component node that subscribes to the Point Cloud topics and processes the relative messages.
 
 ```python
     pc_node = ComposableNode(
@@ -83,7 +83,7 @@ Third step: create the component node that subscribes to the Point Cloud topics 
     )
 ```
 
-Final step: load the Point Cloud component node in the existing ZED Container to leverage Intra Process Communication.
+**Final step**: load the Point Cloud component node in the existing ZED Container process to leverage Intra Process Communication.
 
 ```python
     load_pc_node = LoadComposableNodes(
