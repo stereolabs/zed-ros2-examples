@@ -1,4 +1,4 @@
-# ROS 2 Composition with Intra-Process Communication Tutorial
+# TUTORIAL - ROS 2 Composition with Intra-Process Communication
 
 This tutorial demonstrates how to leverage [ROS 2 Composition](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Composition.html) and [Intra-Process Communication](https://docs.ros.org/en/humble/Tutorials/Demos/Intra-Process-Communication.html) to create a new node component that subscribes to point cloud topics published by all ZED Camera node components running within the same process.
 
