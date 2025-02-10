@@ -30,8 +30,11 @@ from launch.substitutions import (
     Command,
     TextSubstitution
 )
-from launch_ros.actions import Node
-
+from launch_ros.actions import (
+    Node,
+    ComposableNodeContainer
+)
+from launch_ros.descriptions import ComposableNode
 
 def parse_array_param(param):
     str = param.replace('[', '')
@@ -42,6 +45,11 @@ def parse_array_param(param):
     return arr
 
 def launch_setup(context, *args, **kwargs):
+
+    # List of actions to be launched
+    actions = []
+
+    namespace_val = 'zed_multi'
     
     # URDF/xacro file to be loaded by the Robot State Publisher node
     multi_zed_xacro_path = os.path.join(
@@ -72,12 +80,31 @@ def launch_setup(context, *args, **kwargs):
             LogInfo(msg=TextSubstitution(
                 text='The size of the `serials` param array must be equal to the size of `names`'))
         ]
+    
+    # ROS 2 Component Container    
+    container_name = 'zed_multi_container'
+    distro = os.environ['ROS_DISTRO']
+    if distro == 'foxy':
+        # Foxy does not support the isolated mode
+        container_exec='component_container'
+    else:
+        container_exec='component_container_isolated'
+    
+    info = '* Starting Composable node container: /' + namespace_val + '/' + container_name
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+
+    zed_container = ComposableNodeContainer(
+        name=container_name,
+        namespace=namespace_val,
+        package='rclcpp_components',
+        executable=container_exec,
+        arguments=['--ros-args', '--log-level', 'info'],
+        output='screen',
+    )
+    actions.append(zed_container)
 
     # Set the first camera idx
     cam_idx = 0
-
-    # List of nodes to be started
-    actions = [] 
 
     for name in names_arr:
         model = models_arr[cam_idx]
@@ -85,7 +112,7 @@ def launch_setup(context, *args, **kwargs):
         pose = '['
 
         info = '* Starting a ZED ROS2 node for camera ' + name + \
-            '(' + model + '/' + serial + ')'
+            ' (' + model + '/' + serial + ')'
 
         actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
@@ -93,7 +120,7 @@ def launch_setup(context, *args, **kwargs):
         publish_tf = 'false'
         if (cam_idx == 0):
             if (disable_tf_val == 'False' or disable_tf_val == 'false'):
-                publish_tf = 'true'
+                publish_tf = 'true'        
 
         # A different node name is required by the Diagnostic Updated
         node_name = 'zed_node_' + str(cam_idx)
@@ -106,16 +133,16 @@ def launch_setup(context, *args, **kwargs):
                 '/launch/zed_camera.launch.py'
             ]),
             launch_arguments={
+                'container_name': container_name,
                 'camera_name': name,
                 'camera_model': model,
                 'serial_number': serial,
                 'publish_tf': publish_tf,
                 'publish_map_tf': publish_tf,
-                'node_name': node_name
+                'namespace': namespace_val
             }.items()
         )
-
-        actions.append(zed_wrapper_launch)       
+        actions.append(zed_wrapper_launch)
 
         cam_idx += 1
 
@@ -134,12 +161,15 @@ def launch_setup(context, *args, **kwargs):
 
     # Robot State Publisher node
     # this will publish the static reference link for a multi-camera configuration
-    # and all the joints. See 'urdf/zed_dual.urdf.xacro' as an example
+    # and all the joints. See 'urdf/zed_dual.urdf.xacro' as an example    
+    rsp_name = 'state_publisher'
+    info = '* Starting robot_state_publisher node to link all the frames: ' + rsp_name
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
     multi_rsp_node = Node(
         package='robot_state_publisher',
-        namespace='zed_multi',
+        namespace=namespace_val,
         executable='robot_state_publisher',
-        name='zed_multi_state_publisher',
+        name=rsp_name,
         output='screen',
         parameters=[{
             'robot_description': Command(xacro_command).perform(context)
