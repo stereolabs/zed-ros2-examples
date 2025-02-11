@@ -68,6 +68,7 @@ private:
   std::string mTopicName =
     DEFAULT_TOPIC_NAME;    ///< Name of the benchmarked topic
   int mWinSize = 500;      ///< Window size for frequency average
+  bool mUseRosLog = false;  ///< Use ROS logging system
 
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is
                                       ///< published by other nodes

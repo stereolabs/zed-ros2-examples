@@ -99,6 +99,12 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
     RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
 
+  # Install LAUNCH files
+  install(DIRECTORY
+    launch
+    DESTINATION share/${PROJECT_NAME}
+  )
+
   ament_package()
 endif()
 

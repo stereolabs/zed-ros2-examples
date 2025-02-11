@@ -15,7 +15,8 @@ This package contains examples and tutorials for effectively using ZED cameras w
 
 ### Prerequisites
 
-- ROS 2 Foxy Fitzroy or ROS 2 Humble Hawksbill: 
+- ROS 2 Foxy Fitzroy or ROS 2 Humble Hawksbill:
+
   - [Foxy on Ubuntu 20.04](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
   - [Humble on Ubuntu 22.04](https://docs.ros.org/en/humble/Installation/Linux-Install-Debians.html)
 
