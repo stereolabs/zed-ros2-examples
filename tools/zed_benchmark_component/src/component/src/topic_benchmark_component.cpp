@@ -21,6 +21,7 @@
 #include <rclcpp/qos.hpp>
 #include <rclcpp/qos_overriding_options.hpp>
 #include <rclcpp/time.hpp>
+#include <sstream>
 
 using namespace std::placeholders;
 
@@ -116,6 +117,7 @@ void TopicBenchmarkComponent::getParameters()
   }
   getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
   mAvgFreq.setNewSize(mWinSize);
+  getParam("use_ros_log", mUseRosLog, mUseRosLog, "ROS Log: ");
 }
 
 void TopicBenchmarkComponent::updateTopicInfo()
@@ -193,11 +195,21 @@ void TopicBenchmarkComponent::topicCallback(
   double bw = freq * bw_scale * msg->size();
   double bw_avg = avg_freq * bw_scale * msg->size();
 
-  std::cout << '\r' << std::fixed << std::setprecision(2) << "#"
+  std::stringstream ss;
+  if(!mUseRosLog) {
+    ss << '\r';
+  }
+  ss << std::fixed << std::setprecision(2) << "#"
             << ++mTopicCount << " - Freq: " << freq << " Hz (Avg: " << avg_freq
             << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
-            << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) << " MB"
-            << std::flush;
+            << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) << " MB";
+  if(!mUseRosLog) {
+    ss << std::flush;
+
+    std::cout << ss.str();
+  } else {
+    RCLCPP_INFO_STREAM(get_logger(), ss.str());
+  }
 
   // std::cout << " - Queue size: " << mAvgFreq.size() << std::endl;
 

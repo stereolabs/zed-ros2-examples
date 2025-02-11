@@ -14,6 +14,8 @@
 
 import os
 
+from sympy import use
+
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -28,9 +30,12 @@ from launch.substitutions import (
     LaunchConfiguration
 )
 from launch_ros.actions import (
-    LoadComposableNodes
+    LoadComposableNodes,
+    Node
 )
-from launch_ros.descriptions import ComposableNode
+from launch_ros.descriptions import (
+    ComposableNode
+)
 
 # Function to parse array parameters
 def parse_array_param(param):
@@ -52,6 +57,8 @@ def launch_setup(context, *args, **kwargs):
     disable_tf = LaunchConfiguration('disable_tf')
     use_ipc = LaunchConfiguration('use_ipc')
 
+    use_ipc_val = use_ipc.perform(context)
+
     # Call the multi-camera launch file
     multi_camera_launch_file = os.path.join(
         get_package_share_directory('zed_multi_camera'),
@@ -71,37 +78,50 @@ def launch_setup(context, *args, **kwargs):
     
     cam_count = len(names.perform(context).split(','))
 
-    # Create topic remappings for the point cloud node
-    remappings = []
+    
+    # Start a benchmark node for each point cloud topic of each camera
     name_array = parse_array_param(names.perform(context))
     for i in range(cam_count):
-        base_topic = 'pointcloud_' + str(i)
-        remap = '/zed_multi/' + name_array[i] + '/point_cloud/cloud_registered'
-        remapping = (base_topic, remap)
-        remappings.append(remapping)
 
-    # Create the point cloud node
-    pc_node = ComposableNode(
-        package='zed_ipc',
-        plugin='stereolabs::PointCloudComponent',
-        name='ipc_point_cloud',
-        namespace='zed_multi',
-        parameters=[{
-            'cam_count': cam_count
-        }],
-        remappings=remappings,
-        extra_arguments=[{'use_intra_process_comms': True}]
-    )
+        # Topic name to subscribe to
+        topic_name = '/zed_multi/' + name_array[i] + '/point_cloud/cloud_registered'
 
-    # Load the point cloud node in the container
-    load_pc_node = LoadComposableNodes(
-        composable_node_descriptions=[pc_node],
-        target_container='/zed_multi/zed_multi_container'
-    )
-    actions.append(load_pc_node)
+        if( use_ipc_val=='True'):
+            # Create the point cloud node
+            benchmark_node = ComposableNode(
+                package='zed_topic_benchmark_component',
+                plugin='stereolabs::TopicBenchmarkComponent',
+                name='benchmark_' + str(i),
+                namespace='zed_multi',
+                parameters=[{
+                    'topic_name': topic_name,
+                    'use_ros_log': True
+                }],
+                extra_arguments=[{'use_intra_process_comms': True}]
+            )
+
+            # Load the point cloud node in the container
+            load_pc_node = LoadComposableNodes(
+                composable_node_descriptions=[benchmark_node],
+                target_container='/zed_multi/zed_multi_container'
+            )
+            actions.append(load_pc_node)
+        else:
+            # Launch each benchmark in a separate process
+            benchmark_node = Node(
+                package='zed_topic_benchmark',
+                executable='zed_topic_benchmark',
+                name='benchmark_' + str(i),
+                namespace='zed_multi',
+                output='screen',
+                parameters=[{
+                    'topic_name': topic_name,
+                    'use_ros_log': True
+                }]
+            )
+            actions.append(benchmark_node)
 
     return actions
-
 
 def generate_launch_description():
     return LaunchDescription(
