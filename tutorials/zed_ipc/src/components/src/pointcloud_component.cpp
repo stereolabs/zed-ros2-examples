@@ -92,6 +92,8 @@ void PointCloudComponent::createSubscribers()
     std::function<void(const sensor_msgs::msg::PointCloud2::SharedPtr msg)> bound_callback_func =
     std::bind(&PointCloudComponent::callback_pointcloud, this, _1, topic_name);
 
+    _qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+
     auto sub = create_subscription<sensor_msgs::msg::PointCloud2>(
       topic_name, _qos, bound_callback_func, _subOpt);
     _pcSubs.push_back(sub);
@@ -130,6 +132,9 @@ void PointCloudComponent::callback_pointcloud(const sensor_msgs::msg::PointCloud
 
   double freq = 1e6 / elapsed_usec;
   double avg_freq = _stats[idx]->addValue(freq);
+
+  if(freq>60.0)
+    return;
 
   static double bw_scale = 8. / (1024. * 1024.);
 

@@ -83,7 +83,7 @@ def launch_setup(context, *args, **kwargs):
     pc_node = ComposableNode(
         package='zed_ipc',
         plugin='stereolabs::PointCloudComponent',
-        name='ipc_point_cloud',
+        name='ipc_user_node',
         namespace='zed_multi',
         parameters=[{
             'cam_count': cam_count
