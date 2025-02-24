@@ -21,7 +21,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+
 #include "ipc_visibility_control.hpp"
+#include "winavg.hpp"
 
 namespace stereolabs
 {
@@ -59,6 +61,12 @@ private:
   std::vector<std::shared_ptr<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>>> _pcSubs;
   // <---- Subscribers
 
+  // ----> Statistics
+  std::vector<std::unique_ptr<WinAvg>> _stats;
+  std::vector<std::chrono::high_resolution_clock::time_point> _times;
+  std::vector<int> _counters;
+  std::vector<bool> _firsts;  
+  // <---- Statistics
 };
 
 }  // namespace stereolabs

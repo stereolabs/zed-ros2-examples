@@ -23,7 +23,7 @@ namespace stereolabs
 
 PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
 : Node("pointcloud_node", options)
-, _qos(10)
+, _qos(1)
 {
   RCLCPP_INFO(get_logger(), "********************************");
   RCLCPP_INFO(get_logger(), "   Point Cloud Sub Component ");
@@ -42,6 +42,15 @@ PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
   // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
   
   readParameters();
+
+  _stats.resize(_camCount);
+  for(int i = 0; i < _camCount; i++) {
+    _stats[i] = std::make_unique<WinAvg>(500);
+  }
+  _times.resize(_camCount);
+  _firsts.resize(_camCount,false);
+  _counters.resize(_camCount,0);
+
   createSubscribers();
 }
 
@@ -83,6 +92,8 @@ void PointCloudComponent::createSubscribers()
     std::function<void(const sensor_msgs::msg::PointCloud2::SharedPtr msg)> bound_callback_func =
     std::bind(&PointCloudComponent::callback_pointcloud, this, _1, topic_name);
 
+    _qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+
     auto sub = create_subscription<sensor_msgs::msg::PointCloud2>(
       topic_name, _qos, bound_callback_func, _subOpt);
     _pcSubs.push_back(sub);
@@ -94,7 +105,51 @@ void PointCloudComponent::callback_pointcloud(const sensor_msgs::msg::PointCloud
 {
   RCLCPP_INFO_STREAM(get_logger(), "Received point cloud from topic: " << topic_name);
 
-  // Do something with the received point cloud
+  // ----> Extract index X from "pointcloud_X"
+  int idx = -1;
+  std::size_t pos = topic_name.find(_pcTopicPrefix);
+  if (pos != std::string::npos) {
+    std::string index_str = topic_name.substr(pos + _pcTopicPrefix.length());
+    idx = std::stoi(index_str);
+  } else {
+    return;
+  }
+  // <---- Extract index X from "pointcloud_X"
+
+  // ----> Calculate statistics
+  if (_firsts[idx]) {
+    _times[idx] =
+      std::chrono::high_resolution_clock::now();    // Set the start time point
+      _firsts[idx] = false;
+    return;
+  }
+
+  auto now = std::chrono::high_resolution_clock::now();
+  double elapsed_usec =
+    std::chrono::duration_cast<std::chrono::microseconds>(now - _times[idx])
+    .count();
+  _times[idx] = now;
+
+  double freq = 1e6 / elapsed_usec;
+  double avg_freq = _stats[idx]->addValue(freq);
+
+  if(freq>60.0)
+    return;
+
+  static double bw_scale = 8. / (1024. * 1024.);
+
+  int data_size = msg->data.size();
+  double bw = freq * bw_scale * data_size;
+  double bw_avg = avg_freq * bw_scale * data_size;
+
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(2) << " #"
+             << ++_counters[idx] << " - Freq: " << freq << " Hz (Avg: " << avg_freq
+            << " Hz) - BW: " << bw << " Mbps (Avg: " << bw_avg
+            << " Mbps) - Msg size: " << data_size / (1024. * 1024.) << " MB";
+
+  RCLCPP_INFO_STREAM(get_logger(), ss.str());
+  // <---- Calculate statistics
 }
 
 }  // namespace stereolabs

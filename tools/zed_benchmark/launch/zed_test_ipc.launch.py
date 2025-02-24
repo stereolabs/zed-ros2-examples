@@ -116,7 +116,8 @@ def launch_setup(context, *args, **kwargs):
                 output='screen',
                 parameters=[{
                     'topic_name': topic_name,
-                    'use_ros_log': True
+                    'use_ros_log': True,
+                    'avg_win_size': 5000
                 }]
             )
             actions.append(benchmark_node)

@@ -128,10 +128,12 @@ set(INC
 
 set(PC_INC_COMPINC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/include/pointcloud_component.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/components/include/winavg.hpp
 )
 
 set(PC_SRC_COMP
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/src/pointcloud_component.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/components/src/winavg.cpp
 )
 
 ###############################################################################

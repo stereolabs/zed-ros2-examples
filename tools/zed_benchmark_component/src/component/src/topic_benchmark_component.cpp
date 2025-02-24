@@ -28,7 +28,7 @@ using namespace std::placeholders;
 namespace stereolabs
 {
 
-const int QOS_QUEUE_SIZE = 100;
+const int QOS_QUEUE_SIZE = 1;
 
 TopicBenchmarkComponent::TopicBenchmarkComponent(
   const rclcpp::NodeOptions & options)
@@ -155,7 +155,7 @@ void TopicBenchmarkComponent::updateTopicInfo()
     }
   }
 
-  if (!mTopicAvailable.load()) {
+  if (!mTopicAvailable) {
     RCLCPP_INFO_STREAM_ONCE(
       get_logger(), "Waiting for topic '"
         << mTopicName
@@ -176,12 +176,12 @@ void TopicBenchmarkComponent::topicCallback(
   // msg->size() );
   if (first) {
     mLastRecTime =
-      std::chrono::steady_clock::now();    // Set the start time point
+      std::chrono::high_resolution_clock::now();    // Set the start time point
     first = false;
     return;
   }
 
-  auto now = std::chrono::steady_clock::now();
+  auto now = std::chrono::high_resolution_clock::now();
   double elapsed_usec =
     std::chrono::duration_cast<std::chrono::microseconds>(now - mLastRecTime)
     .count();
