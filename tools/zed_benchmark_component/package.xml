@@ -13,10 +13,8 @@
     <build_depend>ament_cmake_auto</build_depend>
     <build_depend>zed_topic_benchmark_interfaces</build_depend>
     <build_depend>rclcpp</build_depend>
-    <build_depend>rosx_introspection</build_depend>
     <exec_depend>zed_topic_benchmark_interfaces</exec_depend>
     <exec_depend>rclcpp</exec_depend>
-    <exec_depend>rosx_introspection</exec_depend>
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_lint_common</test_depend>
     <test_depend>ament_cmake_clang_format</test_depend>
