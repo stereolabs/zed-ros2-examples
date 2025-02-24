@@ -42,7 +42,7 @@ All the parameter arrays must have the same size:
 * `cam_ids`: An array containing the ID number of the cameras, e.g. `[0,1]`
 * `disable_tf`: Only the first camera is configured to broadcast the TF `map` -> `odom` -> `camera_link` to avoid TF conflicts. The TF broadcasting can be disabled by setting this parameter to `false`. This is required if an external Kalman filter that fuses different odometry sources is used.
 
-> :pushpin: **Note**: One of `cam_serials or `cam_ids` argument is required to uniquely identify the cameras of the system.
+> :pushpin: **Note**: One of `cam_serials` or `cam_ids` argument is required to uniquely identify the cameras of the system.
 
 ## Run the example
 
@@ -56,16 +56,17 @@ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,z
 
 **Note:** The parameters `cam_models` and `cam_serials` must be modified according to the configuration of your system.
 
-Example (with serial numbers):
+Example with serial numbers:
 
 ```bash
 ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[<front_camera_model>,<rear_camera_model>]' cam_serials:='[<front_camera_serial>,<rear_camera_serial>]'
 ```
 
-Example (with ID numbers):
+Example with ID numbers:
 
 ```bash
 ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[<front_camera_model>,<rear_camera_model>]' cam_ids:='[<front_camera_id>,<rear_camera_id>]'
+```
 
 > :pushpin: **Note**: For multi-GMSL2 camera setups, it's advisable to use camera IDs rather than Serial Numbers. Each camera ID linked to a GMSL2 wire remains consistent during reboots, unlike USB3 cameras, which may change.
 
