@@ -35,6 +35,9 @@ if(ROS2_FOUND)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_IRON)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_JAZZY)
     else()
         message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by the package '${PROJECT_NAME}'. Correct operation is not guaranteed.")
     endif()
@@ -43,7 +46,9 @@ else()
 endif()
 ################################################
 
-if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
+if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" 
+    OR ${FOUND_ROS2_DISTRO} STREQUAL "iron"
+    OR ${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
   # if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
   if(NOT CMAKE_BUILD_TYPE)
       set(CMAKE_BUILD_TYPE Release)

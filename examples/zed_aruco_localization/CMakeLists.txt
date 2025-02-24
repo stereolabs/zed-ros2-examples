@@ -35,6 +35,9 @@ if(ROS2_FOUND)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_IRON)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_JAZZY)
     else()
         message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} is not officially supported by the package '${PROJECT_NAME}'. Correct operation is not guaranteed.")
     endif()
@@ -123,7 +126,9 @@ add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 # create ament index resource which references the libraries in the binary dir
 set(node_plugins "")
 
-if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
+if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" 
+    OR ${FOUND_ROS2_DISTRO} STREQUAL "iron"
+    OR ${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
     ###############################################################################
     # SOURCES
 

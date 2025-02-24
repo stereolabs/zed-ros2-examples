@@ -37,7 +37,9 @@ public:
   virtual ~PointCloudComponent() {}
 
 protected:
-  void callback_pointcloud(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string& topic_name);
+  void callback_pointcloud(
+    const sensor_msgs::msg::PointCloud2::SharedPtr msg,
+    const std::string & topic_name);
 
   void readParameters();
   void createSubscribers();
@@ -65,7 +67,7 @@ private:
   std::vector<std::unique_ptr<WinAvg>> _stats;
   std::vector<std::chrono::high_resolution_clock::time_point> _times;
   std::vector<int> _counters;
-  std::vector<bool> _firsts;  
+  std::vector<bool> _firsts;
   // <---- Statistics
 };
 

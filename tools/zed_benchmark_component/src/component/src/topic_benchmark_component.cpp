@@ -199,7 +199,7 @@ void TopicBenchmarkComponent::topicCallback(
   if(!mUseRosLog) {
     ss << '\r';
   }
-  ss << std::fixed << std::setprecision(2) << "#"
+  ss        << std::fixed << std::setprecision(2) << "#"
             << ++mTopicCount << " - Freq: " << freq << " Hz (Avg: " << avg_freq
             << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
             << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) << " MB";
