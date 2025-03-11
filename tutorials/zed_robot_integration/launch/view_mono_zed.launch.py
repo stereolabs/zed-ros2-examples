@@ -25,9 +25,11 @@ from launch.actions import (
 )
 from launch.actions import (
     DeclareLaunchArgument,
-    OpaqueFunction,
-    SetEnvironmentVariable
+    OpaqueFunction
 )
+
+# Enable colored output
+os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
 # Cmaera name and model
 camera_name = 'zed'
@@ -97,7 +99,6 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription(
         [
-            SetEnvironmentVariable(name='RCUTILS_COLORIZED_OUTPUT', value='1'),
             DeclareLaunchArgument(
                 'use_zed_localization',
                 default_value='true',
