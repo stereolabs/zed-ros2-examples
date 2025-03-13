@@ -80,7 +80,7 @@ private:
   WinAvg mAvgFreq;
 
   // Time measuring
-  std::chrono::steady_clock::time_point mLastRecTime;
+  std::chrono::high_resolution_clock::time_point mLastRecTime;
 
   // Stats message publisher
   std::shared_ptr<rclcpp::Publisher<

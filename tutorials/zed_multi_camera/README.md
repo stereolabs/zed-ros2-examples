@@ -30,16 +30,19 @@ $ ros2 component list
   2  /zed_multi/zedx_rear
 ```
 
-> :pushpin: **Note**: all the nodes run in the same namespace `zed_multi`.
+> :pushpin: **Note**: All the nodes run in the same namespace `zed_multi`.
 
 ### Launch parameters
 
 All the parameter arrays must have the same size:
 
-* `cam_names`: {REQUIRED} An array containing the name of the cameras, e.g. `'[zed_front,zed_back]'`. **Note:** it is important that all the cameras have a different name to correctly distinguish them.
+* `cam_names`: {REQUIRED} An array containing the name of the cameras, e.g. `'[zed_front,zed_back]'`. **Note:** It is important that all the cameras have a different name to correctly distinguish them.
 * `cam_models`: {REQUIRED} An array containing the model of the cameras, e.g. `'[zed2i,zed2]'`
-* `cam_serials`: {REQUIRED} An array containing the serial numbers of the cameras, e.g. `[3001234,2001234]`
-* `disable_tf`: Only the first camera is configured to broadcast the TF `map` -> `odom` -> `camera_link` to avoid TF conflicts. The TF broadcasting can be disabled by setting this parameter to `false`. This is required is an external Kalman filter that fuses different odometry sources is used.
+* `cam_serials`: An array containing the serial number of the cameras, e.g. `[3001234,2001234]`
+* `cam_ids`: An array containing the ID number of the cameras, e.g. `[0,1]`
+* `disable_tf`: Only the first camera is configured to broadcast the TF `map` -> `odom` -> `camera_link` to avoid TF conflicts. The TF broadcasting can be disabled by setting this parameter to `false`. This is required if an external Kalman filter that fuses different odometry sources is used.
+
+> :pushpin: **Note**: One of `cam_serials` or `cam_ids` argument is required to uniquely identify the cameras of the system.
 
 ## Run the example
 
@@ -49,19 +52,27 @@ Launch the dual camera nodes by using the following command
 ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[zed2i,zed2]' cam_serials:='[31234567,21234567]'
 ```
 
-**Info:** to retrieve the serial number of each connected camera you can use the command `$ ZED_Explorer --all`.
+**Info:** To retrieve the serial number of each connected camera you can use the command `$ ZED_Explorer --all`.
 
-**Note:** the parameters `cam_models` and `cam_serials` must be modified according to the configuration of your system.
+**Note:** The parameters `cam_models` and `cam_serials` must be modified according to the configuration of your system.
 
-Example:
+Example with serial numbers:
 
 ```bash
 ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[<front_camera_model>,<rear_camera_model>]' cam_serials:='[<front_camera_serial>,<rear_camera_serial>]'
 ```
 
-### The Multi Camera URDF
+Example with ID numbers:
 
-It is important to create an URDF that defines the position of all the cameras with respect to a reference link.
+```bash
+ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_back]' cam_models:='[<front_camera_model>,<rear_camera_model>]' cam_ids:='[<front_camera_id>,<rear_camera_id>]'
+```
+
+> :pushpin: **Note**: For multi-GMSL2 camera setups, it's advisable to use camera IDs rather than Serial Numbers. Each camera ID linked to a GMSL2 wire remains consistent during reboots, unlike USB3 cameras, which may change.
+
+### The Multi-Camera URDF
+
+It is important to create a URDF that defines the position of all the cameras with respect to a reference link.
 
 We provide an example in 'urdf/zed_multi.urdf.xacro'.
 
@@ -78,7 +89,7 @@ First of all all reference links are created:
 The name of the reference link is contained in the xacro argument `multi_link`, the default value is `zed_multi_link`.
 A "virtual" link `camera_link` for each camera must be defined to correctly connect the URDF of each camera to the reference link.
 
-Next a joint to connect the reference link to the main link of each camera is created:
+Next, a joint to connect the reference link to the main link of each camera is created:
 
 ```xml
   <joint name="$(arg camera_name_0)_camera_joint" type="fixed">
@@ -99,9 +110,9 @@ A position and orientation must be provided for each camera with respect to the 
 `<origin xyz="x y z" rpy="r p y" />` 
 the position is in meters, the orientation in radians.
 
-**Important:** the first joint has `parent link` and `child link` inverted with respect to all the other joints. This is required because
-the first camera is the reference for visual odometry processing and in ROS a joint cannot have tro parents.
+**Important:** The first joint has `parent link` and `child link` inverted with respect to all the other joints. This is required because
+the first camera is the reference for visual odometry processing and in ROS a joint cannot have two parents.
 
-The following image display the TF tree generated for the dual camera configuration of this tutorial:
+The following image displays the TF tree generated for the dual camera configuration of this tutorial:
 
 ![TF Frames](./image/frames.png)
