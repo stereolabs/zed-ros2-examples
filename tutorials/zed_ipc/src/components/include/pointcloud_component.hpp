@@ -67,7 +67,7 @@ private:
   std::vector<std::unique_ptr<WinAvg>> _stats;
   std::vector<std::chrono::high_resolution_clock::time_point> _times;
   std::vector<int> _counters;
-  std::vector<bool> _firsts;  
+  std::vector<bool> _firsts;
   // <---- Statistics
 };
 

@@ -23,7 +23,7 @@ namespace stereolabs
 
 PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
 : Node("pointcloud_node", options)
-, _qos(1)
+  , _qos(1)
 {
   RCLCPP_INFO(get_logger(), "********************************");
   RCLCPP_INFO(get_logger(), "   Point Cloud Sub Component ");
@@ -44,12 +44,12 @@ PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
   readParameters();
 
   _stats.resize(_camCount);
-  for(int i = 0; i < _camCount; i++) {
+  for (int i = 0; i < _camCount; i++) {
     _stats[i] = std::make_unique<WinAvg>(500);
   }
   _times.resize(_camCount);
-  _firsts.resize(_camCount,false);
-  _counters.resize(_camCount,0);
+  _firsts.resize(_camCount, false);
+  _counters.resize(_camCount, 0);
 
   createSubscribers();
 }
@@ -90,7 +90,7 @@ void PointCloudComponent::createSubscribers()
     RCLCPP_INFO_STREAM(get_logger(), " * Subscribing to topic: " << topic_name);
 
     std::function<void(const sensor_msgs::msg::PointCloud2::SharedPtr msg)> bound_callback_func =
-    std::bind(&PointCloudComponent::callback_pointcloud, this, _1, topic_name);
+      std::bind(&PointCloudComponent::callback_pointcloud, this, _1, topic_name);
 
     _qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
 
@@ -122,7 +122,7 @@ void PointCloudComponent::callback_pointcloud(
   if (_firsts[idx]) {
     _times[idx] =
       std::chrono::high_resolution_clock::now();    // Set the start time point
-      _firsts[idx] = false;
+    _firsts[idx] = false;
     return;
   }
 
@@ -135,8 +135,9 @@ void PointCloudComponent::callback_pointcloud(
   double freq = 1e6 / elapsed_usec;
   double avg_freq = _stats[idx]->addValue(freq);
 
-  if(freq>60.0)
+  if (freq > 60.0) {
     return;
+  }
 
   static double bw_scale = 8. / (1024. * 1024.);
 
@@ -146,9 +147,9 @@ void PointCloudComponent::callback_pointcloud(
 
   std::stringstream ss;
   ss << std::fixed << std::setprecision(2) << " #"
-             << ++_counters[idx] << " - Freq: " << freq << " Hz (Avg: " << avg_freq
-            << " Hz) - BW: " << bw << " Mbps (Avg: " << bw_avg
-            << " Mbps) - Msg size: " << data_size / (1024. * 1024.) << " MB";
+     << ++_counters[idx] << " - Freq: " << freq << " Hz (Avg: " << avg_freq
+     << " Hz) - BW: " << bw << " Mbps (Avg: " << bw_avg
+     << " Mbps) - Msg size: " << data_size / (1024. * 1024.) << " MB";
 
   RCLCPP_INFO_STREAM(get_logger(), ss.str());
   // <---- Calculate statistics
