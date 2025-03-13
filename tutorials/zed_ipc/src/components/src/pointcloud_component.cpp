@@ -23,7 +23,7 @@ namespace stereolabs
 
 PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
 : Node("pointcloud_node", options)
-, _qos(10)
+  , _qos(10)
 {
   RCLCPP_INFO(get_logger(), "********************************");
   RCLCPP_INFO(get_logger(), "   Point Cloud Sub Component ");
@@ -40,7 +40,7 @@ PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
    */
 
   // https://github.com/ros2/ros2/wiki/About-Quality-of-Service-Settings
-  
+
   readParameters();
   createSubscribers();
 }
@@ -81,7 +81,7 @@ void PointCloudComponent::createSubscribers()
     RCLCPP_INFO_STREAM(get_logger(), " * Subscribing to topic: " << topic_name);
 
     std::function<void(const sensor_msgs::msg::PointCloud2::SharedPtr msg)> bound_callback_func =
-    std::bind(&PointCloudComponent::callback_pointcloud, this, _1, topic_name);
+      std::bind(&PointCloudComponent::callback_pointcloud, this, _1, topic_name);
 
     auto sub = create_subscription<sensor_msgs::msg::PointCloud2>(
       topic_name, _qos, bound_callback_func, _subOpt);
@@ -90,7 +90,9 @@ void PointCloudComponent::createSubscribers()
   // <---- Create the subscribers
 }
 
-void PointCloudComponent::callback_pointcloud(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string& topic_name)
+void PointCloudComponent::callback_pointcloud(
+  const sensor_msgs::msg::PointCloud2::SharedPtr msg,
+  const std::string & topic_name)
 {
   RCLCPP_INFO_STREAM(get_logger(), "Received point cloud from topic: " << topic_name);
 
@@ -98,7 +100,6 @@ void PointCloudComponent::callback_pointcloud(const sensor_msgs::msg::PointCloud
 }
 
 }  // namespace stereolabs
-
 
 
 #include "rclcpp_components/register_node_macro.hpp"

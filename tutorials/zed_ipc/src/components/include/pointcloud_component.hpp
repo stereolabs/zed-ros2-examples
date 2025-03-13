@@ -35,7 +35,9 @@ public:
   virtual ~PointCloudComponent() {}
 
 protected:
-  void callback_pointcloud(const sensor_msgs::msg::PointCloud2::SharedPtr msg, const std::string& topic_name);
+  void callback_pointcloud(
+    const sensor_msgs::msg::PointCloud2::SharedPtr msg,
+    const std::string & topic_name);
 
   void readParameters();
   void createSubscribers();

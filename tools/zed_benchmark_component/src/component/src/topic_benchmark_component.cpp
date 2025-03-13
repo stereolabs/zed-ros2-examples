@@ -196,14 +196,14 @@ void TopicBenchmarkComponent::topicCallback(
   double bw_avg = avg_freq * bw_scale * msg->size();
 
   std::stringstream ss;
-  if(!mUseRosLog) {
+  if (!mUseRosLog) {
     ss << '\r';
   }
   ss << std::fixed << std::setprecision(2) << "#"
-            << ++mTopicCount << " - Freq: " << freq << " Hz (Avg: " << avg_freq
-            << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
-            << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) << " MB";
-  if(!mUseRosLog) {
+     << ++mTopicCount << " - Freq: " << freq << " Hz (Avg: " << avg_freq
+     << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
+     << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) << " MB";
+  if (!mUseRosLog) {
     ss << std::flush;
 
     std::cout << ss.str();
