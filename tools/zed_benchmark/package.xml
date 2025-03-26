@@ -2,7 +2,7 @@
 <!-- Package format 3 according to http://www.ros.org/reps/rep-0149.html -->
 <package format="3">
     <name>zed_topic_benchmark</name>
-    <version>4.2.1</version>
+    <version>5.0.0</version>
     <description> This package contains tools to test the performance of the ZED ROS2 Wrapper </description>
     <maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
     <license>Apache License 2.0</license>
