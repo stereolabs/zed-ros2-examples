@@ -9,15 +9,16 @@ is required to correctly execute the ROS node to acquire data from a Stereolabs 
 
 ## Getting started
 
-   - First, be sure to have installed the main ROS package to integrate the ZED cameras in the ROS framework: [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper/#build-the-package)
-   - [Install](#Installation) the package
-   - Read the online documentation for [More information](https://www.stereolabs.com/docs/ros2/)
+- First, be sure to have installed the main ROS package to integrate the ZED cameras in the ROS framework: [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper/#build-the-package)
+- [Install](#Installation) the package
+- Read the online documentation for [More information](https://www.stereolabs.com/docs/ros2/)
 
 ### Prerequisites
 
-   - Ubuntu 20.04
-   - [ZED SDK](https://www.stereolabs.com/developers/release/latest/) v3.5 or later
-   - [ROS2 ROS 2 Foxy Fitzroy](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html)
+- ROS 2 Foxy Fitzroy (deprecated), ROS 2 Humble Hawksbill, or ROS2 Jazzy Jalisco:
+  - [Foxy on Ubuntu 20.04](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html) [**Not recommended. EOL reached**]
+  - [Humble on Ubuntu 22.04](https://docs.ros.org/en/humble/Installation/Linux-Install-Debians.html) [EOL May 2027]
+  - [Jazzy Jalisco on Ubuntu 24.04](https://docs.ros.org/en/jazzy/Installation/Linux-Install-Debians.html) [EOL May 2029]
 
 ### Installation
 
