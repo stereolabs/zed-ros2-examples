@@ -39,10 +39,10 @@ source ~/.bashrc
 
 ## Tutorials and examples
 
-### Rviz visualization examples
+### Data Visualization Examples
 
-- Example launch files to start a preconfigured instance of Rviz displaying all the ZED Wrapper node information: [zed_display_rviz2](./zed_display_rviz2)
-- ROS 2 plugin for ZED2 to visualize the results of the Object Detection module (bounding boxes and skeletons): [rviz-plugin-zed-od](./rviz-plugin-zed-od)
+- Example launch files to start a preconfigured instance of RViz2 displaying all the ZED Wrapper node information: [zed_display_rviz2](./zed_display_rviz2)
+- ROS 2 plugin for RViz2 to visualize the results of the Object Detection module (bounding boxes and skeletons): [rviz-plugin-zed-od](./rviz-plugin-zed-od)
 - Example layouts to display ZED Wrapper data in Foxglove Studio [zed_display_foxglove](./zed_display_foxglove/)
 
 ### Tutorials
