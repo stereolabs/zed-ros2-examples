@@ -15,7 +15,7 @@ This package contains examples and tutorials for effectively using ZED cameras w
 
 ### Prerequisites
 
-- ROS 2 Foxy Fitzroy (deprecated), ROS 2 Humble Hawksbill, or ROS2 Jazzy Jalisco:
+- ROS 2 Foxy Fitzroy (deprecated), ROS 2 Humble Hawksbill, or ROS 2 Jazzy Jalisco:
   - [Foxy on Ubuntu 20.04](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html) - [**Not recommended. EOL reached**]
   - [Humble on Ubuntu 22.04](https://docs.ros.org/en/humble/Installation/Linux-Install-Debians.html) - [EOL May 2027]
   - [Jazzy Jalisco on Ubuntu 24.04](https://docs.ros.org/en/jazzy/Installation/Linux-Install-Debians.html) - [EOL May 2029]
@@ -24,7 +24,7 @@ This package contains examples and tutorials for effectively using ZED cameras w
 
 The `zed-ros-examples` repository is a collection of [colcon](http://design.ros2.org/articles/build_tool.html) packages. 
 
-Open a terminal, clone the repository, update the dependencies and build the packages:
+Open a terminal, clone the repository, update the dependencies, and build the packages:
 
 ```bash
 cd ~/ros2_ws/src/ #use your current ros2 workspace folder
@@ -39,10 +39,11 @@ source ~/.bashrc
 
 ## Tutorials and examples
 
-### Rviz visualization examples
+### Data Visualization Examples
 
-- Example launch files to start a preconfigured instance of Rviz displaying all the ZED Wrapper node information: [zed_display_rviz2](./zed_display_rviz2)
-- ROS 2 plugin for ZED2 to visualize the results of the Object Detection module (bounding boxes and skeletons): [rviz-plugin-zed-od](./rviz-plugin-zed-od)
+- Example launch files to start a preconfigured instance of **RViz2** displaying all the ZED Wrapper node information: [zed_display_rviz2](./zed_display_rviz2)
+- ROS 2 plugin for **RViz2** to visualize the results of the Object Detection module (bounding boxes and skeletons): [rviz-plugin-zed-od](./rviz-plugin-zed-od)
+- Example layouts to display ZED Wrapper data in **Foxglove Studio** [zed_display_foxglove](./zed_display_foxglove/)
 
 ### Tutorials
 
