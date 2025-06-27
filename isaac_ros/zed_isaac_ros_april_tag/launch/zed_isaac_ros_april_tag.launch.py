@@ -42,6 +42,13 @@ os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
 def launch_setup(context, *args, **kwargs):
 
+    # Get the path to the example configuration file
+    example_config_path = os.path.join(
+        get_package_share_directory('zed_isaac_ros_april_tag'),
+        'config',
+        'zed_params.yaml'
+    )
+
     # List of actions to be launched
     actions = []
 
@@ -80,20 +87,43 @@ def launch_setup(context, *args, **kwargs):
             'camera_model': camera_model,
             'container_name': container_name,
             'namespace': namespace_val,
-            'enable_ipc': 'false'
+            'enable_ipc': 'false',
+            'ros_params_override_path': example_config_path
         }.items()
     )
     actions.append(zed_wrapper_launch)
 
+    # Isaac ROS Node to convert from ZED BGRA8 image to BGR8 required by AprilTag
+    isaac_converter_node = ComposableNode(
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::ImageFormatConverterNode',
+        name='zed_image_converter',
+        namespace=namespace_val,
+        parameters=[
+            {
+                'image_width': 1920,
+                'image_height': 1080,
+                'encoding_desired': 'bgr8',
+                'num_blocks': 40
+            }
+        ],
+        remappings=[
+            ('image_raw', 'zed/rgb/image_rect_color'),
+            ('image', 'zed/rgb/image_rect_color_bgr8')
+        ]
+    )
+
+    # add parameters for conversion node -> https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_image_pipeline/isaac_ros_image_proc/index.html#imageformatconverternode
+
     # AprilTag detection node
-    apriltag_node = ComposableNode(
+    isac_apriltag_node = ComposableNode(
         package='isaac_ros_apriltag',
         plugin='nvidia::isaac_ros::apriltag::AprilTagNode',
         name='apriltag',
         namespace=namespace_val,
         remappings=[
-                ('image', 'zed/rgb/camera_info'),
-                ('camera_info', 'zed/rgb/image_rect_color')
+                ('image', 'zed/rgb/image_rect_color_bgr8'),
+                ('camera_info', 'zed/rgb/camera_info')
         ],
         parameters=[{'size': 0.22,
                         'max_tags': 64,
@@ -101,12 +131,21 @@ def launch_setup(context, *args, **kwargs):
         ]
     )
 
-    # Add the AprilTag node to the container
+    container_full_name = '/' + namespace_val + '/' + container_name
+    # Load the Converter node into the container
+    load_converter_node = LoadComposableNodes(
+        composable_node_descriptions=[isaac_converter_node],
+        target_container=container_full_name
+    )
+    actions.append(load_converter_node)
+
+    # Load the AprilTag node into the container
     load_april_tag_node = LoadComposableNodes(
-        composable_node_descriptions=[apriltag_node],
-        target_container=('/' + namespace_val + '/' + container_name)
+        composable_node_descriptions=[isac_apriltag_node],
+        target_container=container_full_name
     )
     actions.append(load_april_tag_node)
+
     return actions
 
 def generate_launch_description():
