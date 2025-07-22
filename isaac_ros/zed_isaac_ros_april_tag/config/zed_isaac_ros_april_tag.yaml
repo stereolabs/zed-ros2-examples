@@ -3,3 +3,8 @@
 ---
 /**:
     ros__parameters:
+        size: 0.155 # The tag edge size in meters, assuming square markers. For example, 0.22
+        max_tags: 64 # The maximum number of tags to be detected. For example, 64
+        tile_size: 4 # Tile/window size used for adaptive thresholding in pixels. For example, 4
+        tag_family: 'tag36h11' # Tag family to detect. CUDA backend only supports tag36h11. CPU and PVA backends support tag36h11, tag16h5, tag25h9, tag36h10, tag36h11, circle21h7, circle49h12, custom48h12, standard41h12, standard52h13
+        backends: 'CUDA' # Backend to perform detection with. Options include CPU, CUDA, PVA

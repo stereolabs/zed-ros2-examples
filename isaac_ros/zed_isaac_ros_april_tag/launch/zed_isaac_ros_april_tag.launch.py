@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -42,11 +43,18 @@ os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
 def launch_setup(context, *args, **kwargs):
 
-    # Get the path to the example configuration file
-    example_config_path = os.path.join(
+    # Get the path to the camera configuration file
+    camera_config_override_path = os.path.join(
         get_package_share_directory('zed_isaac_ros_april_tag'),
         'config',
         'zed_params.yaml'
+    )
+
+    # Get the path to the AprilTag configuration file
+    apriltag_config_path = os.path.join(
+        get_package_share_directory('zed_isaac_ros_april_tag'),
+        'config',
+        'zed_isaac_ros_april_tag.yaml'
     )
 
     # List of actions to be launched
@@ -60,7 +68,7 @@ def launch_setup(context, *args, **kwargs):
     
     # ROS 2 Component Container
     container_name = 'zed_container'
-    info = '* Starting Composable node container: /' + namespace_val + '/' + container_name
+    info = '* Starting Composable node container: ' + namespace_val + '/' + container_name
     actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
     # Note: It is crucial that the 'executable' field is set to be 'component_container_mt'
@@ -88,10 +96,41 @@ def launch_setup(context, *args, **kwargs):
             'container_name': container_name,
             'namespace': namespace_val,
             'enable_ipc': 'false',
-            'ros_params_override_path': example_config_path
+            'ros_params_override_path': camera_config_override_path
         }.items()
     )
     actions.append(zed_wrapper_launch)
+
+    # Read the resolution from the ZED parameters file
+    with open(camera_config_override_path, 'r') as f:
+        configuration = yaml.safe_load(f)
+        print(f'Loaded configuration: {configuration}')
+        resolution = configuration["/**"]["ros__parameters"]["general"]["grab_resolution"]
+        pub_resolution = configuration["/**"]["ros__parameters"]["general"]["pub_resolution"]
+        pub_downscale_factor = configuration["/**"]["ros__parameters"]["general"]["pub_downscale_factor"]
+        if pub_resolution == 'CUSTOM':
+            rescale = pub_downscale_factor
+        else:
+            rescale = 1.0
+
+    if resolution == 'HD2K':
+        image_width = 2208
+        image_height = 1242
+    elif resolution == 'HD1200':
+        image_width = 1280
+        image_height = 720
+    elif resolution == 'HD1080':
+        image_width = 1920
+        image_height = 1080
+    elif resolution == 'HD720':
+        image_width = 1280
+        image_height = 720
+    elif resolution == 'SVGA':
+        image_width = 960
+        image_height = 600
+    elif resolution == 'VGA':
+        image_width = 672
+        image_height = 376
 
     # Isaac ROS Node to convert from ZED BGRA8 image to BGR8 required by AprilTag
     isaac_converter_node = ComposableNode(
@@ -101,8 +140,8 @@ def launch_setup(context, *args, **kwargs):
         namespace=namespace_val,
         parameters=[
             {
-                'image_width': 1920,
-                'image_height': 1080,
+                'image_width': int(image_width / rescale),
+                'image_height': int(image_height / rescale),
                 'encoding_desired': 'bgr8',
                 'num_blocks': 40
             }
@@ -125,13 +164,10 @@ def launch_setup(context, *args, **kwargs):
                 ('image', 'zed/rgb/image_rect_color_bgr8'),
                 ('camera_info', 'zed/rgb/camera_info')
         ],
-        parameters=[{'size': 0.22,
-                        'max_tags': 64,
-                        'tile_size': 4}
-        ]
+        parameters=[apriltag_config_path]
     )
 
-    container_full_name = '/' + namespace_val + '/' + container_name
+    container_full_name = namespace_val + '/' + container_name
     # Load the Converter node into the container
     load_converter_node = LoadComposableNodes(
         composable_node_descriptions=[isaac_converter_node],
