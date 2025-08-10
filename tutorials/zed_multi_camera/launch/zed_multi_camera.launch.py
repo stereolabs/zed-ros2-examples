@@ -47,7 +47,9 @@ def launch_setup(context, *args, **kwargs):
     # List of actions to be launched
     actions = []
 
-    namespace_val = 'zed_multi'
+    # Namespace can be overridden at launch (defaults set in generate_launch_description)
+    ns_cfg = LaunchConfiguration('namespace')
+    namespace_val = ns_cfg.perform(context)
     
     # URDF/xacro file to be loaded by the Robot State Publisher node
     multi_zed_xacro_path = os.path.join(
@@ -203,18 +205,23 @@ def generate_launch_description():
         [
             DeclareLaunchArgument(
                 'cam_names',
-                description='An array containing the name of the cameras, e.g. [zed_front,zed_back]'),
+                default_value='[static_zedxmini_side,static_zedxmini_center]',
+                description='An array containing the name of the cameras, e.g. [static_zedxmini_side,static_zedxmini_center]'),
             DeclareLaunchArgument(
                 'cam_models',
                 description='An array containing the model of the cameras, e.g. [zed2i,zed2]'),
             DeclareLaunchArgument(
                 'cam_serials',
-                default_value=[],
+                default_value='[51933055,58338256]',
                 description='An array containing the serial number of the cameras, e.g. [35199186,23154724]'),
             DeclareLaunchArgument(
                 'cam_ids',
                 default_value=[],
                 description='An array containing the ID number of the cameras, e.g. [0,1]'),
+            DeclareLaunchArgument(
+                'namespace',
+                default_value='camera',
+                description='Namespace under which to launch all cameras'),
             DeclareLaunchArgument(
                 'disable_tf',
                 default_value='False',

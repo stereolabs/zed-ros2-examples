@@ -42,8 +42,8 @@
   
   <!-- Define the required parameters -->
   <xacro:arg name="multi_link" default="zed_multi_link" />
-  <xacro:arg name="camera_name_0" default="zed_front" />
-  <xacro:arg name="camera_name_1" default="zed_rear" />
+  <xacro:arg name="camera_name_0" default="static_zedxmini_side" />
+  <xacro:arg name="camera_name_1" default="static_zedxmini_center" />
 
   <!-- Define the reference links -->
   <link name="$(arg multi_link)" />
