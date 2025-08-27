@@ -1,0 +1,40 @@
+# Z-03 Multi-Camera Configuration
+# Complete camera configuration including namespace, placement, hardware details
+
+# Global configuration
+namespace: "camera"
+
+# Transform (TF) Configuration
+# disable_tf: Controls TF broadcasting behavior
+#   false: Normal operation - cameras publish transforms (recommended)
+#   true:  Disable TF broadcasting - useful for external odometry fusion
+disable_tf: false
+
+# Camera configurations
+# Using same names as the original working zed_multi_camera.launch.py
+cameras:
+  static_zedxmini_side:
+    camera_model: "zedxm"
+    serial_number: "51933055"
+    camera_id: 0
+    sub_namespace: "static_side"
+    camera_name: "zedxmini"
+
+  static_zedxmini_center:
+    camera_model: "zedxm"
+    serial_number: "53972069"
+    camera_id: 1
+    sub_namespace: "static_center"
+    camera_name: "zedxmini"
+
+
+# NOTE: All camera configurations must be explicitly defined above.
+# No defaults are provided - missing configurations will result in errors.
+
+# URDF configuration
+urdf:
+  multi_link: "zed_multi_link"
+
+# Container configuration
+container:
+  name: "zed_multi_container"

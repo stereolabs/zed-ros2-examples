@@ -17,7 +17,7 @@
 -->
 
 <!-- *** THIS IS AN EXAMPLE FILE FOR A MULTI-CAMERA CONFIGURATION *** -->
-<!-- 
+<!--
   This xacro file allows to configure a multi-camera system with two cameras
   mounted on a plate, distant 12 cm and looking at opposite directions.
   It demonstrates how to configure the URDF/xacro file to create a working
@@ -39,11 +39,11 @@
 <robot name="zed_multi_camera" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <xacro:property name="M_PI"     value="3.1415926535897931" />
-  
+
   <!-- Define the required parameters -->
   <xacro:arg name="multi_link" default="zed_multi_link" />
-  <xacro:arg name="camera_name_0" default="static_zedxmini_side" />
-  <xacro:arg name="camera_name_1" default="static_zedxmini_center" />
+  <xacro:arg name="camera_name_0" default="static_side" />
+  <xacro:arg name="camera_name_1" default="static_center" />
 
   <!-- Define the reference links -->
   <link name="$(arg multi_link)" />
@@ -68,5 +68,5 @@
   </joint>
 
   <!-- NOTE: Replicate the same XML code above for all the cameras of the multi-camera system if more cameras are used -->
-  
+
 </robot>

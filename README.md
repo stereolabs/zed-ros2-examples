@@ -22,7 +22,7 @@ This package contains examples and tutorials for effectively using ZED cameras w
 
 ### Build the package
 
-The `zed-ros-examples` repository is a collection of [colcon](http://design.ros2.org/articles/build_tool.html) packages. 
+The `zed-ros-examples` repository is a collection of [colcon](http://design.ros2.org/articles/build_tool.html) packages.
 
 Open a terminal, clone the repository, update the dependencies, and build the packages:
 
@@ -64,8 +64,34 @@ source ~/.bashrc
 
 - **ZED Benchmark tool**: used to test topics and get statistics on frequency and bandwidth to be plotted.
 
- 
 
+## Launch the multi-camera for Zordi computers
 
+After building and sourcing, launch the dual ZED-X Mini setup using the config-driven approach:
 
+```bash
+source ~/ros2_ws/install/setup.bash
+sudo systemctl restart zed_x_daemon
+ZED_Explorer -a
+export DISPLAY=:0 # For remote ssh -X
+xhost +local:
+ros2 launch zed_multi_camera zordi_multi_camera.launch.py \
+  config:=/home/zordi/ros2_ws/src/zed-ros2-examples/tutorials/zed_multi_camera/configs/z-03.yaml
+```
 
+Or use the default config location (recommended):
+```bash
+ros2 launch zed_multi_camera zordi_multi_camera.launch.py
+```
+
+This publishes topics under the hierarchical namespace structure:
+- `/camera/static_side/zedxmini/...` (side camera)
+- `/camera/static_center/zedxmini/...` (center camera)
+
+### Configuration
+
+The camera setup is defined in `z-03.yaml` which includes:
+- Camera serial numbers and models
+- Namespace structure (`camera/static_side`, `camera/static_center`)
+- TF broadcasting settings
+- Container configuration (single shared container: `/camera/zed_multi_container`)

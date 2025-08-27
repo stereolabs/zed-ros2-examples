@@ -66,9 +66,9 @@ add_custom_target(all_${PROJECT_NAME}_files SOURCES ${all_files})
 ###############################################################################
 # INSTALL
 
-# Install LAUNCH files
+# Install LAUNCH files, URDF files, and CONFIG files
 install(DIRECTORY
-  launch urdf
+  launch urdf configs
   DESTINATION share/${PROJECT_NAME}
 )
 
