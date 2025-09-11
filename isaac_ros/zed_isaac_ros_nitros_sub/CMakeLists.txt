@@ -77,7 +77,7 @@ if(ROS2_FOUND)
 
     # Install LAUNCH files
     install(DIRECTORY
-    launch config rviz2
+    launch config
     DESTINATION share/${PROJECT_NAME}
     )
 
