@@ -4,62 +4,61 @@ project(zed_isaac_ros_nitros_sub)
 ## Generate symbols for IDE indexer
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Check ISAAC ROS Nitros availability
-find_package(isaac_ros_common QUIET)
 
-# If Isaac ROS is not available the example will not be built
-if(isaac_ros_common_FOUND)  
-    ################################################
-    # Check the ROS2 version
+################################################
+# Check the ROS2 version
 
+set(ROS2_FOUND FALSE)
+if(DEFINED ENV{ROS_DISTRO})
+    set(FOUND_ROS2_DISTRO $ENV{ROS_DISTRO})
+    set(ROS2_FOUND TRUE)
+    #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
+else()
+    message("* ROS2 distro variable not set. Trying to figure it out...")
+    set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;jazzy;rolling")
     set(ROS2_FOUND FALSE)
-    if(DEFINED ENV{ROS_DISTRO})
-        set(FOUND_ROS2_DISTRO $ENV{ROS_DISTRO})
-        set(ROS2_FOUND TRUE)
-        #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
-    else()
-        message("* ROS2 distro variable not set. Trying to figure it out...")
-        set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;jazzy;rolling")
-        set(ROS2_FOUND FALSE)
-        foreach(distro ${ROS2_DISTROS})
-            if(NOT ROS2_FOUND)
-                find_path(RCLCPP_H rclcpp.hpp PATHS /opt/ros/${distro}/include/rclcpp)
-                if(RCLCPP_H)
-                    message("* Found ROS2 ${distro}")
-                    set(FOUND_ROS2_DISTRO ${distro})
-                    set(ROS2_FOUND TRUE)
-                endif()
+    foreach(distro ${ROS2_DISTROS})
+        if(NOT ROS2_FOUND)
+            find_path(RCLCPP_H rclcpp.hpp PATHS /opt/ros/${distro}/include/rclcpp)
+            if(RCLCPP_H)
+                message("* Found ROS2 ${distro}")
+                set(FOUND_ROS2_DISTRO ${distro})
+                set(ROS2_FOUND TRUE)
             endif()
-        endforeach()
-    endif()
-
-    if(ROS2_FOUND)
-        if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
-            #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-            add_definitions(-DFOUND_HUMBLE)
-        elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
-            #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-            add_definitions(-DFOUND_IRON)
-        elseif(${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
-            #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-            add_definitions(-DFOUND_JAZZY)
-        else()
-            message("*** WARNING *** Unsupported ROS2 ${FOUND_ROS2_DISTRO}. '${PROJECT_NAME}' may not work correctly.")
         endif()
+    endforeach()
+endif()
+
+if(ROS2_FOUND)
+    if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_HUMBLE)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_IRON)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
+        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
+        add_definitions(-DFOUND_JAZZY)
     else()
-        message("*** WARNING *** ROS2 distro is unknown. This package could not work correctly.")
+        message("*** WARNING *** Unsupported ROS2 ${FOUND_ROS2_DISTRO}. '${PROJECT_NAME}' may not work correctly.")
     endif()
-    ################################################
+else()
+    message("*** WARNING *** ROS2 distro is unknown. This package could not work correctly.")
+endif()
+################################################
 
-    if(ROS2_FOUND)
-        #############################################
-        # Dependencies
+if(ROS2_FOUND)
+    #############################################
+    # Dependencies
 
-        find_package(ament_cmake_auto REQUIRED)
-        ament_auto_find_build_dependencies()
+    find_package(ament_cmake_auto REQUIRED)
+    ament_auto_find_build_dependencies()
 
-        find_package(zed_components REQUIRED)
-        find_package(zed_wrapper REQUIRED)
+    # Check ISAAC ROS Nitros availability
+    find_package(isaac_ros_common QUIET)
+
+    # If Isaac ROS is not available the example will not be built
+    if(isaac_ros_common_FOUND)
 
         if(BUILD_TESTING)
         find_package(ament_lint_auto REQUIRED)
@@ -82,9 +81,7 @@ if(isaac_ros_common_FOUND)
         install(DIRECTORY
         launch config
         DESTINATION share/${PROJECT_NAME}
-        )
-
-        ament_package()
-    endif(ROS2_FOUND)
-
-endif(isaac_ros_common_FOUND)
+        )        
+    endif(isaac_ros_common_FOUND)
+    ament_package()
+endif(ROS2_FOUND)
