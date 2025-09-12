@@ -12,41 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef WINAVG_HPP_
-#define WINAVG_HPP_
+#ifndef ZED_NITROS_SUB__COMPONENT_HPP_
+#define ZED_NITROS_SUB__COMPONENT_HPP_
 
-#include <cstddef>  // size_t
-#include <deque>    // std::dequeue
-#include <mutex>
+#include <rcutils/logging_macros.h>
+
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/image.hpp>
+
+#include "nitros_sub_visibility_control.hpp"
 
 namespace stereolabs
 {
 
-class WinAvg
+class ZedNitrosSubComponent : public rclcpp::Node
 {
 public:
-  explicit WinAvg(size_t win_size = 15);
-  ~WinAvg();
+  ZED_NITROS_SUB_COMPONENT_PUBLIC
+  explicit ZedNitrosSubComponent(const rclcpp::NodeOptions & options);
 
-  double setNewSize(size_t win_size);
-  double addValue(double val);
+  virtual ~ZedNitrosSubComponent() {}
 
-  /// @brief Get the current average of the stored values
-  /// @return average of the stored values
-  double getAvg();
-
-  inline size_t size() {return mVals.size();}
+protected:
+  void sub_callback(
+    const sensor_msgs::msg::Image::ConstSharedPtr & img);
 
 private:
-  size_t mWinSize;
-
-  std::deque<double>
-  mVals;      // The values in the queue used to calculate the windowed average
-  double mSumVals = 0.0;  // The updated sum of the values in the queue
-
-  std::mutex mQueueMux;
+  // QoS parameters
+  rclcpp::QoS mDefaultQoS;
 };
 
 }  // namespace stereolabs
 
-#endif  // WINAVG_HPP_
+#endif  // ZED_NITROS_SUB__COMPONENT_HPP_
