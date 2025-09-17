@@ -17,6 +17,8 @@
 
 #include <rcutils/logging_macros.h>
 
+#include <isaac_ros_managed_nitros/managed_nitros_subscriber.hpp>
+#include <isaac_ros_nitros_image_type/nitros_image_view.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 
@@ -34,12 +36,41 @@ public:
   virtual ~ZedNitrosSubComponent() {}
 
 protected:
-  void sub_callback(
-    const sensor_msgs::msg::Image::ConstSharedPtr & img);
+  // Read the parameters from the parameter server
+  void read_parameters();
+
+  // Create and enable the standard ROS 2 subscriber
+  void create_std_subscriber();
+
+  // Create and enable the Nitros subscriber
+  void create_nitros_subscriber();
+
+// Standard ROS2 subscriber callback for the image topic
+  void std_sub_callback(const sensor_msgs::msg::Image::ConstSharedPtr & img);
+
+  // Nitros subscriber callback for the image topic
+  void nitros_sub_callback(
+    const nvidia::isaac_ros::nitros::NitrosImageView & img);
 
 private:
   // QoS parameters
-  rclcpp::QoS mDefaultQoS;
+  rclcpp::QoS _defaultQoS;
+
+  // Parameters
+  int _totSamples = 100;  // Total number of samples to process before exiting
+  bool _debugNitros = false;  // Enable Nitros debug information
+
+  // Message type
+  bool _isDepth = false;  // True if the topic is a depth map
+  std::string _encoding;  // Encoding of the subscribed image topic
+
+  // Standard subscriber to the image topic
+  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _sub;
+
+  // Nitros subscriber to the image topic
+  std::shared_ptr<nvidia::isaac_ros::nitros::ManagedNitrosSubscriber<
+      nvidia::isaac_ros::nitros::NitrosImageView>>
+  _nitrosSub;
 };
 
 }  // namespace stereolabs

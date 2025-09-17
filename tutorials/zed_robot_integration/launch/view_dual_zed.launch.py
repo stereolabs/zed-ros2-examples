@@ -31,7 +31,7 @@ from launch.actions import (
 # Enable colored output
 os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
-# Cmaera name and model
+# Camera name and model
 camera_name_1 = 'zed_front'
 camera_name_2 = 'zed_rear'
 camera_model_1 = 'zedx'
