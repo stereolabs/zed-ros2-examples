@@ -4,15 +4,15 @@
 /**:
     ros__parameters:
         general:
-            grab_resolution: 'HD720' # The native camera grab resolution. 'HD2K', 'HD1080', 'HD720', 'VGA', 'AUTO'
-            grab_frame_rate: 60 # ZED SDK internal grabbing rate
+            grab_resolution: 'HD1060' # The native camera grab resolution. 'HD2K', 'HD1080', 'HD720', 'VGA', 'AUTO'
+            grab_frame_rate: 30 # ZED SDK internal grabbing rate
             pub_resolution: 'NATIVE' # The resolution used for image and depth map publishing. 'NATIVE' to use the same `general.grab_resolution` - `CUSTOM` to apply the `general.pub_downscale_factor` downscale factory to reduce bandwidth in transmission
             pub_downscale_factor: 2.0 # rescale factor used to rescale image before publishing when 'pub_resolution' is 'CUSTOM'
-            pub_frame_rate: 60.0 # [DYNAMIC] Frequency of publishing of visual images and depth data (not the Point Cloud, see 'depth.point_cloud_freq'). This value must be equal or less than the camera framerate.
+            pub_frame_rate: 30.0 # [DYNAMIC] Frequency of publishing of visual images and depth data (not the Point Cloud, see 'depth.point_cloud_freq'). This value must be equal or less than the camera framerate.
             
         test:
             tot_samples: 1000 # Total number of samples to process before exiting
 
         debug:
-            debug_nitros: true # Enable Nitros debug information
+            debug_nitros: false # Enable Nitros debug information
             use_pub_timestamps: true # Used to measure the real communication latency. 

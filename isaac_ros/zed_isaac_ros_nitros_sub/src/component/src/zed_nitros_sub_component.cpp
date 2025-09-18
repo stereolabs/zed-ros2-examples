@@ -33,8 +33,103 @@ ZedNitrosSubComponent::ZedNitrosSubComponent(const rclcpp::NodeOptions & options
   // Read the parameters from the parameter server
   read_parameters();
 
+  // Initialize the benchmark results statistics
+  initialize_benchmark_results();
+
   // Start the example and perform the benchmark
   create_std_subscriber();
+}
+
+void ZedNitrosSubComponent::initialize_benchmark_results()
+{
+  // Initialize the benchmark results statistics with a lambda function
+  auto init_stat = [](BenchmarkTest & stat, const std::string & name) {
+      stat.name = name;
+      stat.values_sec.clear();
+      stat.total_sec = 0.0;
+      stat.min_sec = std::numeric_limits<double>::max();
+      stat.max_sec = 0.0;
+      stat.avg_sec = 0.0;
+      stat.std_dev_sec = 0.0;
+    };
+
+  // Initialize both standard and Nitros benchmark results
+  init_stat(_benchmarkResults.latency_std, "Standard Subscriber Latency");
+  init_stat(_benchmarkResults.latency_nitros, "Nitros Subscriber Latency");
+}
+
+void ZedNitrosSubComponent::update_benchmark_stats(
+  BenchmarkTest & benchmark, double new_value)
+{
+  benchmark.values_sec.push_back(new_value);
+  benchmark.total_sec += new_value;
+  RCLCPP_INFO(
+    this->get_logger(), " * New sample value: %.6f sec - Min: %.6f sec", new_value,
+    benchmark.min_sec);
+  if (new_value < benchmark.min_sec) {
+    benchmark.min_sec = new_value;
+    RCLCPP_INFO(this->get_logger(), " * New min value: %.6f sec", benchmark.min_sec);
+  }
+  RCLCPP_INFO(
+    this->get_logger(), " * New sample value: %.6f sec - Max: %.6f sec", new_value,
+    benchmark.max_sec);
+  if (new_value > benchmark.max_sec) {
+    benchmark.max_sec = new_value;
+    RCLCPP_INFO(this->get_logger(), " * New max value: %.6f sec", benchmark.max_sec);
+  }
+}
+
+void ZedNitrosSubComponent::calculate_benchmark_results(BenchmarkTest & benchmark)
+{
+  if (benchmark.values_sec.empty()) {
+    RCLCPP_WARN(this->get_logger(), "No samples received, cannot calculate benchmark results.");
+    return;
+  }
+
+  double sample_count = static_cast<double>(benchmark.values_sec.size());
+
+  benchmark.avg_sec = benchmark.total_sec / sample_count;
+
+  // For simplicity, we are not calculating the standard deviation in this example.
+  double sum_sq_diff = 0.0;
+  for (const auto & sample_val : benchmark.values_sec) {
+    double diff = sample_val - benchmark.avg_sec;
+    sum_sq_diff += diff * diff;
+  }
+  benchmark.std_dev_sec = std::sqrt(sum_sq_diff / sample_count);
+
+  RCLCPP_INFO(this->get_logger(), " * Samples: %lu", static_cast<unsigned long>(sample_count));
+  RCLCPP_INFO(this->get_logger(), " * Min: %.6f sec", benchmark.min_sec);
+  RCLCPP_INFO(this->get_logger(), " * Max: %.6f sec", benchmark.max_sec);
+  RCLCPP_INFO(this->get_logger(), " * Avg: %.6f sec", benchmark.avg_sec);
+  RCLCPP_INFO(this->get_logger(), " * Std Dev: %.6f sec", benchmark.std_dev_sec);
+}
+
+void ZedNitrosSubComponent::compare_benchmark_results(
+  const BenchmarkTest & benchmark1,
+  const BenchmarkTest & benchmark2)
+{
+  RCLCPP_INFO(this->get_logger(), "Benchmark comparison:");
+  RCLCPP_INFO(this->get_logger(), " * %s vs %s", benchmark1.name.c_str(), benchmark2.name.c_str());
+
+  RCLCPP_INFO(
+    this->get_logger(), " * Avg Latency: %.6f sec vs %.6f sec", benchmark1.avg_sec,
+    benchmark2.avg_sec);
+  if (benchmark1.avg_sec < benchmark2.avg_sec) {
+    double diff = benchmark2.avg_sec - benchmark1.avg_sec;
+    double percent = (diff / benchmark1.avg_sec) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "   - %s is lower by %.6f sec (%.2f%% faster)",
+      benchmark1.name.c_str(), diff, percent);
+  } else if (benchmark2.avg_sec < benchmark1.avg_sec) {
+    double diff = benchmark1.avg_sec - benchmark2.avg_sec;
+    double percent = (diff / benchmark2.avg_sec) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "   - %s is lower by %.6f sec (%.2f%% faster)",
+      benchmark2.name.c_str(), diff, percent);
+  } else {
+    RCLCPP_INFO(this->get_logger(), "   - Both have the same average latency.");
+  }
 }
 
 void ZedNitrosSubComponent::read_parameters()
@@ -152,20 +247,26 @@ void ZedNitrosSubComponent::std_sub_callback(
   int32_t ts_nsec = img->header.stamp.nanosec;
   img_ts = rclcpp::Time(ts_sec, ts_nsec, now.get_clock_type());
 
+  double latency = now.seconds() - img_ts.seconds();
+
   RCLCPP_INFO(
-    this->get_logger(), " * Latency: %f sec",
-    now.seconds() - img_ts.seconds());
+    this->get_logger(), " * Latency: %f sec", latency);
 
   // Check if we acquired the desired number of samples
   static int std_sample_count = 0;
-  std_sample_count++;
+  std_sample_count++; \
   RCLCPP_INFO(
     this->get_logger(), " *** Sample %d/%d ***", std_sample_count, _totSamples);
 
+  // Update benchmark results here
+  update_benchmark_stats(_benchmarkResults.latency_std, latency);
+
+  // Check if we acquired the desired number of samples
   if (std_sample_count >= _totSamples) {
     RCLCPP_INFO(this->get_logger(), "Received %d standard samples. Unsubscribing...", _totSamples);
     _sub.reset();
     RCLCPP_INFO(this->get_logger(), "Standard subscriber unsubscribed.");
+    RCLCPP_INFO(this->get_logger(), "-----------------------------------");
 
     // Create and enable the Nitros subscriber
     create_nitros_subscriber();
@@ -199,7 +300,8 @@ void ZedNitrosSubComponent::nitros_sub_callback(
   int32_t ts_sec = img.GetTimestampSeconds();
   int32_t ts_nsec = img.GetTimestampNanoseconds();
   img_ts = rclcpp::Time(ts_sec, ts_nsec, now.get_clock_type());
-  RCLCPP_INFO(this->get_logger(), " * Latency: %f sec", now.seconds() - img_ts.seconds());
+  double latency = now.seconds() - img_ts.seconds();
+  RCLCPP_INFO(this->get_logger(), " * Latency: %f sec", latency);
 
   // Check if we acquired the desired number of samples
   static int nitros_sample_count = 0;
@@ -207,13 +309,27 @@ void ZedNitrosSubComponent::nitros_sub_callback(
   RCLCPP_INFO(
     this->get_logger(), " *** Sample %d/%d ***", nitros_sample_count, _totSamples);
 
+  // Update benchmark results here
+  update_benchmark_stats(_benchmarkResults.latency_nitros, latency);
+
+  // Check if we acquired the desired number of samples
   if (nitros_sample_count >= _totSamples) {
     RCLCPP_INFO(this->get_logger(), "Received %d Nitros samples. Unsubscribing...", _totSamples);
     _nitrosSub.reset();
     RCLCPP_INFO(this->get_logger(), "Nitros subscriber unsubscribed.");
 
     // Calculate the statistics
-    RCLCPP_INFO(this->get_logger(), "Example completed.");
+    // Calculate the statistics
+    RCLCPP_INFO(this->get_logger(), "-----------------------------------");
+    RCLCPP_INFO(this->get_logger(), "Standard Subscriber benchmark results:");
+    calculate_benchmark_results(_benchmarkResults.latency_std);
+    RCLCPP_INFO(this->get_logger(), "-----------------------------------");
+    RCLCPP_INFO(this->get_logger(), "Nitros Subscriber benchmark results:");
+    calculate_benchmark_results(_benchmarkResults.latency_nitros);
+    RCLCPP_INFO(this->get_logger(), "-----------------------------------");
+    compare_benchmark_results(
+      _benchmarkResults.latency_std,
+      _benchmarkResults.latency_nitros);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
 
     // Perform a clean shutdown of the node

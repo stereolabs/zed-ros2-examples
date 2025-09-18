@@ -27,6 +27,24 @@
 namespace stereolabs
 {
 
+struct BenchmarkTest
+{
+  std::string name;
+  std::vector<double> values_sec;
+
+  double total_sec;
+  double min_sec;
+  double max_sec;
+  double avg_sec;
+  double std_dev_sec;
+};
+
+struct BenchmarkResults
+{
+  BenchmarkTest latency_std;
+  BenchmarkTest latency_nitros;
+};
+
 class ZedNitrosSubComponent : public rclcpp::Node
 {
 public:
@@ -52,6 +70,20 @@ protected:
   void nitros_sub_callback(
     const nvidia::isaac_ros::nitros::NitrosImageView & img);
 
+  // Initialize the benchmark results statistics
+  void initialize_benchmark_results();
+
+  // Update benchmark results statistics
+  void update_benchmark_stats(BenchmarkTest & benchmark, double new_value);
+
+  // Calculate and print the benchmark results statistics
+  void calculate_benchmark_results(BenchmarkTest & benchmark);
+
+  // Compare two benchmark results and print the comparison
+  void compare_benchmark_results(
+    const BenchmarkTest & benchmark1,
+    const BenchmarkTest & benchmark2);
+
 private:
   // QoS parameters
   rclcpp::QoS _defaultQoS;
@@ -71,6 +103,9 @@ private:
   std::shared_ptr<nvidia::isaac_ros::nitros::ManagedNitrosSubscriber<
       nvidia::isaac_ros::nitros::NitrosImageView>>
   _nitrosSub;
+
+  // Benchmark results
+  BenchmarkResults _benchmarkResults;
 };
 
 }  // namespace stereolabs
