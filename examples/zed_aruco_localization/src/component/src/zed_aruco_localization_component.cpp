@@ -37,7 +37,7 @@
 #elif defined FOUND_FOXY
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #else
-#error Unsupported ROS2 distro
+#error Unsupported ROS 2 distro
 #endif
 
 using namespace std::chrono_literals;

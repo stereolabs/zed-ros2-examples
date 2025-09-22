@@ -20,7 +20,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
-#include <rclcpp/generic_subscription.hpp>  // Not available before ROS2 Humble
+#include <rclcpp/generic_subscription.hpp>  // Not available before ROS 2 Humble
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <string>

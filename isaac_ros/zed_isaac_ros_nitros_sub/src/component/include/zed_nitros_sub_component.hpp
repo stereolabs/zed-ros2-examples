@@ -63,7 +63,7 @@ protected:
   // Create and enable the Nitros subscriber
   void create_nitros_subscriber();
 
-// Standard ROS2 subscriber callback for the image topic
+// Standard ROS 2 subscriber callback for the image topic
   void std_sub_callback(const sensor_msgs::msg::Image::ConstSharedPtr & img);
 
   // Nitros subscriber callback for the image topic
