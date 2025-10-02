@@ -30,19 +30,21 @@ namespace stereolabs
 struct BenchmarkTest
 {
   std::string name;
-  std::vector<double> values_sec;
+  std::vector<double> values;
 
-  double total_sec;
-  double min_sec;
-  double max_sec;
-  double avg_sec;
-  double std_dev_sec;
+  double sum;
+  double min_val;
+  double max_val;
+  double avg_val;
+  double std_dev_val;
 };
 
 struct BenchmarkResults
 {
-  BenchmarkTest latency_std;
+  BenchmarkTest latency_dds;
   BenchmarkTest latency_nitros;
+  BenchmarkTest sub_freq_dds;
+  BenchmarkTest sub_freq_nitros;
 };
 
 class ZedNitrosSubComponent : public rclcpp::Node
@@ -58,13 +60,13 @@ protected:
   void read_parameters();
 
   // Create and enable the standard ROS 2 subscriber
-  void create_std_subscriber();
+  void create_dds_subscriber();
 
   // Create and enable the Nitros subscriber
   void create_nitros_subscriber();
 
 // Standard ROS 2 subscriber callback for the image topic
-  void std_sub_callback(const sensor_msgs::msg::Image::ConstSharedPtr & img);
+  void dds_sub_callback(const sensor_msgs::msg::Image::ConstSharedPtr & img);
 
   // Nitros subscriber callback for the image topic
   void nitros_sub_callback(
@@ -103,6 +105,9 @@ private:
   std::shared_ptr<nvidia::isaac_ros::nitros::ManagedNitrosSubscriber<
       nvidia::isaac_ros::nitros::NitrosImageView>>
   _nitrosSub;
+
+  // Time of the last received message
+  rclcpp::Time _lastMsgTime;
 
   // Benchmark results
   BenchmarkResults _benchmarkResults;
