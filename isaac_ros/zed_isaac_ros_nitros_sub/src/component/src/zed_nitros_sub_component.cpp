@@ -432,17 +432,19 @@ float ZedNitrosSubComponent::get_cpu_load()
 
 float ZedNitrosSubComponent::get_gpu_load()
 {
-  std::string cmd = "tegrastats --interval 100 --count 1";
+  std::string cmd = "tegrastats --interval 100";
   std::array<char, 128> buffer;
   std::string result;
   FILE* pipe = popen(cmd.c_str(), "r");
   if (!pipe) return -1;
+
+  // TODO change to wait for 100ms and read only one line
   while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
       result += buffer.data();
   }
   pclose(pipe);
 
-  // Esempio di parsing basato su output tipo: "GR3D_FREQ 45%@306MHz"
+  // Example based on the full output of type: "GR3D_FREQ 45%@306MHz"
   size_t pos = result.find("GR3D_FREQ");
   if (pos != std::string::npos) {
       size_t pct_pos = result.find('%', pos);
