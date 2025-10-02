@@ -29,14 +29,15 @@ namespace stereolabs
 
 struct BenchmarkTest
 {
-  std::string name;
+  std::string name = "";
+  std::string units = "";
   std::vector<double> values;
 
-  double sum;
-  double min_val;
-  double max_val;
-  double avg_val;
-  double std_dev_val;
+  double sum = 0.0;
+  double min_val = std::numeric_limits<double>::max();
+  double max_val = 0.0;
+  double avg_val = 0.0;
+  double std_dev_val = 0.0;
 };
 
 struct BenchmarkResults
@@ -85,6 +86,12 @@ protected:
   void compare_benchmark_results(
     const BenchmarkTest & benchmark1,
     const BenchmarkTest & benchmark2);
+
+  // Retrieve CPU load
+  float get_cpu_load();
+
+  // Retrieve GPU load
+  float get_gpu_load();
 
 private:
   // QoS parameters

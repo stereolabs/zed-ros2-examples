@@ -46,8 +46,9 @@ void ZedNitrosSubComponent::initialize_benchmark_results()
   _lastMsgTime = rclcpp::Time(0, 0, RCL_ROS_TIME);
 
   // Initialize the benchmark results statistics with a lambda function
-  auto init_stat = [](BenchmarkTest & stat, const std::string & name) {
+  auto init_stat = [](BenchmarkTest & stat, const std::string & name, const std::string & units) {
       stat.name = name;
+      stat.units = units;
       stat.values.clear();
       stat.sum = 0.0;
       stat.min_val = std::numeric_limits<double>::max();
@@ -57,10 +58,10 @@ void ZedNitrosSubComponent::initialize_benchmark_results()
     };
 
   // Initialize both DDS and Nitros benchmark results
-  init_stat(_benchmarkResults.latency_dds, "DDS Subscriber Latency");
-  init_stat(_benchmarkResults.latency_nitros, "Nitros Subscriber Latency");
-  init_stat(_benchmarkResults.sub_freq_dds, "DDS Subscriber Frequency");
-  init_stat(_benchmarkResults.sub_freq_nitros, "Nitros Subscriber Frequency");
+  init_stat(_benchmarkResults.latency_dds, "DDS Subscriber Latency", "sec");
+  init_stat(_benchmarkResults.latency_nitros, "Nitros Subscriber Latency", "sec");
+  init_stat(_benchmarkResults.sub_freq_dds, "DDS Subscriber Frequency", "Hz");
+  init_stat(_benchmarkResults.sub_freq_nitros, "Nitros Subscriber Frequency", "Hz");
 }
 
 void ZedNitrosSubComponent::update_benchmark_stats(
@@ -70,23 +71,23 @@ void ZedNitrosSubComponent::update_benchmark_stats(
   benchmark.sum += new_value;
   RCLCPP_INFO(
     this->get_logger(),
-    " * New sample value: %.6f sec - Min: %.6f sec", new_value,
-    benchmark.min_val);
+    " * New sample value: %.6f sec - Min: %.6f %s", new_value,
+    benchmark.min_val, benchmark.units.c_str());
   if (new_value < benchmark.min_val) {
     benchmark.min_val = new_value;
     RCLCPP_INFO(
-      this->get_logger(), " * New min value: %.6f sec",
-      benchmark.min_val);
+      this->get_logger(), " * New min value: %.6f %s",
+      benchmark.min_val, benchmark.units.c_str());
   }
   RCLCPP_INFO(
     this->get_logger(),
-    " * New sample value: %.6f sec - Max: %.6f sec", new_value,
-    benchmark.max_val);
+    " * New sample value: %.6f sec - Max: %.6f %s", new_value,
+    benchmark.max_val, benchmark.units.c_str());
   if (new_value > benchmark.max_val) {
     benchmark.max_val = new_value;
     RCLCPP_INFO(
-      this->get_logger(), " * New max value: %.6f sec",
-      benchmark.max_val);
+      this->get_logger(), " * New max value: %.6f %s",
+      benchmark.max_val, benchmark.units.c_str());
   }
 }
 
@@ -101,7 +102,7 @@ void ZedNitrosSubComponent::calculate_benchmark_results(BenchmarkTest & benchmar
 
   benchmark.avg_val = benchmark.sum / sample_count;
 
-  // For simplicity, we are not calculating the DDS deviation in this example.
+
   double sum_sq_diff = 0.0;
   for (const auto & sample_val : benchmark.values) {
     double diff = sample_val - benchmark.avg_val;
@@ -109,13 +110,14 @@ void ZedNitrosSubComponent::calculate_benchmark_results(BenchmarkTest & benchmar
   }
   benchmark.std_dev_val = std::sqrt(sum_sq_diff / sample_count);
 
-  RCLCPP_INFO(this->get_logger(), " * Samples: %lu", static_cast<unsigned long>(sample_count));
-  RCLCPP_INFO(this->get_logger(), " * Min: %.6f sec", benchmark.min_val);
-  RCLCPP_INFO(this->get_logger(), " * Max: %.6f sec", benchmark.max_val);
-  RCLCPP_INFO(this->get_logger(), " * Avg: %.6f sec", benchmark.avg_val);
+  RCLCPP_INFO(this->get_logger(), " - Benchmark results for '%s': ", benchmark.name.c_str());
+  RCLCPP_INFO(this->get_logger(), "   * Samples: %lu", static_cast<unsigned long>(sample_count));
+  RCLCPP_INFO(this->get_logger(), "   * Min: %.6f %s", benchmark.min_val, benchmark.units.c_str());
+  RCLCPP_INFO(this->get_logger(), "   * Max: %.6f %s", benchmark.max_val, benchmark.units.c_str());
+  RCLCPP_INFO(this->get_logger(), "   * Avg: %.6f %s", benchmark.avg_val, benchmark.units.c_str());
   RCLCPP_INFO(
-    this->get_logger(), " * Std Dev: %.6f sec",
-    benchmark.std_dev_val);
+    this->get_logger(), " * Std Dev: %.6f %s",
+    benchmark.std_dev_val, benchmark.units.c_str());
 }
 
 void ZedNitrosSubComponent::compare_benchmark_results(
@@ -126,23 +128,44 @@ void ZedNitrosSubComponent::compare_benchmark_results(
   RCLCPP_INFO(this->get_logger(), " * %s vs %s", benchmark1.name.c_str(), benchmark2.name.c_str());
 
   RCLCPP_INFO(
-    this->get_logger(), " * Avg Latency: %.6f sec vs %.6f sec",
+    this->get_logger(), "   * Avg Frequency: %.2f Hz vs %.2f Hz",
+    benchmark1.avg_val, benchmark2.avg_val);
+  if (benchmark1.avg_val > benchmark2.avg_val) {
+    double diff = benchmark1.avg_val - benchmark2.avg_val;
+    double percent = (diff / benchmark2.avg_val) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "     - %s is higher by %.2f Hz (%.2f%% faster)",
+      benchmark1.name.c_str(), diff, percent);
+  } else if (benchmark2.avg_val > benchmark1.avg_val) {
+    double diff = benchmark2.avg_val - benchmark1.avg_val;
+    double percent = (diff / benchmark1.avg_val) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "     - %s is higher by %.2f Hz (%.2f%% faster)",
+      benchmark2.name.c_str(), diff, percent);
+  } else {
+    RCLCPP_INFO(this->get_logger(), "     - Both have the same average frequency.");
+  }  
+
+  RCLCPP_INFO(
+    this->get_logger(), "   * Avg Latency: %.6f sec vs %.6f sec",
     benchmark1.avg_val, benchmark2.avg_val);
   if (benchmark1.avg_val < benchmark2.avg_val) {
     double diff = benchmark2.avg_val - benchmark1.avg_val;
     double percent = (diff / benchmark1.avg_val) * 100.0;
     RCLCPP_INFO(
-      this->get_logger(), "   - %s is lower by %.6f sec (%.2f%% faster)",
+      this->get_logger(), "     - %s is lower by %.6f sec (%.2f%% faster)",
       benchmark1.name.c_str(), diff, percent);
   } else if (benchmark2.avg_val < benchmark1.avg_val) {
     double diff = benchmark1.avg_val - benchmark2.avg_val;
     double percent = (diff / benchmark2.avg_val) * 100.0;
     RCLCPP_INFO(
-      this->get_logger(), "   - %s is lower by %.6f sec (%.2f%% faster)",
+      this->get_logger(), "     - %s is lower by %.6f sec (%.2f%% faster)",
       benchmark2.name.c_str(), diff, percent);
   } else {
-    RCLCPP_INFO(this->get_logger(), "   - Both have the same average latency.");
+    RCLCPP_INFO(this->get_logger(), "     - Both have the same average latency.");
   }
+
+   
 }
 
 void ZedNitrosSubComponent::read_parameters()
@@ -365,9 +388,11 @@ void ZedNitrosSubComponent::nitros_sub_callback(
     // Calculate the statistics
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
     RCLCPP_INFO(this->get_logger(), "DDS Subscriber benchmark results:");
+    calculate_benchmark_results(_benchmarkResults.sub_freq_dds);
     calculate_benchmark_results(_benchmarkResults.latency_dds);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
     RCLCPP_INFO(this->get_logger(), "Nitros Subscriber benchmark results:");
+    calculate_benchmark_results(_benchmarkResults.sub_freq_nitros);
     calculate_benchmark_results(_benchmarkResults.latency_nitros);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
     compare_benchmark_results(
@@ -379,6 +404,55 @@ void ZedNitrosSubComponent::nitros_sub_callback(
     RCLCPP_INFO(this->get_logger(), "Shutting down the node...");
     rclcpp::shutdown();
   }
+}
+
+float ZedNitrosSubComponent::get_cpu_load()
+{
+  std::ifstream file("/proc/stat");
+  std::string line;
+  std::getline(file, line);
+
+  std::istringstream iss(line);
+  std::string cpu;
+  unsigned long user, nice, system, idle;
+  iss >> cpu >> user >> nice >> system >> idle;
+
+  static unsigned long prevTotal = 0, prevIdle = 0;
+  unsigned long total = user + nice + system + idle;
+
+  float diffTotal = total - prevTotal;
+  float diffIdle = idle - prevIdle;
+
+  prevTotal = total;
+  prevIdle = idle;
+
+  if (diffTotal == 0) return 0.0f;
+  return 100.0f * (1.0f - diffIdle / diffTotal);
+}
+
+float ZedNitrosSubComponent::get_gpu_load()
+{
+  std::string cmd = "tegrastats --interval 100 --count 1";
+  std::array<char, 128> buffer;
+  std::string result;
+  FILE* pipe = popen(cmd.c_str(), "r");
+  if (!pipe) return -1;
+  while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+      result += buffer.data();
+  }
+  pclose(pipe);
+
+  // Esempio di parsing basato su output tipo: "GR3D_FREQ 45%@306MHz"
+  size_t pos = result.find("GR3D_FREQ");
+  if (pos != std::string::npos) {
+      size_t pct_pos = result.find('%', pos);
+      size_t at_pos = result.find('@', pos);
+      if (pct_pos != std::string::npos && at_pos != std::string::npos) {
+          std::string pct = result.substr(at_pos + 1, pct_pos - at_pos - 1);
+          return std::stof(result.substr(pos + 10, pct_pos - pos - 10));
+      }
+  }
+  return -1.0f;
 }
 
 }  // namespace stereolabs
