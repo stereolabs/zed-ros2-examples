@@ -109,7 +109,6 @@ void ZedNitrosSubComponent::calculate_benchmark_results(BenchmarkTest & benchmar
 
   benchmark.avg_val = benchmark.sum / sample_count;
 
-
   double sum_sq_diff = 0.0;
   for (const auto & sample_val : benchmark.values) {
     double diff = sample_val - benchmark.avg_val;
@@ -117,7 +116,7 @@ void ZedNitrosSubComponent::calculate_benchmark_results(BenchmarkTest & benchmar
   }
   benchmark.std_dev_val = std::sqrt(sum_sq_diff / sample_count);
 
-  RCLCPP_INFO(this->get_logger(), " - Benchmark results for '%s': ", benchmark.name.c_str());
+  RCLCPP_INFO(this->get_logger(), " - %s: ", benchmark.name.c_str());
   RCLCPP_INFO(this->get_logger(), "   * Samples: %lu", static_cast<unsigned long>(sample_count));
   RCLCPP_INFO(this->get_logger(), "   * Min: %.6f %s", benchmark.min_val, benchmark.units.c_str());
   RCLCPP_INFO(this->get_logger(), "   * Max: %.6f %s", benchmark.max_val, benchmark.units.c_str());
@@ -125,6 +124,7 @@ void ZedNitrosSubComponent::calculate_benchmark_results(BenchmarkTest & benchmar
   RCLCPP_INFO(
     this->get_logger(), " * Std Dev: %.6f %s",
     benchmark.std_dev_val, benchmark.units.c_str());
+  
 }
 
 void ZedNitrosSubComponent::compare_benchmark_results(
@@ -134,85 +134,26 @@ void ZedNitrosSubComponent::compare_benchmark_results(
   RCLCPP_INFO(this->get_logger(), "Benchmark comparison:");
   RCLCPP_INFO(this->get_logger(), " * %s vs %s", benchmark1.name.c_str(), benchmark2.name.c_str());
 
-  // Compare average frequency
+  // Compare averages
   RCLCPP_INFO(
-    this->get_logger(), "   * Avg Frequency: %.2f Hz vs %.2f Hz",
-    benchmark1.avg_val, benchmark2.avg_val);
+    this->get_logger(), "   * Avg: %g %s vs %g %s",
+    benchmark1.avg_val, benchmark1.units.c_str(),
+    benchmark2.avg_val, benchmark2.units.c_str());
   if (benchmark1.avg_val > benchmark2.avg_val) {
     double diff = benchmark1.avg_val - benchmark2.avg_val;
     double percent = (diff / benchmark2.avg_val) * 100.0;
     RCLCPP_INFO(
-      this->get_logger(), "     - %s is higher by %.2f Hz (%.2f%% faster)",
-      benchmark1.name.c_str(), diff, percent);
+      this->get_logger(), "     - %s is higher by %g %s (%g%%)",
+      benchmark1.name.c_str(), diff, benchmark1.units.c_str(), percent);
   } else if (benchmark2.avg_val > benchmark1.avg_val) {
     double diff = benchmark2.avg_val - benchmark1.avg_val;
     double percent = (diff / benchmark1.avg_val) * 100.0;
     RCLCPP_INFO(
-      this->get_logger(), "     - %s is higher by %.2f Hz (%.2f%% faster)",
-      benchmark2.name.c_str(), diff, percent);
+      this->get_logger(), "     - %s is higher by %g %s (%g%%)",
+      benchmark2.name.c_str(), diff, benchmark2.units.c_str(), percent);
   } else {
-    RCLCPP_INFO(this->get_logger(), "     - Both have the same average frequency.");
-  }  
-
-  // Compare average latency  
-  RCLCPP_INFO(
-    this->get_logger(), "   * Avg Latency: %.6f sec vs %.6f sec",
-    benchmark1.avg_val, benchmark2.avg_val);
-  if (benchmark1.avg_val < benchmark2.avg_val) {
-    double diff = benchmark2.avg_val - benchmark1.avg_val;
-    double percent = (diff / benchmark1.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is lower by %.6f sec (%.2f%% faster)",
-      benchmark1.name.c_str(), diff, percent);
-  } else if (benchmark2.avg_val < benchmark1.avg_val) {
-    double diff = benchmark1.avg_val - benchmark2.avg_val;
-    double percent = (diff / benchmark2.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is lower by %.6f sec (%.2f%% faster)",
-      benchmark2.name.c_str(), diff, percent);
-  } else {
-    RCLCPP_INFO(this->get_logger(), "     - Both have the same average latency.");
-  }
-
-  // Compare average CPU load
-  RCLCPP_INFO(
-    this->get_logger(), "   * Avg CPU Load: %.2f%% vs %.2f%%",
-    benchmark1.avg_val, benchmark2.avg_val);
-  if (benchmark1.avg_val < benchmark2.avg_val) {
-    double diff = benchmark2.avg_val - benchmark1.avg_val;
-    double percent = (diff / benchmark1.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
-      benchmark1.name.c_str(), diff, percent);
-  } else if (benchmark2.avg_val < benchmark1.avg_val) {
-    double diff = benchmark1.avg_val - benchmark2.avg_val;
-    double percent = (diff / benchmark2.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
-      benchmark2.name.c_str(), diff, percent);
-  } else {
-    RCLCPP_INFO(this->get_logger(), "     - Both have the same average CPU load.");
-  } 
-
-  // Compare average GPU load
-  RCLCPP_INFO(
-    this->get_logger(), "   * Avg GPU Load: %.2f%% vs %.2f%%",
-    benchmark1.avg_val, benchmark2.avg_val);
-  if (benchmark1.avg_val < benchmark2.avg_val) {
-    double diff = benchmark2.avg_val - benchmark1.avg_val;
-    double percent = (diff / benchmark1.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
-      benchmark1.name.c_str(), diff, percent);
-  } else if (benchmark2.avg_val < benchmark1.avg_val) {
-    double diff = benchmark1.avg_val - benchmark2.avg_val;
-    double percent = (diff / benchmark2.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
-      benchmark2.name.c_str(), diff, percent);
-  } else {
-    RCLCPP_INFO(this->get_logger(), "     - Both have the same average GPU load.");
-  }
+    RCLCPP_INFO(this->get_logger(), "     - Both have the same average.");
+  }    
 }
 
 void ZedNitrosSubComponent::read_parameters()
@@ -486,8 +427,22 @@ void ZedNitrosSubComponent::nitros_sub_callback(
     _nitrosSub.reset();
     RCLCPP_INFO(this->get_logger(), "Nitros subscriber unsubscribed.");
 
-    // Calculate the statistics
-    RCLCPP_INFO(this->get_logger(), "-----------------------------------");
+    // Calculate the final statistics
+    print_benchmark_results();
+
+    // Perform a clean shutdown of the node
+    RCLCPP_INFO(this->get_logger(), "Shutting down the node...");
+    _cpuGpuLoadThreadRunning = false;
+    if (_cpuGpuLoadThread.joinable()) {
+      _cpuGpuLoadThread.join();
+    }
+    rclcpp::shutdown();
+  }
+}
+
+void ZedNitrosSubComponent::print_benchmark_results()
+{
+  RCLCPP_INFO(this->get_logger(), "-----------------------------------");
     RCLCPP_INFO(this->get_logger(), "DDS Subscriber benchmark results:");
     calculate_benchmark_results(_benchmarkResults.sub_freq_dds);
     calculate_benchmark_results(_benchmarkResults.latency_dds);
@@ -513,15 +468,6 @@ void ZedNitrosSubComponent::nitros_sub_callback(
       _benchmarkResults.gpu_load_dds,
       _benchmarkResults.gpu_load_nitros);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
-
-    // Perform a clean shutdown of the node
-    RCLCPP_INFO(this->get_logger(), "Shutting down the node...");
-    _cpuGpuLoadThreadRunning = false;
-    if (_cpuGpuLoadThread.joinable()) {
-      _cpuGpuLoadThread.join();
-    }
-    rclcpp::shutdown();
-  }
 }
 
 double ZedNitrosSubComponent::get_cpu_load()

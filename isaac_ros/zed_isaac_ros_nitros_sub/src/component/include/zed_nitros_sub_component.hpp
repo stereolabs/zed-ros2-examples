@@ -94,6 +94,9 @@ protected:
     const BenchmarkTest & benchmark1,
     const BenchmarkTest & benchmark2);
 
+  // Compose the final benchmark results and print them
+  void print_benchmark_results();
+
   // Retrieve CPU load
   double get_cpu_load();
 
