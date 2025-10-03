@@ -39,7 +39,7 @@ ZedNitrosSubComponent::ZedNitrosSubComponent(const rclcpp::NodeOptions & options
   // Create the thread to periodically retrieve CPU and GPU load
   _cpuGpuLoadThread = std::thread(&ZedNitrosSubComponent::cpu_gpu_load_callback, this);
 
-  // Start the example and perform the benchmark
+  // Start the example and perform the benchmark with the standard ROS 2 DDS subscriber
   create_dds_subscriber();
 }
 
@@ -124,36 +124,73 @@ void ZedNitrosSubComponent::calculate_benchmark_results(BenchmarkTest & benchmar
   RCLCPP_INFO(
     this->get_logger(), " * Std Dev: %.6f %s",
     benchmark.std_dev_val, benchmark.units.c_str());
-  
+
+  if(!_csvLogFile.empty()) {
+    std::ofstream csv_file;
+    csv_file.open(_csvLogFile, std::ofstream::out | std::ofstream::app);
+    if (!csv_file.is_open()){
+      RCLCPP_ERROR(this->get_logger(), "Failed to open CSV log file: %s", _csvLogFile.c_str());
+      return;
+    }
+    csv_file << benchmark.name << ", "
+             << sample_count << ", "
+             << benchmark.units << ", "
+             << std::setprecision(6)
+             << benchmark.avg_val << ", "
+             << benchmark.min_val << ", "
+             << benchmark.max_val << ", "
+             << benchmark.std_dev_val << std::endl;
+    csv_file.close();
+  }
 }
 
 void ZedNitrosSubComponent::compare_benchmark_results(
   const BenchmarkTest & benchmark1,
   const BenchmarkTest & benchmark2)
 {
-  RCLCPP_INFO(this->get_logger(), "Benchmark comparison:");
-  RCLCPP_INFO(this->get_logger(), " * %s vs %s", benchmark1.name.c_str(), benchmark2.name.c_str());
+  std::ofstream csv_file;
+  if(!_csvLogFile.empty()) {
+    csv_file.open(_csvLogFile, std::ofstream::out | std::ofstream::app);
+    csv_file << std::endl;
+  }
+
+  std::stringstream ss;  
+  RCLCPP_INFO_STREAM(this->get_logger(), ss.str());  
+  if(csv_file.is_open()) {csv_file << ss.str() << std::endl;}
+
+  ss.str(std::string());
+  ss << " * " << benchmark1.name << " vs " << benchmark2.name;
+  RCLCPP_INFO_STREAM(this->get_logger(), ss.str());  
+  if(csv_file.is_open()) {csv_file << ss.str() << std::endl;}
 
   // Compare averages
-  RCLCPP_INFO(
-    this->get_logger(), "   * Avg: %g %s vs %g %s",
-    benchmark1.avg_val, benchmark1.units.c_str(),
-    benchmark2.avg_val, benchmark2.units.c_str());
+  ss.str(std::string());
+  ss << std::setprecision(6) << "   * Avg: " << benchmark1.avg_val << " " << benchmark1.units.c_str() << " vs " << benchmark2.avg_val << " " << benchmark2.units.c_str();
+  RCLCPP_INFO_STREAM(this->get_logger(), ss.str());  
+  if(csv_file.is_open()) {csv_file << ss.str() << std::endl;}
+  
   if (benchmark1.avg_val > benchmark2.avg_val) {
     double diff = benchmark1.avg_val - benchmark2.avg_val;
     double percent = (diff / benchmark2.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is higher by %g %s (%g%%)",
-      benchmark1.name.c_str(), diff, benchmark1.units.c_str(), percent);
+    ss.str(std::string());
+    ss << std::setprecision(6) << "     - " << benchmark1.name.c_str() << " is higher by " << diff << " " << benchmark1.units.c_str() << " (" << percent << "%)";
+    RCLCPP_INFO_STREAM(this->get_logger(), ss.str());    
+    if(csv_file.is_open()) {csv_file << ss.str() << std::endl;}
   } else if (benchmark2.avg_val > benchmark1.avg_val) {
     double diff = benchmark2.avg_val - benchmark1.avg_val;
     double percent = (diff / benchmark1.avg_val) * 100.0;
-    RCLCPP_INFO(
-      this->get_logger(), "     - %s is higher by %g %s (%g%%)",
-      benchmark2.name.c_str(), diff, benchmark2.units.c_str(), percent);
+    ss.str(std::string());
+    ss << std::setprecision(6) << "     - " << benchmark2.name.c_str() << " is higher by " << diff << " " << benchmark2.units.c_str() << " (" << percent << "%)";
+    RCLCPP_INFO_STREAM(this->get_logger(), ss.str());    
+    if(csv_file.is_open()) {csv_file << ss.str() << std::endl;}
   } else {
-    RCLCPP_INFO(this->get_logger(), "     - Both have the same average.");
-  }    
+    ss.str(std::string());
+    ss << "     - Both have the same average.";
+    RCLCPP_INFO_STREAM(this->get_logger(), ss.str());    
+    if(csv_file.is_open()) {csv_file << ss.str() << std::endl;}
+  }
+
+  if(csv_file.is_open()) {csv_file.close();}
 }
 
 void ZedNitrosSubComponent::read_parameters()
@@ -173,7 +210,7 @@ void ZedNitrosSubComponent::read_parameters()
   range.from_value = 1;
   range.to_value = 1000;
   descriptor.integer_range.push_back(range);
-  paramName = "test.tot_samples";
+  paramName = "benchmark.tot_samples";
   this->declare_parameter(paramName, rclcpp::ParameterValue(_totSamples), descriptor);
   if (!this->get_parameter(paramName, _totSamples)) {
     RCLCPP_WARN_STREAM(
@@ -191,7 +228,7 @@ void ZedNitrosSubComponent::read_parameters()
   range.to_value = 1000;
   descriptor.integer_range.clear(); // Clear previous range before reusing
   descriptor.integer_range.push_back(range);
-  paramName = "test.cpu_gpu_load_period";
+  paramName = "benchmark.cpu_gpu_load_period";
   this->declare_parameter(paramName, rclcpp::ParameterValue(_cpuGpuLoadPeriod), descriptor);
   if (!this->get_parameter(paramName, _cpuGpuLoadPeriod)) {
     RCLCPP_WARN_STREAM(
@@ -209,7 +246,7 @@ void ZedNitrosSubComponent::read_parameters()
   range.to_value = 100;
   descriptor.integer_range.clear(); // Clear previous range before reusing
   descriptor.integer_range.push_back(range);
-  paramName = "test.cpu_gpu_load_avg_wnd_size";
+  paramName = "benchmark.cpu_gpu_load_avg_wnd_size";
   this->declare_parameter(paramName, rclcpp::ParameterValue(_cpuGpuLoadAvgWndSize), descriptor);
   if (!this->get_parameter(paramName, _cpuGpuLoadAvgWndSize)) {
     RCLCPP_WARN_STREAM(
@@ -220,6 +257,20 @@ void ZedNitrosSubComponent::read_parameters()
         << _cpuGpuLoadAvgWndSize);
   }
   RCLCPP_INFO_STREAM(get_logger(), " * " << paramName << ": " << _cpuGpuLoadAvgWndSize);
+
+  // CSV log file
+  descriptor.description = "If not empty, log the benchmark results in a CSV file with the specified name";
+  paramName = "benchmark.csv_log_file";
+  this->declare_parameter(paramName, rclcpp::ParameterValue(_csvLogFile), descriptor);
+  if (!this->get_parameter(paramName, _csvLogFile)) {
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "The parameter '"
+        << paramName
+        << "' is not available or is not valid, using the default value: "
+        << _csvLogFile);
+  }
+  RCLCPP_INFO_STREAM(get_logger(), " * " << paramName << ": " << _csvLogFile);
 
   // Isaac ROS Nitros debug information
   descriptor.description = "Isaac ROS Nitros debug information";
@@ -442,6 +493,27 @@ void ZedNitrosSubComponent::nitros_sub_callback(
 
 void ZedNitrosSubComponent::print_benchmark_results()
 {
+  if(!_csvLogFile.empty()) {
+    std::ofstream csv_file;
+    csv_file.open(_csvLogFile, std::ofstream::out | std::ofstream::trunc);
+    if (!csv_file.is_open()){
+      RCLCPP_ERROR(
+        this->get_logger(),
+        "Could not open CSV file: %s for writing benchmark results.",
+        _csvLogFile.c_str());
+        
+        _csvLogFile = "";
+    } else {
+      RCLCPP_INFO(
+        this->get_logger(),
+        "+++ Logging benchmark results in CSV file: %s +++",
+        _csvLogFile.c_str());
+
+      csv_file << "BENCHMARK, SAMPLES, UNITS, AVG, MIN, MAX, STDDEV\n";
+      csv_file.close();
+    }
+  }
+  
   RCLCPP_INFO(this->get_logger(), "-----------------------------------");
     RCLCPP_INFO(this->get_logger(), "DDS Subscriber benchmark results:");
     calculate_benchmark_results(_benchmarkResults.sub_freq_dds);
@@ -455,6 +527,7 @@ void ZedNitrosSubComponent::print_benchmark_results()
     calculate_benchmark_results(_benchmarkResults.cpu_load_nitros);
     calculate_benchmark_results(_benchmarkResults.gpu_load_nitros);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
+    RCLCPP_INFO(this->get_logger(), "Benchmark comparison:");
     compare_benchmark_results(
       _benchmarkResults.latency_dds,
       _benchmarkResults.latency_nitros);

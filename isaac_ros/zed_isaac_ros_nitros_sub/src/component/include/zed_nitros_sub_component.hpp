@@ -115,6 +115,7 @@ private:
   bool _debugNitros = false;  // Enable Nitros debug information
   int _cpuGpuLoadPeriod = 100;  // Period in milliseconds to retrieve CPU and GPU load statistics
   int _cpuGpuLoadAvgWndSize = 10;  // Size of the averaging window for CPU and GPU load statistics
+  std::string _csvLogFile = "";  // If not empty, log the benchmark results in a CSV file with the specified name
 
   // Message type
   bool _isDepth = false;  // True if the topic is a depth map
