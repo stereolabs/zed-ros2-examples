@@ -36,10 +36,7 @@ ZedNitrosSubComponent::ZedNitrosSubComponent(const rclcpp::NodeOptions & options
   // Initialize the benchmark results statistics
   initialize_benchmark_results();
 
-  // Create a timer to periodically retrieve CPU and GPU load statistics
-  // _cpuGpuLoadTimer = this->create_wall_timer(
-  //   std::chrono::milliseconds(_cpuGpuLoadPeriod),
-  //   std::bind(&ZedNitrosSubComponent::cpu_gpu_load_callback, this));
+  // Create the thread to periodically retrieve CPU and GPU load
   _cpuGpuLoadThread = std::thread(&ZedNitrosSubComponent::cpu_gpu_load_callback, this);
 
   // Start the example and perform the benchmark
@@ -68,6 +65,10 @@ void ZedNitrosSubComponent::initialize_benchmark_results()
   init_stat(_benchmarkResults.latency_nitros, "Nitros Subscriber Latency", "sec");
   init_stat(_benchmarkResults.sub_freq_dds, "DDS Subscriber Frequency", "Hz");
   init_stat(_benchmarkResults.sub_freq_nitros, "Nitros Subscriber Frequency", "Hz");
+  init_stat(_benchmarkResults.cpu_load_dds, "DDS Subscriber CPU Load", "%");
+  init_stat(_benchmarkResults.cpu_load_nitros, "Nitros Subscriber CPU Load", "%");
+  init_stat(_benchmarkResults.gpu_load_dds, "DDS Subscriber GPU Load", "%");
+  init_stat(_benchmarkResults.gpu_load_nitros, "Nitros Subscriber GPU Load", "%");
 }
 
 void ZedNitrosSubComponent::update_benchmark_stats(
@@ -77,7 +78,7 @@ void ZedNitrosSubComponent::update_benchmark_stats(
   benchmark.sum += new_value;
   RCLCPP_INFO(
     this->get_logger(),
-    " * New sample value: %.6f sec - Min: %.6f %s", new_value,
+    "   * New sample value: %.6f sec - Min: %.6f %s", new_value,
     benchmark.min_val, benchmark.units.c_str());
   if (new_value < benchmark.min_val) {
     benchmark.min_val = new_value;
@@ -87,7 +88,7 @@ void ZedNitrosSubComponent::update_benchmark_stats(
   }
   RCLCPP_INFO(
     this->get_logger(),
-    " * New sample value: %.6f sec - Max: %.6f %s", new_value,
+    "   * New sample value: %.6f sec - Max: %.6f %s", new_value,
     benchmark.max_val, benchmark.units.c_str());
   if (new_value > benchmark.max_val) {
     benchmark.max_val = new_value;
@@ -133,6 +134,7 @@ void ZedNitrosSubComponent::compare_benchmark_results(
   RCLCPP_INFO(this->get_logger(), "Benchmark comparison:");
   RCLCPP_INFO(this->get_logger(), " * %s vs %s", benchmark1.name.c_str(), benchmark2.name.c_str());
 
+  // Compare average frequency
   RCLCPP_INFO(
     this->get_logger(), "   * Avg Frequency: %.2f Hz vs %.2f Hz",
     benchmark1.avg_val, benchmark2.avg_val);
@@ -152,6 +154,7 @@ void ZedNitrosSubComponent::compare_benchmark_results(
     RCLCPP_INFO(this->get_logger(), "     - Both have the same average frequency.");
   }  
 
+  // Compare average latency  
   RCLCPP_INFO(
     this->get_logger(), "   * Avg Latency: %.6f sec vs %.6f sec",
     benchmark1.avg_val, benchmark2.avg_val);
@@ -171,7 +174,45 @@ void ZedNitrosSubComponent::compare_benchmark_results(
     RCLCPP_INFO(this->get_logger(), "     - Both have the same average latency.");
   }
 
-   
+  // Compare average CPU load
+  RCLCPP_INFO(
+    this->get_logger(), "   * Avg CPU Load: %.2f%% vs %.2f%%",
+    benchmark1.avg_val, benchmark2.avg_val);
+  if (benchmark1.avg_val < benchmark2.avg_val) {
+    double diff = benchmark2.avg_val - benchmark1.avg_val;
+    double percent = (diff / benchmark1.avg_val) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
+      benchmark1.name.c_str(), diff, percent);
+  } else if (benchmark2.avg_val < benchmark1.avg_val) {
+    double diff = benchmark1.avg_val - benchmark2.avg_val;
+    double percent = (diff / benchmark2.avg_val) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
+      benchmark2.name.c_str(), diff, percent);
+  } else {
+    RCLCPP_INFO(this->get_logger(), "     - Both have the same average CPU load.");
+  } 
+
+  // Compare average GPU load
+  RCLCPP_INFO(
+    this->get_logger(), "   * Avg GPU Load: %.2f%% vs %.2f%%",
+    benchmark1.avg_val, benchmark2.avg_val);
+  if (benchmark1.avg_val < benchmark2.avg_val) {
+    double diff = benchmark2.avg_val - benchmark1.avg_val;
+    double percent = (diff / benchmark1.avg_val) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
+      benchmark1.name.c_str(), diff, percent);
+  } else if (benchmark2.avg_val < benchmark1.avg_val) {
+    double diff = benchmark1.avg_val - benchmark2.avg_val;
+    double percent = (diff / benchmark2.avg_val) * 100.0;
+    RCLCPP_INFO(
+      this->get_logger(), "     - %s is lower by %.2f%% (%.2f%% more efficient)",
+      benchmark2.name.c_str(), diff, percent);
+  } else {
+    RCLCPP_INFO(this->get_logger(), "     - Both have the same average GPU load.");
+  }
 }
 
 void ZedNitrosSubComponent::read_parameters()
@@ -342,22 +383,26 @@ void ZedNitrosSubComponent::dds_sub_callback(
   RCLCPP_INFO(
     this->get_logger(), " * Latency: %f sec", latency);
 
+  // Update benchmark results here
+  update_benchmark_stats(_benchmarkResults.latency_dds, latency);
+  // <---- Latency statistics update
+
+  // ----> CPU and GPU load statistics update
+  double cpu_load = _cpuLoadAvg.load();
+  double gpu_load = _gpuLoadAvg.load();
+  RCLCPP_INFO(
+    this->get_logger(), " * CPU Load: %.2f%%", cpu_load);
+  update_benchmark_stats(_benchmarkResults.cpu_load_dds, cpu_load);
+  RCLCPP_INFO(
+    this->get_logger(), " * GPU Load: %.2f%%", gpu_load);
+  update_benchmark_stats(_benchmarkResults.gpu_load_dds, gpu_load);
+  // <---- CPU and GPU load statistics update
+
   // Check if we acquired the desired number of samples
   static int std_sample_count = 0;
   std_sample_count++; \
   RCLCPP_INFO(
     this->get_logger(), " *** Sample %d/%d ***", std_sample_count, _totSamples);
-
-  // Update benchmark results here
-  update_benchmark_stats(_benchmarkResults.latency_dds, latency);
-  // <---- Latency statistics update
-
-  // Print CPU and GPU load averages
-  RCLCPP_INFO(
-    this->get_logger(), " * CPU Load (avg last %d): %.2f%% - GPU Load (avg last %d): %.2f%%",
-    _cpuGpuLoadAvgWndSize, _cpuLoadAvg.load(), _cpuGpuLoadAvgWndSize, _gpuLoadAvg.load());
-
-  // Check if we acquired the desired number of samples
   if (std_sample_count >= _totSamples) {
     RCLCPP_INFO(
       this->get_logger(), "Received %d DDS samples. Unsubscribing...",
@@ -416,22 +461,26 @@ void ZedNitrosSubComponent::nitros_sub_callback(
   double latency = now.seconds() - img_ts.seconds();
   RCLCPP_INFO(this->get_logger(), " * Latency: %f sec", latency);
 
+  // Update benchmark results here
+  update_benchmark_stats(_benchmarkResults.latency_nitros, latency);
+  // <---- Latency statistics update
+
+  // ----> CPU and GPU load statistics update
+  double cpu_load = _cpuLoadAvg.load();
+  double gpu_load = _gpuLoadAvg.load();
+  RCLCPP_INFO(
+    this->get_logger(), " * CPU Load: %.2f%%", cpu_load);
+  update_benchmark_stats(_benchmarkResults.cpu_load_nitros, cpu_load);
+  RCLCPP_INFO(
+    this->get_logger(), " * GPU Load: %.2f%%", gpu_load);
+  update_benchmark_stats(_benchmarkResults.gpu_load_nitros, gpu_load);
+  // <---- CPU and GPU load statistics update
+
   // Check if we acquired the desired number of samples
   static int nitros_sample_count = 0;
   nitros_sample_count++;
   RCLCPP_INFO(
     this->get_logger(), " *** Sample %d/%d ***", nitros_sample_count, _totSamples);
-
-  // Update benchmark results here
-  update_benchmark_stats(_benchmarkResults.latency_nitros, latency);
-  // <---- Latency statistics update
-
-  // Print CPU and GPU load averages
-  RCLCPP_INFO(
-    this->get_logger(), " * CPU Load (avg last %d): %.2f%% - GPU Load (avg last %d): %.2f%%",
-    _cpuGpuLoadAvgWndSize, _cpuLoadAvg.load(), _cpuGpuLoadAvgWndSize, _gpuLoadAvg.load());
-
-  // Check if we acquired the desired number of samples
   if (nitros_sample_count >= _totSamples) {
     RCLCPP_INFO(this->get_logger(), "Received %d Nitros samples. Unsubscribing...", _totSamples);
     _nitrosSub.reset();
@@ -442,14 +491,27 @@ void ZedNitrosSubComponent::nitros_sub_callback(
     RCLCPP_INFO(this->get_logger(), "DDS Subscriber benchmark results:");
     calculate_benchmark_results(_benchmarkResults.sub_freq_dds);
     calculate_benchmark_results(_benchmarkResults.latency_dds);
+    calculate_benchmark_results(_benchmarkResults.cpu_load_dds);
+    calculate_benchmark_results(_benchmarkResults.gpu_load_dds);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
     RCLCPP_INFO(this->get_logger(), "Nitros Subscriber benchmark results:");
     calculate_benchmark_results(_benchmarkResults.sub_freq_nitros);
     calculate_benchmark_results(_benchmarkResults.latency_nitros);
+    calculate_benchmark_results(_benchmarkResults.cpu_load_nitros);
+    calculate_benchmark_results(_benchmarkResults.gpu_load_nitros);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
     compare_benchmark_results(
       _benchmarkResults.latency_dds,
       _benchmarkResults.latency_nitros);
+    compare_benchmark_results(
+      _benchmarkResults.sub_freq_dds,
+      _benchmarkResults.sub_freq_nitros);
+    compare_benchmark_results(
+      _benchmarkResults.cpu_load_dds,
+      _benchmarkResults.cpu_load_nitros);
+    compare_benchmark_results(
+      _benchmarkResults.gpu_load_dds,
+      _benchmarkResults.gpu_load_nitros);
     RCLCPP_INFO(this->get_logger(), "-----------------------------------");
 
     // Perform a clean shutdown of the node
@@ -462,7 +524,7 @@ void ZedNitrosSubComponent::nitros_sub_callback(
   }
 }
 
-float ZedNitrosSubComponent::get_cpu_load()
+double ZedNitrosSubComponent::get_cpu_load()
 {
   std::ifstream file("/proc/stat");
   std::string line;
@@ -476,8 +538,8 @@ float ZedNitrosSubComponent::get_cpu_load()
   static unsigned long prevTotal = 0, prevIdle = 0;
   unsigned long total = user + nice + system + idle;
 
-  float diffTotal = total - prevTotal;
-  float diffIdle = idle - prevIdle;
+  double diffTotal = total - prevTotal;
+  double diffIdle = idle - prevIdle;
 
   prevTotal = total;
   prevIdle = idle;
@@ -486,7 +548,7 @@ float ZedNitrosSubComponent::get_cpu_load()
   return 100.0f * (1.0f - diffIdle / diffTotal);
 }
 
-float ZedNitrosSubComponent::get_gpu_load() {
+double ZedNitrosSubComponent::get_gpu_load() {
     std::ifstream file("/sys/devices/platform/gpu.0/load");
     int value = 0;
     file >> value;
@@ -501,11 +563,11 @@ void ZedNitrosSubComponent::cpu_gpu_load_callback()
   static int count = 0;
   while(_cpuGpuLoadThreadRunning && rclcpp::ok())
   {
-    float cpu_load = get_cpu_load();
-    float gpu_load = get_gpu_load();
+    double cpu_load = get_cpu_load();
+    double gpu_load = get_gpu_load();
 
     // ----> Simple moving average
-    static std::deque<float> cpu_queue, gpu_queue;
+    static std::deque<double> cpu_queue, gpu_queue;
 
     cpu_queue.push_back(cpu_load);
     gpu_queue.push_back(gpu_load);
@@ -513,8 +575,8 @@ void ZedNitrosSubComponent::cpu_gpu_load_callback()
     if (cpu_queue.size() > _cpuGpuLoadAvgWndSize) cpu_queue.pop_front();
     if (gpu_queue.size() > _cpuGpuLoadAvgWndSize) gpu_queue.pop_front();
 
-    float cpu_avg = std::accumulate(cpu_queue.begin(), cpu_queue.end(), 0.0f) / cpu_queue.size();
-    float gpu_avg = std::accumulate(gpu_queue.begin(), gpu_queue.end(), 0.0f) / gpu_queue.size();
+    double cpu_avg = std::accumulate(cpu_queue.begin(), cpu_queue.end(), 0.0f) / cpu_queue.size();
+    double gpu_avg = std::accumulate(gpu_queue.begin(), gpu_queue.end(), 0.0f) / gpu_queue.size();
     // <---- Simple moving average
 
     //RCLCPP_INFO(this->get_logger(), "CPU avg (last 5): %.2f%%, GPU avg (last 5): %.2f%%", cpu_avg, gpu_avg);

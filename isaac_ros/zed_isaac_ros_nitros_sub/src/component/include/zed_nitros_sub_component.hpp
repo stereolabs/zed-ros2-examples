@@ -49,6 +49,10 @@ struct BenchmarkResults
   BenchmarkTest latency_nitros;
   BenchmarkTest sub_freq_dds;
   BenchmarkTest sub_freq_nitros;
+  BenchmarkTest cpu_load_dds;
+  BenchmarkTest cpu_load_nitros;
+  BenchmarkTest gpu_load_dds;
+  BenchmarkTest gpu_load_nitros;
 };
 
 class ZedNitrosSubComponent : public rclcpp::Node
@@ -91,10 +95,10 @@ protected:
     const BenchmarkTest & benchmark2);
 
   // Retrieve CPU load
-  float get_cpu_load();
+  double get_cpu_load();
 
   // Retrieve GPU load
-  float get_gpu_load();
+  double get_gpu_load();
 
   // Thread function to periodically retrieve CPU and GPU load
   void cpu_gpu_load_callback();
@@ -128,8 +132,8 @@ private:
   //rclcpp::TimerBase::SharedPtr _cpuGpuLoadTimer;
   std::thread _cpuGpuLoadThread;
   std::atomic<bool> _cpuGpuLoadThreadRunning{true};
-  std::atomic<float> _cpuLoadAvg{0.0};
-  std::atomic<float> _gpuLoadAvg{0.0};  
+  std::atomic<double> _cpuLoadAvg{0.0};
+  std::atomic<double> _gpuLoadAvg{0.0};  
 
   // Benchmark results
   BenchmarkResults _benchmarkResults;
