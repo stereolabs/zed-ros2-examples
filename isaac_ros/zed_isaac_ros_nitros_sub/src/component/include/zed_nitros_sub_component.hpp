@@ -17,6 +17,9 @@
 
 #include <rcutils/logging_macros.h>
 
+#include <atomic>
+#include <thread>
+
 #include <isaac_ros_managed_nitros/managed_nitros_subscriber.hpp>
 #include <isaac_ros_nitros_image_type/nitros_image_view.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -93,6 +96,9 @@ protected:
   // Retrieve GPU load
   float get_gpu_load();
 
+  // Thread function to periodically retrieve CPU and GPU load
+  void cpu_gpu_load_callback();
+
 private:
   // QoS parameters
   rclcpp::QoS _defaultQoS;
@@ -100,6 +106,8 @@ private:
   // Parameters
   int _totSamples = 100;  // Total number of samples to process before exiting
   bool _debugNitros = false;  // Enable Nitros debug information
+  int _cpuGpuLoadPeriod = 100;  // Period in milliseconds to retrieve CPU and GPU load statistics
+  int _cpuGpuLoadAvgWndSize = 10;  // Size of the averaging window for CPU and GPU load statistics
 
   // Message type
   bool _isDepth = false;  // True if the topic is a depth map
@@ -115,6 +123,13 @@ private:
 
   // Time of the last received message
   rclcpp::Time _lastMsgTime;
+
+  // CPU and GPU load monitoring
+  //rclcpp::TimerBase::SharedPtr _cpuGpuLoadTimer;
+  std::thread _cpuGpuLoadThread;
+  std::atomic<bool> _cpuGpuLoadThreadRunning{true};
+  std::atomic<float> _cpuLoadAvg{0.0};
+  std::atomic<float> _gpuLoadAvg{0.0};  
 
   // Benchmark results
   BenchmarkResults _benchmarkResults;

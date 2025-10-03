@@ -11,7 +11,8 @@
             pub_frame_rate: 60.0 # [DYNAMIC] Frequency of publishing of visual images and depth data (not the Point Cloud, see 'depth.point_cloud_freq'). This value must be equal or less than the camera framerate.
             
         test:
-            tot_samples: 100 # Total number of samples to process before exiting
+            tot_samples: 1000 # Total number of samples to process before exiting
+            cpu_gpu_load_period: 10 # Period in milliseconds to retrieve CPU and GPU load statistics
 
         debug:
             debug_nitros: false # Enable Nitros debug information

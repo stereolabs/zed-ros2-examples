@@ -36,6 +36,12 @@ ZedNitrosSubComponent::ZedNitrosSubComponent(const rclcpp::NodeOptions & options
   // Initialize the benchmark results statistics
   initialize_benchmark_results();
 
+  // Create a timer to periodically retrieve CPU and GPU load statistics
+  // _cpuGpuLoadTimer = this->create_wall_timer(
+  //   std::chrono::milliseconds(_cpuGpuLoadPeriod),
+  //   std::bind(&ZedNitrosSubComponent::cpu_gpu_load_callback, this));
+  _cpuGpuLoadThread = std::thread(&ZedNitrosSubComponent::cpu_gpu_load_callback, this);
+
   // Start the example and perform the benchmark
   create_dds_subscriber();
 }
@@ -197,6 +203,42 @@ void ZedNitrosSubComponent::read_parameters()
   }
   RCLCPP_INFO_STREAM(get_logger(), " * " << paramName << ": " << _totSamples);
 
+  // CPU and GPU load retrieval period
+  descriptor.description = "Period in milliseconds to retrieve CPU and GPU load statistics";
+  range.from_value = 10;
+  range.to_value = 1000;
+  descriptor.integer_range.clear(); // Clear previous range before reusing
+  descriptor.integer_range.push_back(range);
+  paramName = "test.cpu_gpu_load_period";
+  this->declare_parameter(paramName, rclcpp::ParameterValue(_cpuGpuLoadPeriod), descriptor);
+  if (!this->get_parameter(paramName, _cpuGpuLoadPeriod)) {
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "The parameter '"
+        << paramName
+        << "' is not available or is not valid, using the default value: "
+        << _cpuGpuLoadPeriod);
+  }
+  RCLCPP_INFO_STREAM(get_logger(), " * " << paramName << ": " << _cpuGpuLoadPeriod);
+
+  // Size of the averaging window for CPU and GPU load statistics
+  descriptor.description = "Size of the averaging window for CPU and GPU load statistics";
+  range.from_value = 1;
+  range.to_value = 100;
+  descriptor.integer_range.clear(); // Clear previous range before reusing
+  descriptor.integer_range.push_back(range);
+  paramName = "test.cpu_gpu_load_avg_wnd_size";
+  this->declare_parameter(paramName, rclcpp::ParameterValue(_cpuGpuLoadAvgWndSize), descriptor);
+  if (!this->get_parameter(paramName, _cpuGpuLoadAvgWndSize)) {
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "The parameter '"
+        << paramName
+        << "' is not available or is not valid, using the default value: "
+        << _cpuGpuLoadAvgWndSize);
+  }
+  RCLCPP_INFO_STREAM(get_logger(), " * " << paramName << ": " << _cpuGpuLoadAvgWndSize);
+
   // Isaac ROS Nitros debug information
   descriptor.description = "Isaac ROS Nitros debug information";
   paramName = "debug.debug_nitros";
@@ -310,6 +352,11 @@ void ZedNitrosSubComponent::dds_sub_callback(
   update_benchmark_stats(_benchmarkResults.latency_dds, latency);
   // <---- Latency statistics update
 
+  // Print CPU and GPU load averages
+  RCLCPP_INFO(
+    this->get_logger(), " * CPU Load (avg last %d): %.2f%% - GPU Load (avg last %d): %.2f%%",
+    _cpuGpuLoadAvgWndSize, _cpuLoadAvg.load(), _cpuGpuLoadAvgWndSize, _gpuLoadAvg.load());
+
   // Check if we acquired the desired number of samples
   if (std_sample_count >= _totSamples) {
     RCLCPP_INFO(
@@ -379,6 +426,11 @@ void ZedNitrosSubComponent::nitros_sub_callback(
   update_benchmark_stats(_benchmarkResults.latency_nitros, latency);
   // <---- Latency statistics update
 
+  // Print CPU and GPU load averages
+  RCLCPP_INFO(
+    this->get_logger(), " * CPU Load (avg last %d): %.2f%% - GPU Load (avg last %d): %.2f%%",
+    _cpuGpuLoadAvgWndSize, _cpuLoadAvg.load(), _cpuGpuLoadAvgWndSize, _gpuLoadAvg.load());
+
   // Check if we acquired the desired number of samples
   if (nitros_sample_count >= _totSamples) {
     RCLCPP_INFO(this->get_logger(), "Received %d Nitros samples. Unsubscribing...", _totSamples);
@@ -402,6 +454,10 @@ void ZedNitrosSubComponent::nitros_sub_callback(
 
     // Perform a clean shutdown of the node
     RCLCPP_INFO(this->get_logger(), "Shutting down the node...");
+    _cpuGpuLoadThreadRunning = false;
+    if (_cpuGpuLoadThread.joinable()) {
+      _cpuGpuLoadThread.join();
+    }
     rclcpp::shutdown();
   }
 }
@@ -430,31 +486,44 @@ float ZedNitrosSubComponent::get_cpu_load()
   return 100.0f * (1.0f - diffIdle / diffTotal);
 }
 
-float ZedNitrosSubComponent::get_gpu_load()
+float ZedNitrosSubComponent::get_gpu_load() {
+    std::ifstream file("/sys/devices/platform/gpu.0/load");
+    int value = 0;
+    file >> value;
+    file.close();
+
+    // The value represents the percentage * 10 (e.g., 450 = 45%)
+    return value / 10.0f;
+}
+
+void ZedNitrosSubComponent::cpu_gpu_load_callback()
 {
-  std::string cmd = "tegrastats --interval 100";
-  std::array<char, 128> buffer;
-  std::string result;
-  FILE* pipe = popen(cmd.c_str(), "r");
-  if (!pipe) return -1;
+  static int count = 0;
+  while(_cpuGpuLoadThreadRunning && rclcpp::ok())
+  {
+    float cpu_load = get_cpu_load();
+    float gpu_load = get_gpu_load();
 
-  // TODO change to wait for 100ms and read only one line
-  while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-      result += buffer.data();
-  }
-  pclose(pipe);
+    // ----> Simple moving average
+    static std::deque<float> cpu_queue, gpu_queue;
 
-  // Example based on the full output of type: "GR3D_FREQ 45%@306MHz"
-  size_t pos = result.find("GR3D_FREQ");
-  if (pos != std::string::npos) {
-      size_t pct_pos = result.find('%', pos);
-      size_t at_pos = result.find('@', pos);
-      if (pct_pos != std::string::npos && at_pos != std::string::npos) {
-          std::string pct = result.substr(at_pos + 1, pct_pos - at_pos - 1);
-          return std::stof(result.substr(pos + 10, pct_pos - pos - 10));
-      }
+    cpu_queue.push_back(cpu_load);
+    gpu_queue.push_back(gpu_load);
+
+    if (cpu_queue.size() > _cpuGpuLoadAvgWndSize) cpu_queue.pop_front();
+    if (gpu_queue.size() > _cpuGpuLoadAvgWndSize) gpu_queue.pop_front();
+
+    float cpu_avg = std::accumulate(cpu_queue.begin(), cpu_queue.end(), 0.0f) / cpu_queue.size();
+    float gpu_avg = std::accumulate(gpu_queue.begin(), gpu_queue.end(), 0.0f) / gpu_queue.size();
+    // <---- Simple moving average
+
+    //RCLCPP_INFO(this->get_logger(), "CPU avg (last 5): %.2f%%, GPU avg (last 5): %.2f%%", cpu_avg, gpu_avg);
+    //RCLCPP_INFO(this->get_logger(), "#%d - CPU Load: %.2f%% - GPU Load: %.2f%%", count++, cpu_load, gpu_load);
+    _cpuLoadAvg = cpu_avg;
+    _gpuLoadAvg = gpu_avg;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(_cpuGpuLoadPeriod));
   }
-  return -1.0f;
 }
 
 }  // namespace stereolabs

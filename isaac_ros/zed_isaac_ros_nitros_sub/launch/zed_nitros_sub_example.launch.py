@@ -69,6 +69,7 @@ def launch_setup(context, *args, **kwargs):
         namespace=namespace_val,
         package='rclcpp_components',
         executable='component_container_mt',
+        #executable='component_container_isolated',
         arguments=['--ros-args', '--log-level', 'info'],
         output='screen',
     )
