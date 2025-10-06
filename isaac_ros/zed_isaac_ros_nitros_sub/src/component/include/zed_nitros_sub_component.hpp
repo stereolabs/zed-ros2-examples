@@ -137,7 +137,7 @@ private:
   std::thread _cpuGpuLoadThread;
   std::atomic<bool> _cpuGpuLoadThreadRunning{true};
   std::atomic<double> _cpuLoadAvg{0.0};
-  std::atomic<double> _gpuLoadAvg{0.0};  
+  std::atomic<double> _gpuLoadAvg{0.0};
 
   // Benchmark results
   BenchmarkResults _benchmarkResults;
