@@ -1,4 +1,4 @@
-// Copyright 2024 Stereolabs
+// Copyright 2025 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
-#include <rclcpp/generic_subscription.hpp>  // Not available before ROS2 Humble
+#include <rclcpp/generic_subscription.hpp>  // Not available before ROS 2 Humble
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/serialized_message.hpp>
 #include <string>

@@ -1,4 +1,4 @@
-# Copyright 2024 Stereolabs
+# Copyright 2025 Stereolabs
 #
 # Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ from launch.actions import (
 # Enable colored output
 os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
-# Cmaera name and model
+# Camera name and model
 camera_name_1 = 'zed_front'
 camera_name_2 = 'zed_rear'
 camera_model_1 = 'zedx'

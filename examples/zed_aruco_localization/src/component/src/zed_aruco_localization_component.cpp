@@ -1,4 +1,4 @@
-// Copyright 2024 Stereolabs
+// Copyright 2025 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@
 #elif defined FOUND_FOXY
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #else
-#error Unsupported ROS2 distro
+#error Unsupported ROS 2 distro
 #endif
 
 using namespace std::chrono_literals;
