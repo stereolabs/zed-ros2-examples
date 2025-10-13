@@ -1,7 +1,8 @@
 
-## Submitting your code changes
+# Submitting your code changes
 
 Code contributions should be made via pull requests to the appropriate repositories:
+
 * [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper/pulls)
 * [zed-ros2-interfaces](https://github.com/stereolabs/zed-ros2-interfaces/pulls)
 * [zed-ros2-examples](https://github.com/stereolabs/zed-ros2-examples/pulls)
@@ -34,7 +35,7 @@ Any contribution that you make to this repository will
 be under the Apache 2 License, as dictated by that
 [license](http://www.apache.org/licenses/LICENSE-2.0.html):
 
-~~~
+~~~text
 5. Submission of Contributions. Unless You explicitly state otherwise,
    any Contribution intentionally submitted for inclusion in the Work
    by You to the Licensor shall be under the terms and conditions of

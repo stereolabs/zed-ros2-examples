@@ -75,14 +75,14 @@
   <joint name="$(arg camera_name_2)_camera_joint" type="fixed">
       <parent link="$(arg multi_link)"/>
       <child link="$(arg camera_name_2)_camera_link"/>
-      <origin xyz="0.0 0.06 0.0" rpy="0 ${M_PI/2} 0" />
+      <origin xyz="0.0 0.06 0.0" rpy="0 0 ${M_PI/2}" />
   </joint>
 
   <!-- Define the position of the right camera with respect to the reference link -->
   <joint name="$(arg camera_name_3)_camera_joint" type="fixed">
       <parent link="$(arg multi_link)"/>
       <child link="$(arg camera_name_3)_camera_link"/>
-      <origin xyz="0.0 -0.06 0.0" rpy="0 -${M_PI/2} 0" />
+      <origin xyz="0.0 -0.06 0.0" rpy="0 0 -${M_PI/2}" />
   </joint>
 
   <!-- NOTE: Replicate the same XML code above for all the cameras of the multi-camera system if more cameras are used -->
