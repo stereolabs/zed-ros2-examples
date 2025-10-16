@@ -120,7 +120,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed/zed_node/rgb/image_rect_color
+            Value: /zed/zed_node/rgb/color/rect/image
           Value: true
           Visibility:
             Depth:
@@ -172,7 +172,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed/zed_node/stereo/image_rect_color
+            Value: /zed/zed_node/stereo/color/rect/image
           Value: false
         - Class: rviz_default_plugins/Image
           Enabled: true
