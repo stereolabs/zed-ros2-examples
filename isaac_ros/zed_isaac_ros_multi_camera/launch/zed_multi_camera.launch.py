@@ -48,6 +48,9 @@ def parse_array_param(param):
     str = str.replace(' ', '')
     arr = str.split(',')
 
+    if arr[0] == '':
+        return []
+
     return arr
 
 def launch_setup(context, *args, **kwargs):
@@ -86,6 +89,18 @@ def launch_setup(context, *args, **kwargs):
 
     num_cams = len(names_arr)
 
+    info = '* Number of cameras to be configured: ' + str(num_cams)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+
+    info = '* Camera names: ' + str(names_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    info = '* Camera models: ' + str(models_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    info = '* Camera serials: ' + str(serials_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    info = '* Camera IDs: ' + str(ids_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+
     if (num_cams != len(models_arr)):
         return [
             LogInfo(msg=TextSubstitution(
@@ -99,14 +114,7 @@ def launch_setup(context, *args, **kwargs):
         ]
     
     # ROS 2 Component Container
-    container_name = 'zed_multi_container'
-    distro = os.environ['ROS_DISTRO']
-    if distro == 'foxy':
-        # Foxy does not support the isolated mode
-        container_exec='component_container'
-    else:
-        container_exec='component_container_isolated'
-    
+    container_name = 'zed_multi_container'    
     info = '* Starting Composable node container: /' + namespace_val + '/' + container_name
     actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
@@ -114,7 +122,7 @@ def launch_setup(context, *args, **kwargs):
         name=container_name,
         namespace=namespace_val,
         package='rclcpp_components',
-        executable=container_exec,
+        executable='component_container_isolated',
         arguments=['--ros-args', '--log-level', 'info'],
         output='screen',
     )
@@ -122,6 +130,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Set the first camera idx
     cam_idx = 0
+    sub_node_array = []
 
     for name in names_arr:
         model = models_arr[cam_idx]
@@ -134,17 +143,14 @@ def launch_setup(context, *args, **kwargs):
             id = ids_arr[cam_idx]
         else:
             id = '-1'
-        
-        pose = '['
 
-        info = '* Starting a ZED ROS2 node for camera ' + name + \
-            ' (' + model        
+        info = '* Adding a ZED ROS2 node for camera ' + name + \
+            ' (' + model
         if(serial != '0'):
             info += ', serial: ' + serial
         elif( id!= '-1'):
             info += ', id: ' + id
         info += ')'
-
         actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
         # Only the first camera send odom and map TF
@@ -177,6 +183,15 @@ def launch_setup(context, *args, **kwargs):
         # Camera topic name for the subscriber (according to the camera name and namespace)
         cam_topic_name = '/' + namespace_val + '/' + name + '/' + topic_name_val
 
+        info = '* Adding a Subscriber node for camera ' + name + \
+            ' (' + model
+        if(serial != '0'):
+            info += ', serial: ' + serial
+        elif( id!= '-1'):
+            info += ', id: ' + id
+        info += ') subscribing to topic: ' + cam_topic_name
+        actions.append(LogInfo(msg=TextSubstitution(text=info)))
+
         # Add the Subscriber node
         isaac_image_sub_node = ComposableNode(
             package='zed_isaac_ros_nitros_sub',
@@ -185,24 +200,32 @@ def launch_setup(context, *args, **kwargs):
             namespace=namespace_val,
             remappings=[
                 ('image', cam_topic_name)
-                ],
-                parameters=[
-                example_params_file
+            ],
+            parameters=[
+                example_params_file,
+                # Overriding
+                {
+                    #'benchmark.csv_log_file': name + '_benchmark.csv'
+                    'benchmark.csv_log_file': ''
+                },
+                
             ],
             extra_arguments=[{'use_intra_process_comms': False}]
         )
 
-        # Create the full name of the container
-        container_full_name = namespace_val + '/' + container_name
-
-        # Load the Image Subscriber node into the container
-        load_sub_node = LoadComposableNodes(
-            composable_node_descriptions=[isaac_image_sub_node],
-            target_container=container_full_name
-        )
-        actions.append(load_sub_node)
+        sub_node_array.append(isaac_image_sub_node)
 
         cam_idx += 1
+
+    # Create the full name of the container
+    container_full_name = namespace_val + '/' + container_name
+
+    # Load the Image Subscriber nodes into the container
+    load_sub_node = LoadComposableNodes(
+        composable_node_descriptions=sub_node_array,
+        target_container=container_full_name
+    )
+    #actions.append(load_sub_node)
 
     # Create the Xacro command with correct camera names
     xacro_command = []
