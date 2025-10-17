@@ -51,6 +51,13 @@ def parse_array_param(param):
 
 def launch_setup(context, *args, **kwargs):
 
+    # Get the path to the camera configuration file
+    example_params_file = os.path.join(
+        get_package_share_directory('zed_isaac_ros_multi_camera'),
+        'config',
+        'example_params.yaml'
+    )
+
     # List of actions to be launched
     actions = []
 
