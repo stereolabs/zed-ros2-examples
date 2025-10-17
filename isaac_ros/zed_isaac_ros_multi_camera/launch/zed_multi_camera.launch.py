@@ -34,6 +34,13 @@ from launch_ros.actions import (
     ComposableNodeContainer
 )
 
+from launch_ros.descriptions import (
+    ComposableNode
+)
+
+# Enable colored output
+os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
+
 def parse_array_param(param):
     str = param.replace('[', '')
     str = str.replace(']', '')
@@ -59,7 +66,7 @@ def launch_setup(context, *args, **kwargs):
     models = LaunchConfiguration('cam_models')
     serials = LaunchConfiguration('cam_serials')
     ids = LaunchConfiguration('cam_ids')
-
+    topic_name = LaunchConfiguration('topic_name')
     disable_tf = LaunchConfiguration('disable_tf')
 
     names_arr = parse_array_param(names.perform(context))
@@ -67,6 +74,7 @@ def launch_setup(context, *args, **kwargs):
     serials_arr = parse_array_param(serials.perform(context))
     ids_arr = parse_array_param(ids.perform(context))
     disable_tf_val = disable_tf.perform(context)
+    topic_name_val = topic_name.perform(context)
 
     num_cams = len(names_arr)
 
@@ -137,10 +145,7 @@ def launch_setup(context, *args, **kwargs):
             if (disable_tf_val == 'False' or disable_tf_val == 'false'):
                 publish_tf = 'true'
 
-        # A different node name is required by the Diagnostic Updated
-        node_name = 'zed_node_' + str(cam_idx)
-
-        # Add the node
+        # Add the ZED node
         # ZED Wrapper launch file
         zed_wrapper_launch = IncludeLaunchDescription(
             launch_description_source=PythonLaunchDescriptionSource([
@@ -160,6 +165,34 @@ def launch_setup(context, *args, **kwargs):
             }.items()
         )
         actions.append(zed_wrapper_launch)
+
+        # Camera topic name for the subscriber (according to the camera name and namespace)
+        cam_topic_name = '/' + namespace_val + '/' + name + '/' + topic_name_val
+
+        # Add the Subscriber node
+        isaac_image_sub_node = ComposableNode(
+            package='zed_isaac_ros_nitros_sub',
+            plugin='stereolabs::ZedNitrosSubComponent',
+            name=name+'_nitros_sub_component',
+            namespace=namespace_val,
+            remappings=[
+                ('image', cam_topic_name)
+                ],
+                parameters=[
+                example_params_file
+            ],
+            extra_arguments=[{'use_intra_process_comms': False}]
+        )
+
+        # Create the full name of the container
+        container_full_name = namespace_val + '/' + container_name
+
+        # Load the Image Subscriber node into the container
+        load_sub_node = LoadComposableNodes(
+            composable_node_descriptions=[isaac_image_sub_node],
+            target_container=container_full_name
+        )
+        actions.append(load_sub_node)
 
         cam_idx += 1
 
@@ -220,6 +253,10 @@ def generate_launch_description():
                 'disable_tf',
                 default_value='False',
                 description='If `True` disable TF broadcasting for all the cameras in order to fuse visual odometry information externally.'),
+            DeclareLaunchArgument(
+                'topic_name',
+                default_value='rgb/color/rect/image',
+                description='The topic name to subscribe to for the benchmark processing.'),
             OpaqueFunction(function=launch_setup)
         ]
     )
