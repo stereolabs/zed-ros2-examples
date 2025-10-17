@@ -31,7 +31,8 @@ from launch.substitutions import (
 )
 from launch_ros.actions import (
     Node,
-    ComposableNodeContainer
+    ComposableNodeContainer,
+    LoadComposableNodes
 )
 
 from launch_ros.descriptions import (
