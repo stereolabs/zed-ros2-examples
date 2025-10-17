@@ -147,8 +147,8 @@ def launch_setup(context, *args, **kwargs):
             }
         ],
         remappings=[
-            ('image_raw', 'zed/rgb/image_rect_color'),
-            ('image', 'zed/rgb/image_rect_color_bgr8')
+            ('image_raw', 'zed/rgb/color/rect/image'),
+            ('image', 'zed/rgb/color/rect/image_bgr8')
         ]
     )
 
@@ -161,7 +161,7 @@ def launch_setup(context, *args, **kwargs):
         name='apriltag',
         namespace=namespace_val,
         remappings=[
-                ('image', 'zed/rgb/image_rect_color_bgr8'),
+                ('image', 'zed/rgb/color/rect/image_bgr8'),
                 ('camera_info', 'zed/rgb/camera_info')
         ],
         parameters=[apriltag_config_path]

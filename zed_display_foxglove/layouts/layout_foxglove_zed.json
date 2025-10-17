@@ -41,7 +41,7 @@
         "poseEstimateThetaDeviation": 0.26179939
       },
       "imageMode": {
-        "imageTopic": "/zed/zed_node/left/image_rect_color/compressed"
+        "imageTopic": "/zed/zed_node/left/color/rect/image/compressed"
       }
     },
     "Image!j4xzm2": {
@@ -177,10 +177,10 @@
             "#bbe02480"
           ]
         },
-        "/zed/zed_node/left_gray/image_rect_gray/compressed": {
+        "/zed/zed_node/left/gray/rect/image/compressed": {
           "visible": false
         },
-        "/zed/zed_node/left/image_rect_color/compressed": {
+        "/zed/zed_node/left/color/rect/image/compressed": {
           "visible": true,
           "cameraInfoTopic": "/zed/zed_node/left/camera_info",
           "distance": 1
