@@ -1,4 +1,4 @@
-# Copyright 2024 Stereolabs
+# Copyright 2025 Stereolabs
 #
 # Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
-    OpaqueFunction,
-    SetEnvironmentVariable
+    OpaqueFunction
 )
 from launch.conditions import IfCondition
 from launch.substitutions import (
@@ -31,6 +30,9 @@ from launch.substitutions import (
 from launch_ros.actions import Node
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+
+# Enable colored output
+os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
 # ZED Configurations to be loaded by ZED Node
 default_config_common = os.path.join(
@@ -190,7 +192,6 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription(
         [
-            SetEnvironmentVariable(name='RCUTILS_COLORIZED_OUTPUT', value='1'),
             DeclareLaunchArgument(
                 'camera_name',
                 default_value=TextSubstitution(text='zed'),

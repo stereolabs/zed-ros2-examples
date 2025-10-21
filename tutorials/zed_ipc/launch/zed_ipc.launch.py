@@ -1,4 +1,4 @@
-# Copyright 2024 Stereolabs
+# Copyright 2025 Stereolabs
 #
 # Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ from launch.actions import (
     LogInfo
 )
 from launch.substitutions import (
-    LaunchConfiguration
+    LaunchConfiguration,
+    TextSubstitution
 )
 from launch_ros.actions import (
     LoadComposableNodes
@@ -49,6 +50,7 @@ def launch_setup(context, *args, **kwargs):
     names = LaunchConfiguration('cam_names')
     models = LaunchConfiguration('cam_models')
     serials = LaunchConfiguration('cam_serials')
+    ids = LaunchConfiguration('cam_ids')
     disable_tf = LaunchConfiguration('disable_tf')
 
     # Call the multi-camera launch file
@@ -63,6 +65,7 @@ def launch_setup(context, *args, **kwargs):
             'cam_names': names,
             'cam_models': models,
             'cam_serials': serials,
+            'cam_ids': ids,
             'disable_tf': disable_tf
         }.items()
     )
@@ -113,7 +116,12 @@ def generate_launch_description():
                 description='An array containing the names of the cameras, e.g. [zed2i,zed2]'),
             DeclareLaunchArgument(
                 'cam_serials',
+                default_value=[],
                 description='An array containing the serial numbers of the cameras, e.g. [35199186,23154724]'),
+            DeclareLaunchArgument(
+                'cam_ids',
+                default_value=[],
+                description='An array containing the ID number of the cameras, e.g. [0,1]'),
             DeclareLaunchArgument(
                 'disable_tf',
                 default_value='False',

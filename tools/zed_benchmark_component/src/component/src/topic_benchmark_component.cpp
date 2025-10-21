@@ -1,4 +1,4 @@
-// Copyright 2024 Stereolabs
+// Copyright 2025 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -196,14 +196,14 @@ void TopicBenchmarkComponent::topicCallback(
   double bw_avg = avg_freq * bw_scale * msg->size();
 
   std::stringstream ss;
-  if(!mUseRosLog) {
+  if (!mUseRosLog) {
     ss << '\r';
   }
-  ss        << std::fixed << std::setprecision(2) << "#"
-            << ++mTopicCount << " - Freq: " << freq << " Hz (Avg: " << avg_freq
-            << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
-            << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) << " MB";
-  if(!mUseRosLog) {
+  ss << std::fixed << std::setprecision(2) << "#"
+     << ++mTopicCount << " - Freq: " << freq << " Hz (Avg: " << avg_freq
+     << " Hz) - Bandwidth: " << bw << " Mbps (Avg: " << bw_avg
+     << " Mbps) - Msg size: " << msg->size() / (1024. * 1024.) << " MB";
+  if (!mUseRosLog) {
     ss << std::flush;
 
     std::cout << ss.str();

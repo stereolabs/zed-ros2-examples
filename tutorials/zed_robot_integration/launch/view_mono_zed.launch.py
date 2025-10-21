@@ -1,4 +1,4 @@
-# Copyright 2024 Stereolabs
+# Copyright 2025 Stereolabs
 #
 # Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with the License.
@@ -25,11 +25,13 @@ from launch.actions import (
 )
 from launch.actions import (
     DeclareLaunchArgument,
-    OpaqueFunction,
-    SetEnvironmentVariable
+    OpaqueFunction
 )
 
-# Cmaera name and model
+# Enable colored output
+os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
+
+# Camera name and model
 camera_name = 'zed'
 camera_model = 'zedx'
 
@@ -97,7 +99,6 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     return LaunchDescription(
         [
-            SetEnvironmentVariable(name='RCUTILS_COLORIZED_OUTPUT', value='1'),
             DeclareLaunchArgument(
                 'use_zed_localization',
                 default_value='true',

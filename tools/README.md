@@ -1,4 +1,4 @@
-# Stereolabs ZED Camera - ROS2 topics benchmark tool
+# Stereolabs ZED Camera - ROS 2 topics benchmark tool
 
 This package provides a benchmark node to be used to test frequency and bandwidth of topics and eventually plot the realtime values.
 
@@ -67,4 +67,4 @@ float32 topic_avg_bw
 ```
 
 ## Advanced
-The package provides a ROS2 component called `stereolabs::TopicBenchmarkComponent` to be used with [Composition](https://docs.ros.org/en/humble/Tutorials/Intermediate/Composition.html) to test [Intra Process Communication (IPC)](https://design.ros2.org/articles/intraprocess_communications.html) performances.
+The package provides a ROS 2 component called `stereolabs::TopicBenchmarkComponent` to be used with [Composition](https://docs.ros.org/en/humble/Tutorials/Intermediate/Composition.html) to test [Intra Process Communication (IPC)](https://design.ros2.org/articles/intraprocess_communications.html) performances.

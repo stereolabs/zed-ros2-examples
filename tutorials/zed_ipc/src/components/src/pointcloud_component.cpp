@@ -1,4 +1,4 @@
-// Copyright 2024 Stereolabs
+// Copyright 2025 Stereolabs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ namespace stereolabs
 
 PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
 : Node("pointcloud_node", options)
-  , _qos(1)
+    , _qos(1)
 {
   RCLCPP_INFO(get_logger(), "********************************");
   RCLCPP_INFO(get_logger(), "   Point Cloud Sub Component ");
@@ -44,7 +44,7 @@ PointCloudComponent::PointCloudComponent(const rclcpp::NodeOptions & options)
   readParameters();
 
   _stats.resize(_camCount);
-  for(int i = 0; i < _camCount; i++) {
+  for (int i = 0; i < _camCount; i++) {
     _stats[i] = std::make_unique<WinAvg>(500);
   }
   _times.resize(_camCount);
@@ -135,7 +135,7 @@ void PointCloudComponent::callback_pointcloud(
   double freq = 1e6 / elapsed_usec;
   double avg_freq = _stats[idx]->addValue(freq);
 
-  if(freq > 60.0) {
+  if (freq > 60.0) {
     return;
   }
 
@@ -146,10 +146,10 @@ void PointCloudComponent::callback_pointcloud(
   double bw_avg = avg_freq * bw_scale * data_size;
 
   std::stringstream ss;
-  ss         << std::fixed << std::setprecision(2) << " #"
-             << ++_counters[idx] << " - Freq: " << freq << " Hz (Avg: " << avg_freq
-             << " Hz) - BW: " << bw << " Mbps (Avg: " << bw_avg
-             << " Mbps) - Msg size: " << data_size / (1024. * 1024.) << " MB";
+  ss << std::fixed << std::setprecision(2) << " #"
+     << ++_counters[idx] << " - Freq: " << freq << " Hz (Avg: " << avg_freq
+     << " Hz) - BW: " << bw << " Mbps (Avg: " << bw_avg
+     << " Mbps) - Msg size: " << data_size / (1024. * 1024.) << " MB";
 
   RCLCPP_INFO_STREAM(get_logger(), ss.str());
   // <---- Calculate statistics

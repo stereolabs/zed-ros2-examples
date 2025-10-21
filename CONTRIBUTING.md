@@ -6,27 +6,27 @@ Code contributions should be made via pull requests to the appropriate repositor
 * [zed-ros2-interfaces](https://github.com/stereolabs/zed-ros2-interfaces/pulls)
 * [zed-ros2-examples](https://github.com/stereolabs/zed-ros2-examples/pulls)
 
-We ask all contributors to follow the practices explained in [ROS2 documentation](https://docs.ros.org/en/humble/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html).
+We ask all contributors to follow the practices explained in [ROS 2 documentation](https://docs.ros.org/en/humble/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html).
 
-Before submitting a pull request please perform this list of tasks from the root of your ROS2 workspace:
-1. Automatic code formatting: 
-   
+Before submitting a pull request please perform this list of tasks from the root of your ROS 2 workspace:
+
+1. Automatic code formatting:
+
    `$ ament_uncrustify --reformat src`
 
-2. Build the packages to check for compile errors: 
-   
+2. Build the packages to check for compile errors:
+
    `$ colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release`
 
-3. Perform the automatic build tests: 
-   
+3. Perform the automatic build tests:
+
    `$ colcon test`
 
-4. Analyze and solve eventually reported errors: 
-   
+4. Analyze and solve eventually reported errors:
+
    `$ colcon test-result --verbose`
 
 5. Repeat steps (1) -> (4) until all reported formatting errors have been resolved.
-
 
 ## License
 
