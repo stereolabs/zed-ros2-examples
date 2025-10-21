@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
-project(zed_aruco_localization
-)
-
 set(CMAKE_CUDA_ARCHITECTURES "native")
+project(zed_aruco_localization LANGUAGES C CXX CUDA)
 
 ## Generate symbols for IDE indexer
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -41,6 +39,8 @@ if(ROS2_FOUND)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_JAZZY)
+        cmake_policy(SET CMP0146 OLD)
+        cmake_policy(SET CMP0153 OLD)
     else()
         message("*** WARNING *** Unsupported ROS2 ${FOUND_ROS2_DISTRO}. '${PROJECT_NAME}' may not work correctly.")
     endif()
@@ -87,7 +87,6 @@ endif()
 
 find_package(OpenCV 4 REQUIRED)
 find_package(ZED 4 REQUIRED)
-find_package(CUDA REQUIRED)
 
 set(DEPENDENCIES_COMP
     rclcpp
