@@ -31,8 +31,16 @@ from launch.substitutions import (
 )
 from launch_ros.actions import (
     Node,
-    ComposableNodeContainer
+    ComposableNodeContainer,
+    LoadComposableNodes
 )
+
+from launch_ros.descriptions import (
+    ComposableNode
+)
+
+# Enable colored output
+os.environ["RCUTILS_COLORIZED_OUTPUT"] = "1"
 
 def parse_array_param(param):
     str = param.replace('[', '')
@@ -40,9 +48,19 @@ def parse_array_param(param):
     str = str.replace(' ', '')
     arr = str.split(',')
 
+    if arr[0] == '':
+        return []
+
     return arr
 
 def launch_setup(context, *args, **kwargs):
+
+    # Get the path to the camera configuration file
+    example_params_file = os.path.join(
+        get_package_share_directory('zed_isaac_ros_multi_camera'),
+        'config',
+        'example_params.yaml'
+    )
 
     # List of actions to be launched
     actions = []
@@ -59,7 +77,7 @@ def launch_setup(context, *args, **kwargs):
     models = LaunchConfiguration('cam_models')
     serials = LaunchConfiguration('cam_serials')
     ids = LaunchConfiguration('cam_ids')
-
+    topic_name = LaunchConfiguration('topic_name')
     disable_tf = LaunchConfiguration('disable_tf')
 
     names_arr = parse_array_param(names.perform(context))
@@ -67,8 +85,21 @@ def launch_setup(context, *args, **kwargs):
     serials_arr = parse_array_param(serials.perform(context))
     ids_arr = parse_array_param(ids.perform(context))
     disable_tf_val = disable_tf.perform(context)
+    topic_name_val = topic_name.perform(context)
 
     num_cams = len(names_arr)
+
+    info = '* Number of cameras to be configured: ' + str(num_cams)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+
+    info = '* Camera names: ' + str(names_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    info = '* Camera models: ' + str(models_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    info = '* Camera serials: ' + str(serials_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    info = '* Camera IDs: ' + str(ids_arr)
+    actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
     if (num_cams != len(models_arr)):
         return [
@@ -83,14 +114,7 @@ def launch_setup(context, *args, **kwargs):
         ]
     
     # ROS 2 Component Container
-    container_name = 'zed_multi_container'
-    distro = os.environ['ROS_DISTRO']
-    if distro == 'foxy':
-        # Foxy does not support the isolated mode
-        container_exec='component_container'
-    else:
-        container_exec='component_container_isolated'
-    
+    container_name = 'zed_multi_container'    
     info = '* Starting Composable node container: /' + namespace_val + '/' + container_name
     actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
@@ -98,7 +122,7 @@ def launch_setup(context, *args, **kwargs):
         name=container_name,
         namespace=namespace_val,
         package='rclcpp_components',
-        executable=container_exec,
+        executable='component_container_isolated',
         arguments=['--ros-args', '--log-level', 'info'],
         output='screen',
     )
@@ -106,6 +130,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Set the first camera idx
     cam_idx = 0
+    sub_node_array = []
 
     for name in names_arr:
         model = models_arr[cam_idx]
@@ -118,17 +143,14 @@ def launch_setup(context, *args, **kwargs):
             id = ids_arr[cam_idx]
         else:
             id = '-1'
-        
-        pose = '['
 
-        info = '* Starting a ZED ROS2 node for camera ' + name + \
-            ' (' + model        
+        info = '* Adding a ZED ROS2 node for camera ' + name + \
+            ' (' + model
         if(serial != '0'):
             info += ', serial: ' + serial
         elif( id!= '-1'):
             info += ', id: ' + id
         info += ')'
-
         actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
         # Only the first camera send odom and map TF
@@ -137,10 +159,7 @@ def launch_setup(context, *args, **kwargs):
             if (disable_tf_val == 'False' or disable_tf_val == 'false'):
                 publish_tf = 'true'
 
-        # A different node name is required by the Diagnostic Updated
-        node_name = 'zed_node_' + str(cam_idx)
-
-        # Add the node
+        # Add the ZED node
         # ZED Wrapper launch file
         zed_wrapper_launch = IncludeLaunchDescription(
             launch_description_source=PythonLaunchDescriptionSource([
@@ -161,7 +180,52 @@ def launch_setup(context, *args, **kwargs):
         )
         actions.append(zed_wrapper_launch)
 
+        # Camera topic name for the subscriber (according to the camera name and namespace)
+        cam_topic_name = '/' + namespace_val + '/' + name + '/' + topic_name_val
+
+        info = '* Adding a Subscriber node for camera ' + name + \
+            ' (' + model
+        if(serial != '0'):
+            info += ', serial: ' + serial
+        elif( id!= '-1'):
+            info += ', id: ' + id
+        info += ') subscribing to topic: ' + cam_topic_name
+        actions.append(LogInfo(msg=TextSubstitution(text=info)))
+
+        # Add the Subscriber node
+        isaac_image_sub_node = ComposableNode(
+            package='zed_isaac_ros_nitros_sub',
+            plugin='stereolabs::ZedNitrosSubComponent',
+            name=name+'_nitros_sub_component',
+            namespace=namespace_val,
+            remappings=[
+                ('image', cam_topic_name)
+            ],
+            parameters=[
+                example_params_file,
+                # Overriding
+                {
+                    #'benchmark.csv_log_file': name + '_benchmark.csv'
+                    'benchmark.csv_log_file': ''
+                },
+                
+            ],
+            extra_arguments=[{'use_intra_process_comms': False}]
+        )
+
+        sub_node_array.append(isaac_image_sub_node)
+
         cam_idx += 1
+
+    # Create the full name of the container
+    container_full_name = namespace_val + '/' + container_name
+
+    # Load the Image Subscriber nodes into the container
+    load_sub_node = LoadComposableNodes(
+        composable_node_descriptions=sub_node_array,
+        target_container=container_full_name
+    )
+    #actions.append(load_sub_node)
 
     # Create the Xacro command with correct camera names
     xacro_command = []
@@ -220,6 +284,10 @@ def generate_launch_description():
                 'disable_tf',
                 default_value='False',
                 description='If `True` disable TF broadcasting for all the cameras in order to fuse visual odometry information externally.'),
+            DeclareLaunchArgument(
+                'topic_name',
+                default_value='rgb/color/rect/image',
+                description='The topic name to subscribe to for the benchmark processing.'),
             OpaqueFunction(function=launch_setup)
         ]
     )
