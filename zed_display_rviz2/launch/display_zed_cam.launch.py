@@ -52,9 +52,12 @@ def launch_setup(context, *args, **kwargs):
         camera_model_val=='zed2i' or
         camera_model_val=='zedx' or
         camera_model_val=='zedxm' or
+        camera_model_val=='zedxhdrmini' or
+        camera_model_val=='zedxhdr' or
+        camera_model_val=='zedxhdrmax' or
         camera_model_val=='virtual'):
         camera_type = 'stereo'
-    else: # 'zedxonegs' or 'zedxone4k')
+    else: # 'zedxonegs', 'zedxone4k', 'zedxonehdr')
         camera_type = 'mono'
 
     # RVIZ2 Configurations to be loaded by ZED Node
@@ -109,7 +112,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'camera_model',
                 description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
-                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'virtual', 'zedxonegs', 'zedxone4k']),
+                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'zedxhdrmini', 'zedxhdr', 'zedxhdrmax', 'virtual', 'zedxonegs', 'zedxone4k', 'zedxonehdr']),
             DeclareLaunchArgument(
                 'publish_svo_clock',
                 default_value='false',
