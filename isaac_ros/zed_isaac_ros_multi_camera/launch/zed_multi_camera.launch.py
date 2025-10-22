@@ -123,7 +123,7 @@ def launch_setup(context, *args, **kwargs):
         namespace=namespace_val,
         package='rclcpp_components',
         executable='component_container_isolated',
-        arguments=['--ros-args', '--log-level', 'info'],
+        arguments=['--use_multi_threaded_executor','--ros-args', '--log-level', 'info'],
         output='screen',
     )
     actions.append(zed_container)
@@ -175,7 +175,8 @@ def launch_setup(context, *args, **kwargs):
                 'publish_tf': publish_tf,
                 'publish_map_tf': publish_tf,
                 'namespace': namespace_val,
-                'enable_ipc': 'false'
+                'enable_ipc': 'false',
+                'ros_params_override_path': example_params_file
             }.items()
         )
         actions.append(zed_wrapper_launch)
@@ -205,8 +206,9 @@ def launch_setup(context, *args, **kwargs):
                 example_params_file,
                 # Overriding
                 {
-                    #'benchmark.csv_log_file': name + '_benchmark.csv'
-                    'benchmark.csv_log_file': ''
+                    'benchmark.csv_log_file': name + '_benchmark.csv',
+                    #'benchmark.csv_log_file': ''
+
                 },
                 
             ],
@@ -221,11 +223,11 @@ def launch_setup(context, *args, **kwargs):
     container_full_name = namespace_val + '/' + container_name
 
     # Load the Image Subscriber nodes into the container
-    load_sub_node = LoadComposableNodes(
+    load_sub_nodes = LoadComposableNodes(
         composable_node_descriptions=sub_node_array,
         target_container=container_full_name
     )
-    #actions.append(load_sub_node)
+    actions.append(load_sub_nodes)
 
     # Create the Xacro command with correct camera names
     xacro_command = []
