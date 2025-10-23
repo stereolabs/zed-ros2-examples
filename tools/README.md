@@ -26,18 +26,18 @@ $ ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=<na
 for example:
 
 ```bash
-ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=/zed2i/zed_node/rgb/image_rect_color
+ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=/zed2i/zed_node/rgb/color/rect/image
 ```
 
 The node will print all the topic information on the console:
 
 ```bash
 [INFO] [1665764376.862143962] [topic_benchmark]: ***** Benchmark parameters *****
-[INFO] [1665764376.862355022] [topic_benchmark]: * Topic name: /zed2i/zed_node/rgb/image_rect_color
+[INFO] [1665764376.862355022] [topic_benchmark]: * Topic name: /zed/zed_node/rgb/color/rect/image
 [INFO] [1665764376.862462857] [topic_benchmark]: Average window size: 500
 [INFO] [1665764376.862496172] [topic_benchmark]: *** START BENCHMARK ***
-[INFO] [1665764376.863484009] [topic_benchmark]: Advertised on topic: /zed2i/zed_node/rgb/image_rect_color_stats
-[INFO] [1665764377.363430211] [topic_benchmark]: Found topic: '/zed2i/zed_node/rgb/image_rect_color' of type: 'sensor_msgs/msg/Image'
+[INFO] [1665764376.863484009] [topic_benchmark]: Advertised on topic: /zed/zed_node/rgb/color/rect/image_stats
+[INFO] [1665764377.363430211] [topic_benchmark]: Found topic: '/zed/zed_node/rgb/color/rect/image' of type: 'sensor_msgs/msg/Image'
 #119 - Freq: 6.01 Hz (Avg: 13.49 Hz) - Bandwidth: 42.28 Mbps (Avg: 94.87 Mbps) - Msg size: 0.88 MB
 ```
 

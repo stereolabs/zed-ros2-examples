@@ -83,8 +83,8 @@ def generate_launch_description():
             config_camera,  # Camera related parameters
         ],
         remappings=[
-            ('zed_image_4ch', 'zed_node/rgb/image_rect_color'),
-            ('camera_info', 'zed_node/rgb/camera_info')
+            ('zed_image_4ch', 'zed_node/rgb/color/rect/image'),
+            ('camera_info', 'zed_node/rgb/color/rect/image')
         ]
     )
 
