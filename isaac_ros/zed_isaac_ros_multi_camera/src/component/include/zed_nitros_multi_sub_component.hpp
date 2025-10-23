@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ZED_NITROS_SUB_COMPONENT_HPP_
-#define ZED_NITROS_SUB_COMPONENT_HPP_
+#ifndef ZED_NITROS_MULTI_SUB_COMPONENT_HPP_
+#define ZED_NITROS_MULTI_SUB_COMPONENT_HPP_
 
 #include <rcutils/logging_macros.h>
 
@@ -25,7 +25,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 
-#include "nitros_sub_visibility_control.hpp"
+#include "nitros_multi_sub_visibility_control.hpp"
 
 namespace stereolabs
 {
@@ -55,30 +55,30 @@ struct BenchmarkResults
   BenchmarkTest gpu_load_nitros;
 };
 
-class ZedNitrosSubComponent : public rclcpp::Node
+class ZedNitrosMultiSubComponent : public rclcpp::Node
 {
 public:
-  ZED_NITROS_SUB_COMPONENT_PUBLIC
-  explicit ZedNitrosSubComponent(const rclcpp::NodeOptions & options);
+  ZED_NITROS_MULTI_SUB_COMPONENT_PUBLIC
+  explicit ZedNitrosMultiSubComponent(const rclcpp::NodeOptions & options);
 
-  virtual ~ZedNitrosSubComponent() {}
+  virtual ~ZedNitrosMultiSubComponent() {}
 
 protected:
   // Read the parameters from the parameter server
   void read_parameters();
 
   // Create and enable the standard ROS 2 subscriber
-  void create_dds_subscriber();
+  void create_dds_subscribers();
 
   // Create and enable the Nitros subscriber
   void create_nitros_subscriber();
 
-// Standard ROS 2 subscriber callback for the image topic
-  void dds_sub_callback(const sensor_msgs::msg::Image::ConstSharedPtr & img);
+  // Standard ROS 2 subscriber callback for the image topic
+  void dds_sub_callback(const sensor_msgs::msg::Image::ConstSharedPtr & img, int source_index);
 
   // Nitros subscriber callback for the image topic
   void nitros_sub_callback(
-    const nvidia::isaac_ros::nitros::NitrosImageView & img);
+      const nvidia::isaac_ros::nitros::NitrosImageView& img, int source_index);
 
   // Initialize the benchmark results statistics
   void initialize_benchmark_results();
@@ -117,18 +117,22 @@ private:
   int _cpuGpuLoadAvgWndSize = 10;  // Size of the averaging window for CPU and GPU load statistics
   std::string _csvLogFile = "";  // If not empty, log the benchmark results in a CSV file with the specified name
   bool _disableDDSTest = false;  // Disable the DDS benchmark test
+  std::vector<std::string> _camNames;  // Names of the cameras to subscribe to
+
+  // Cameras
+  int _numCams = 1;  // Number of cameras
 
   // Message type
   bool _isDepth = false;  // True if the topic is a depth map
   std::string _encoding;  // Encoding of the subscribed image topic
 
   // Standard subscriber to the image topic
-  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr _sub;
+  std::vector<rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr> _subArray;
 
   // Nitros subscriber to the image topic
-  std::shared_ptr<nvidia::isaac_ros::nitros::ManagedNitrosSubscriber<
-      nvidia::isaac_ros::nitros::NitrosImageView>>
-  _nitrosSub;
+  std::vector<std::shared_ptr<nvidia::isaac_ros::nitros::ManagedNitrosSubscriber<
+      nvidia::isaac_ros::nitros::NitrosImageView>>>
+  _nitrosSubArray;
 
   // Time of the last received message
   rclcpp::Time _lastMsgTime;
@@ -141,9 +145,9 @@ private:
   std::atomic<double> _gpuLoadAvg{0.0};
 
   // Benchmark results
-  BenchmarkResults _benchmarkResults;
+  std::vector<BenchmarkResults> _benchmarkResults;
 };
 
 }  // namespace stereolabs
 
-#endif  // ZED_NITROS_SUB_COMPONENT_HPP_
+#endif  // ZED_NITROS_MULTI_SUB_COMPONENT_HPP_
