@@ -1,6 +1,10 @@
 # Stereolabs ZED Camera - ROS 2 topics benchmark tool
 
-This package provides a benchmark node to be used to test frequency and bandwidth of topics and eventually plot the realtime values.
+This package provides benchmarking tools for evaluating the performance of ZED ROS 2 integrations. It includes two benchmark nodes: `zed_topic_benchmark`, which measures the throughput and stability of published ZED topics, and `zed_hardware_load_benchmark`, which monitors system resource usage such as CPU and GPU while the ZED pipeline is running. Together, these nodes help assess both communication performance and hardware load under realistic operating conditions.
+
+## ZED Topic Benchmark node
+
+It can be used to test frequency and bandwidth of topics and eventually plot the realtime values.
 
 For each topic the following information will be available:
 
@@ -11,6 +15,7 @@ For each topic the following information will be available:
 * Real time topic bandwidth
 * Window average topic bandwidth
 
+
 The node publishes a message on the topic `<name_of_the_topic_to_test>_stats` containing all the information to be eventually plotted.
 
 **Note:** This tool is not available for Foxy distribution because it misses an important feature required to subscribe to "generic topics".
@@ -20,13 +25,13 @@ The node publishes a message on the topic `<name_of_the_topic_to_test>_stats` co
 Open a new terminal console and start the benchmark node:
 
 ```bash
-$ ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=<name_of_the_topic_to_test>
+$ ros2 run zed_benchmark zed_topic_benchmark --ros-args -p topic_name:=<name_of_the_topic_to_test>
 ```
 
 for example:
 
 ```bash
-ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=/zed2i/zed_node/rgb/color/rect/image
+ros2 run zed_benchmark zed_topic_benchmark --ros-args -p topic_name:=/zed2i/zed_node/rgb/color/rect/image
 ```
 
 The node will print all the topic information on the console:
@@ -65,6 +70,8 @@ float32 topic_bw
 # Average Bandwidth
 float32 topic_avg_bw
 ```
+## ZED Topic Benchmark node
+
 
 ## Advanced
 The package provides a ROS 2 component called `stereolabs::TopicBenchmarkComponent` to be used with [Composition](https://docs.ros.org/en/humble/Tutorials/Intermediate/Composition.html) to test [Intra Process Communication (IPC)](https://design.ros2.org/articles/intraprocess_communications.html) performances.

@@ -14,7 +14,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "zed_benchmark_components/topic_benchmark_component.hpp"
+#include "zed_benchmark_components/hardware_load_benchmark_component.hpp"
 
 int main(int argc, char * argv[])
 {
@@ -34,7 +34,7 @@ int main(int argc, char * argv[])
   rclcpp::NodeOptions options;
 
   // Add topic_benchmark node
-  auto node = std::make_shared<stereolabs::TopicBenchmarkComponent>(options);
+  auto node = std::make_shared<stereolabs::HardwareLoadBenchmarkComponent>(options);
   exec.add_node(node);
 
   // spin will block until work comes in, execute work as it becomes available,

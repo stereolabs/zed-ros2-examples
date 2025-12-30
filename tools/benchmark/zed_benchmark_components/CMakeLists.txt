@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(zed_benchmark)
+project(zed_benchmark_components)
 
 ## Generate symbols for IDE indexer
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -29,10 +29,7 @@ else()
 endif()
 
 if(ROS2_FOUND)
-    if(${FOUND_ROS2_DISTRO} STREQUAL "foxy")
-        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_FOXY)
-    elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
+    if(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
@@ -63,18 +60,19 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   # dependencies
   set(DEPENDENCIES
     rclcpp
-    rclcpp_components
-    zed_benchmark_components
+    rclcpp_components    
+    zed_topic_benchmark_interfaces
   )
 
   find_package(ament_cmake_auto REQUIRED)
   ament_auto_find_build_dependencies()
+  
+  find_package(CUDA ${ZED_CUDA_VERSION} REQUIRED)
 
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
-  find_package(zed_benchmark_components REQUIRED)
-  
-  find_package(CUDA ${ZED_CUDA_VERSION} REQUIRED)
+  find_package(zed_topic_benchmark_interfaces REQUIRED)
+
 
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
@@ -90,65 +88,91 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   
   ## INCLUDES and LIBS
   include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
     ${CUDA_INCLUDE_DIRS}
-  )
+  ) 
 
   link_directories(${CUDA_LIBRARY_DIRS})
 
-  ## Sources
-  set(SRC_CONT 
-  	src/topic_benchmark_container.cpp
-  )
+  ## SOURCES
   
-   set(HARDWARE_LOAD_SRC_CONT 
-  	src/hardware_load_benchmark_container.cpp
+  set(TOPIC_BENCHMARK_SRC_COMP
+    src/zed_topic_benchmark/src/topic_benchmark_component.cpp
+    src/zed_topic_benchmark/src/winavg.cpp)
+    
+  set(HARDWARE_LOAD_BENCHMARK_SRC_COMP
+    src/zed_hardware_load_benchmark/src/hardware_load_benchmark_component.cpp
+    )
+  
+  ## Topic Benchmark Component
+  
+  add_library(zed_topic_benchmark_component SHARED
+    ${TOPIC_BENCHMARK_SRC_COMP}
   )
-
-
-  ## Build Topic Benchmark node
-  add_executable(zed_topic_benchmark ${SRC_CONT})
-  ament_target_dependencies(zed_topic_benchmark
+  target_compile_definitions(zed_topic_benchmark_component
+    PRIVATE "COMPOSITION_BUILDING_DLL"
+  )
+  ament_target_dependencies(zed_topic_benchmark_component
     ${DEPENDENCIES}
-    zed_benchmark_components
   )
-  
-  target_link_libraries(zed_topic_benchmark 
-  zed_benchmark_components::zed_topic_benchmark_component
+
+  target_include_directories(zed_topic_benchmark_component PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zed_topic_benchmark/include>
+    $<INSTALL_INTERFACE:include>
   )
+
+  rclcpp_components_register_nodes(zed_topic_benchmark_component "stereolabs::TopicBenchmarkComponent")
+  set(node_plugins "${node_plugins}stereolabs::TopicBenchmarkComponent;$<TARGET_FILE:zed_topic_benchmark_component>\n")
   
-  ## Build Hardware Load Benchmark node
-   add_executable(zed_hardware_load_benchmark ${HARDWARE_LOAD_SRC_CONT})
-  ament_target_dependencies(zed_hardware_load_benchmark
+  ## Hardware Load Benchmarck Component
+  
+  add_library(zed_hardware_load_benchmark_component SHARED
+    ${HARDWARE_LOAD_BENCHMARK_SRC_COMP}
+  )
+  target_compile_definitions(zed_hardware_load_benchmark_component
+    PRIVATE "COMPOSITION_BUILDING_DLL"
+  )
+  ament_target_dependencies(zed_hardware_load_benchmark_component
     ${DEPENDENCIES}
-    zed_benchmark_components
   )
   
-  target_link_libraries(zed_hardware_load_benchmark
-  zed_benchmark_components::zed_hardware_load_benchmark_component
-  ${CUDA_CUDART_LIBRARY}
+  target_link_libraries(zed_hardware_load_benchmark_component
+    ${CUDA_CUDA_LIBRARY} 
+    ${CUDA_CUDART_LIBRARY}
   )
   
-  ## Build Performance Test Duration Node
+  target_include_directories(zed_hardware_load_benchmark_component PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zed_hardware_load_benchmark/include>
+    $<INSTALL_INTERFACE:include>
+  )
   
-  add_executable(performance_test_duration_node src/performance_test_duration_node.cpp)
-  ament_target_dependencies(performance_test_duration_node  rclcpp)
+  
 
-  ## Install executable
-  install(TARGETS zed_topic_benchmark zed_hardware_load_benchmark performance_test_duration_node
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
-  )
+  rclcpp_components_register_nodes(zed_hardware_load_benchmark_component "stereolabs::HardwareLoadBenchmarkComponent")
+  set(node_plugins "${node_plugins}stereolabs::HardwareLoadBenchmarkComponent;$<TARGET_FILE:zed_hardware_load_benchmark_component>\n")
 
-  # Install LAUNCH files
+  install(TARGETS zed_topic_benchmark_component zed_hardware_load_benchmark_component
+  EXPORT zed_benchmark_componentsTargets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
   install(DIRECTORY
-    launch
-    config
-    scripts
-    DESTINATION share/${PROJECT_NAME}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/zed_topic_benchmark/include/
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/zed_hardware_load_benchmark/include/
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
+    DESTINATION include/${PROJECT_NAME}
   )
 
+  ament_export_include_directories(include)
+  ament_export_targets(zed_benchmark_componentsTargets HAS_LIBRARY_TARGET)
+  ament_export_dependencies(${DEPENDENCIES})
   ament_package()
 endif()
+
+
 
 
