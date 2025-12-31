@@ -32,15 +32,15 @@ namespace stereolabs
   {
     // Initialize HardwareLoad internals (createCPUusage/createGPUusage/... are called inside launch()).
     // We immediately join to stop its internal 10ms sampling thread, because THIS node uses its own timer.
-    hw_.launch();
-    hw_.join();
+    mHw.launch();
+    mHw.join();
 
     // Retrieve parameters
     getParameters();
 
     // Create timer for sampling
     auto period = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::milliseconds(mLoadPeriod));
-    timer_ = this->create_wall_timer(period, std::bind(&HardwareLoadBenchmarkComponent::getLoadMeasurements, this));
+    mTimer = this->create_wall_timer(period, std::bind(&HardwareLoadBenchmarkComponent::getLoadMeasurements, this));
 
     RCLCPP_INFO(this->get_logger(),
               "HardwareLoadComponent started. Sampling every %d ms, output: %s",
@@ -91,27 +91,41 @@ namespace stereolabs
   void HardwareLoadBenchmarkComponent::getParameters()
   {
     RCLCPP_INFO(get_logger(), "***** Load Benchmark parameters *****");
-    getParam("cpu_gpu_load_period", mLoadPeriod, mLoadPeriod, "CPU/GPU Load Period");
+    getParam("cpu_gpu_load_period" , mLoadPeriod, mLoadPeriod, "CPU/GPU Load Period: ");
     getParam("results_file_path", mResultsFilePath, mResultsFilePath, "Results File path: "); 
+    getParam("use_ros_log", mUseRosLog, mUseRosLog, "ROS Log: ");
   }
 
 
   void HardwareLoadBenchmarkComponent::getLoadMeasurements()
   {
-    hw_.compute();
+    mHw.compute();
 
-    const float cpu = hw_.getCPUload();
-    const float gpu = hw_.getGPUload();
+    const float cpu = mHw.getCPUload();
+    const float gpu = mHw.getGPUload();
+    mRamLoad = mHw.getRAMload();
 
     if (cpu >= 0.0f && cpu <100.0f) {
-      cpu_samples_.push_back(cpu);
+      mCpuSamples.push_back(cpu);
     }
     
     if (gpu >= 0.0f && gpu <100.0f) {
-      gpu_samples_.push_back(gpu);
+      mGpuSamples.push_back(gpu);
     }
 
-    RCLCPP_INFO_STREAM(get_logger(), "Retrieving hardware load measurements: CPU is " <<cpu << ", GPU is "<< gpu);
+    std::stringstream ss;
+    if (!mUseRosLog) {
+      ss << '\r';
+    }
+    ss << std::fixed << std::setprecision(2) <<" - CPU Load: " << cpu << "% - GPU Load: " << gpu
+     << " % - RAM Load: " << mRamLoad;
+
+    if (!mUseRosLog) {
+      ss << std::flush;
+      std::cout << ss.str();
+    } else {
+    RCLCPP_INFO_STREAM(get_logger(), ss.str());
+    }
   }
 
   double HardwareLoadBenchmarkComponent::getMean(const std::vector<float> & v)
@@ -125,8 +139,8 @@ namespace stereolabs
   {
    
     // Cancel timer first
-    if (timer_) {
-      timer_->cancel();
+    if (mTimer) {
+      mTimer->cancel();
     }
 
     RCLCPP_INFO_STREAM(
@@ -141,8 +155,9 @@ namespace stereolabs
     }
 
     output_file
-      << "Average CPU Load: " << getMean(cpu_samples_) << "\n"
-      << "Average GPU Load: " << getMean(gpu_samples_) << "\n"
+      << "Average CPU Load: " << getMean(mCpuSamples) << "\n"
+      << "Average GPU Load: " << getMean(mGpuSamples) << "\n"
+      << "RAM Load: " << mRamLoad << "\n"
 
       << "-----------------------------\n";
 

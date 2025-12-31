@@ -59,17 +59,19 @@ private:
     
   // Params
   int mLoadPeriod;
-  std::string mResultsFilePath;
+  std::string mResultsFilePath = "results.txt";
+  bool mUseRosLog = false;  ///< Use ROS logging system
 
   // Hardware measurement helper (from your header)
-  HardwareLoad hw_;
+  HardwareLoad mHw;
 
   // Timer
-  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr mTimer;
 
   // Measurements samples
-  std::vector<float> cpu_samples_;
-  std::vector<float> gpu_samples_;
+  std::vector<float> mCpuSamples;
+  std::vector<float> mGpuSamples;
+  float mRamLoad;
 
 };
 

@@ -65,9 +65,23 @@ double WinAvg::getAvg()
 {
   std::lock_guard<std::mutex> guard(mQueueMux);
 
-  double avg = mSumVals / mVals.size();
-
+  double avg = 0.0;
+  if (mVals.size() > 0) avg = mSumVals / mVals.size();
   return avg;
 }
+
+double WinAvg::getStdDev()
+{
+  double sum = 0.0;
+  double avg = getAvg();
+  double size = mWinSize;
+  auto tmp = mVals;
+  while (!tmp.empty()) {
+    sum+= (tmp.front() - avg)*(tmp.front() - avg);
+    tmp.pop_front();
+  }
+  return size == 0.0 ? 0.0 : std::sqrt(sum / size);
+}
+
 
 }  // namespace stereolabs

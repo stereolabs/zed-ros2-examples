@@ -18,6 +18,7 @@
 #include <cstddef>  // size_t
 #include <deque>    // std::dequeue
 #include <mutex>
+#include <cmath>
 
 namespace stereolabs
 {
@@ -30,10 +31,15 @@ public:
 
   double setNewSize(size_t win_size);
   double addValue(double val);
+  
 
   /// @brief Get the current average of the stored values
   /// @return average of the stored values
   double getAvg();
+
+  /// @brief Get the current standard deviation  of the stored values
+  /// @return standard deviation of the stored values
+  double getStdDev();
 
   inline size_t size() {return mVals.size();}
 

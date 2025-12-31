@@ -146,7 +146,7 @@ void TopicBenchmarkComponent::updateTopicInfo()
           get_logger(), "Found topic: '" << mTopicName
                                          << "' of type: '"
                                          << topic_type << "'");
-
+        mTopicType = topic_type;
         auto sub_opt = rclcpp::SubscriptionOptions();
         sub_opt.qos_overriding_options =
           rclcpp::QosOverridingOptions::with_default_policies();
@@ -253,6 +253,7 @@ void TopicBenchmarkComponent::saveResults()
     << "Topic Name: " << mTopicName << "\n"
     << "Topic Type: " << mTopicType << "\n"
     << "Average Frequency: " << mAvgFreq.getAvg() << "\n"
+    << "Average Frequency Standard Deviation: " << mAvgFreq.getStdDev() << "\n"
     << "Average Bandwidth: " << mSubFreqBw << "\n"
 
     << "-----------------------------\n";
