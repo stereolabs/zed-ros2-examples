@@ -47,6 +47,10 @@ def parse_array_param(param):
     str = str.replace(']', '')
     str = str.replace(' ', '')
     arr = str.split(',')
+    
+    if arr[0] == '':
+        return []
+        
     return arr
 
 def launch_setup(context, *args, **kwargs):
