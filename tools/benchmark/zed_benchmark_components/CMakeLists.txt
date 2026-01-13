@@ -100,10 +100,6 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
     src/zed_topic_benchmark/src/topic_benchmark_component.cpp
     src/zed_topic_benchmark/src/winavg.cpp)
     
-  set(HARDWARE_LOAD_BENCHMARK_SRC_COMP
-    src/zed_hardware_load_benchmark/src/hardware_load_benchmark_component.cpp
-    )
-  
   ## Topic Benchmark Component
   
   add_library(zed_topic_benchmark_component SHARED
@@ -125,35 +121,8 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   rclcpp_components_register_nodes(zed_topic_benchmark_component "stereolabs::TopicBenchmarkComponent")
   set(node_plugins "${node_plugins}stereolabs::TopicBenchmarkComponent;$<TARGET_FILE:zed_topic_benchmark_component>\n")
   
-  ## Hardware Load Benchmarck Component
-  
-  add_library(zed_hardware_load_benchmark_component SHARED
-    ${HARDWARE_LOAD_BENCHMARK_SRC_COMP}
-  )
-  target_compile_definitions(zed_hardware_load_benchmark_component
-    PRIVATE "COMPOSITION_BUILDING_DLL"
-  )
-  ament_target_dependencies(zed_hardware_load_benchmark_component
-    ${DEPENDENCIES}
-  )
-  
-  target_link_libraries(zed_hardware_load_benchmark_component
-    ${CUDA_CUDA_LIBRARY} 
-    ${CUDA_CUDART_LIBRARY}
-  )
-  
-  target_include_directories(zed_hardware_load_benchmark_component PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/zed_hardware_load_benchmark/include>
-    $<INSTALL_INTERFACE:include>
-  )
-  
-  
 
-  rclcpp_components_register_nodes(zed_hardware_load_benchmark_component "stereolabs::HardwareLoadBenchmarkComponent")
-  set(node_plugins "${node_plugins}stereolabs::HardwareLoadBenchmarkComponent;$<TARGET_FILE:zed_hardware_load_benchmark_component>\n")
-
-  install(TARGETS zed_topic_benchmark_component zed_hardware_load_benchmark_component
+  install(TARGETS zed_topic_benchmark_component 
   EXPORT zed_benchmark_componentsTargets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -162,7 +131,6 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
 
   install(DIRECTORY
     ${CMAKE_CURRENT_SOURCE_DIR}/src/zed_topic_benchmark/include/
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/zed_hardware_load_benchmark/include/
     ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
     DESTINATION include/${PROJECT_NAME}
   )

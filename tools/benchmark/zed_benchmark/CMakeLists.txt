@@ -99,10 +99,7 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   set(SRC_CONT 
   	src/topic_benchmark_container.cpp
   )
-  
-   set(HARDWARE_LOAD_SRC_CONT 
-  	src/hardware_load_benchmark_container.cpp
-  )
+
 
 
   ## Build Topic Benchmark node
@@ -116,17 +113,6 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   zed_benchmark_components::zed_topic_benchmark_component
   )
   
-  ## Build Hardware Load Benchmark node
-   add_executable(zed_hardware_load_benchmark ${HARDWARE_LOAD_SRC_CONT})
-  ament_target_dependencies(zed_hardware_load_benchmark
-    ${DEPENDENCIES}
-    zed_benchmark_components
-  )
-  
-  target_link_libraries(zed_hardware_load_benchmark
-  zed_benchmark_components::zed_hardware_load_benchmark_component
-  ${CUDA_CUDART_LIBRARY}
-  )
   
   ## Build Performance Test Duration Node
   
@@ -134,7 +120,7 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   ament_target_dependencies(performance_test_duration_node  rclcpp)
 
   ## Install executable
-  install(TARGETS zed_topic_benchmark zed_hardware_load_benchmark performance_test_duration_node
+  install(TARGETS zed_topic_benchmark performance_test_duration_node
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION lib/${PROJECT_NAME}

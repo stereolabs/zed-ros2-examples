@@ -294,44 +294,7 @@ def launch_setup(context, *args, **kwargs):
                     		'avg_win_size': 5000
                 		}]
             		)
-            		actions.append(benchmark_node)
-            		
-    # CPU / GPU Load Measurements       
-
-    if( use_ipc_val=='True'):
-            		
-            		benchmark_node = ComposableNode(
-                		package='zed_benchmark_components',
-                		plugin='stereolabs::HardwareLoadBenchmarkComponent',
-                		name='benchmark_hw',
-                		namespace='zed_multi',
-                		parameters=[{
-                    		'results_file_path': results_file_path,
-                    		'cpu_gpu_load_period': 50
-                		}],
-                		extra_arguments=[{'use_intra_process_comms': True}]
-            		)
-
-            		
-            		load_benchmark_hw_node = LoadComposableNodes(
-                		composable_node_descriptions=[benchmark_node],
-                		target_container='/zed_multi/zed_multi_container'
-            		)
-            		actions.append(load_benchmark_hw_node)
-    else:
-            		# Launch each benchmark in a separate process
-            		benchmark_node = Node(
-                		package='zed_benchmark',
-                		executable='zed__hardware_load_benchmark',
-                		name='benchmark_hw',
-                		namespace='zed_multi',
-                		output='screen',
-                		parameters=[{
-                    		'results_file_path': results_file_path,
-                    		'cpu_gpu_load_period': 50
-                		}]
-            		)
-            		actions.append(benchmark_node) 		
+            		actions.append(benchmark_node)	
 
 
     ## If Performance test duration > 0, launch the required performance test node. It will kill the full launcher once the performance test is over.
