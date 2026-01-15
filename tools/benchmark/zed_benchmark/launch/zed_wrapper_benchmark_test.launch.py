@@ -301,12 +301,12 @@ def launch_setup(context, *args, **kwargs):
 
     if duration != "0":
         load_performance_test_duration_node = Node(
-            package="zed_ros2_wrapper_qa",
+            package="zed_benchmark",
             executable="performance_test_duration_node",
             name="performance_test_duration_node",
             output="screen",
             parameters=[{
-            'shutdown_time': performance_test_duration
+            'performance_test_duration': performance_test_duration
             }],
             on_exit=launch.actions.Shutdown() 
         )

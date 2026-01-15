@@ -22,8 +22,12 @@
 #include <rclcpp/qos_overriding_options.hpp>
 #include <rclcpp/time.hpp>
 #include <sstream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 using namespace std::placeholders;
+
+using json = nlohmann::json;
 
 namespace stereolabs
 {
@@ -235,28 +239,47 @@ void TopicBenchmarkComponent::topicCallback(
 
 void TopicBenchmarkComponent::saveResults()
 {
-
   RCLCPP_INFO_STREAM(
     get_logger(),
-    "Appending results to file path: " << mResultsFilePath);
+    "Appending results to JSON file path: " << mResultsFilePath);
 
-  std::ofstream output_file(
-    mResultsFilePath,
-    std::ios::out | std::ios::app);  
+  json root;
 
+  // 1. Read existing JSON if the file exists
+  {
+    std::ifstream input_file(mResultsFilePath);
+    if (input_file.is_open()) {
+      try {
+        input_file >> root;
+      } catch (const json::parse_error & e) {
+        RCLCPP_WARN(
+          get_logger(),
+          "JSON parse error, starting with empty file: %s", e.what());
+        root = json::object();
+      }
+    }
+  }
+
+  // 2. Insert / overwrite this topic entry
+  root[mTopicName] = {
+    {"type", mTopicType},
+    {"performances",
+      {
+        {"average frequency", mAvgFreq.getAvg()},
+        {"average frequency standard deviation", mAvgFreq.getStdDev()},
+        {"average bandwidth", mSubFreqBw}
+      }
+    }
+  };
+
+  // 3. Write back to file (pretty printed)
+  std::ofstream output_file(mResultsFilePath, std::ios::out | std::ios::trunc);
   if (!output_file.is_open()) {
-    RCLCPP_ERROR(get_logger(), "Failed to open results file");
+    RCLCPP_ERROR(get_logger(), "Failed to open results JSON file");
     return;
   }
 
-  output_file
-    << "Topic Name: " << mTopicName << "\n"
-    << "Topic Type: " << mTopicType << "\n"
-    << "Average Frequency: " << mAvgFreq.getAvg() << "\n"
-    << "Average Frequency Standard Deviation: " << mAvgFreq.getStdDev() << "\n"
-    << "Average Bandwidth: " << mSubFreqBw << "\n"
-
-    << "-----------------------------\n";
+  output_file << root.dump(4);  // 4 = indentation spaces
 }
 
 }  // namespace stereolabs

@@ -16,10 +16,10 @@ source install/setup.sh
 SLEEP_DURATION=10  
 
 #Performance Test duration (in seconds)
-TEST_DURATION=30  
+TEST_DURATION=30
 
 # Package name and config filename
-ROS_PACKAGE_NAME="zed_topic_benchmark"
+ROS_PACKAGE_NAME="zed_benchmark"
 
 # Get the package's share directory
 PACKAGE_SHARE_DIR=$(ros2 pkg prefix --share $ROS_PACKAGE_NAME 2>/dev/null)
@@ -30,8 +30,6 @@ if [ -z "$PACKAGE_SHARE_DIR" ]; then
     exit 1
 fi
 
-# Get the package's results directory in which to save results text files
-RESULTS_FILE_PATH="results.txt"
 
 # Get the camera types (no space between types)
 CAMERA_TYPES='[zedx]' #one camera (can be 'zedx', 'zedxm' for ZED X Mini, 'zed2i', 'zedm' for ZED Mini, 
@@ -68,11 +66,12 @@ fi
 
 echo "############################### TEST 1 : One Camera ##################################"
 
+export ZED_SDK_BENCHMARK_MODE=results_1_cam.json
 # Launch the node in the background
-ros2 launch zed_topic_benchmark zed_wrapper_benchmark_test.launch.py \
+ros2 launch zed_benchmark zed_wrapper_benchmark_test.launch.py \
     cam_names:=$CAMERA_NAMES cam_models:=$CAMERA_TYPES cam_serials:=$CAMERA_SN \
     performance_test_duration:=$TEST_DURATION \
-    results_file_path:="results_1_cam.txt" \
+    results_file_path:="results_1_cam.json" \
     ros_params_override_path:=$TEST_CONFIG_PATH\
    
 # Get process ID of the last background command 
@@ -89,11 +88,13 @@ sleep $SLEEP_DURATION
 
 echo "############################### TEST 2 : Two Cameras ##################################"
 
+export ZED_SDK_BENCHMARK_MODE=results_2_cams.json
+
 # Launch the node in the background
-ros2 launch zed_topic_benchmark zed_wrapper_benchmark_test.launch.py \
+ros2 launch zed_benchmark zed_wrapper_benchmark_test.launch.py \
     cam_names:=$CAMERA_NAMES_2 cam_models:=$CAMERA_TYPES_2 cam_serials:=$CAMERA_SN_2 \
     performance_test_duration:=$TEST_DURATION \
-    results_file_path:="results_2_cams.txt" \
+    results_file_path:="results_2_cams.json" \
     ros_params_override_path:=$TEST_CONFIG_PATH\
    
 # Get process ID of the last background command 
@@ -107,11 +108,13 @@ sleep $SLEEP_DURATION
 
 echo "############################### TEST 3 : Four Cameras ##################################"
 
+export ZED_SDK_BENCHMARK_MODE=results_4_cams.json
+
 # Launch the node in the background
-ros2 launch zed_topic_benchmark zed_wrapper_benchmark_test.launch.py \
+ros2 launch zed_benchmark zed_wrapper_benchmark_test.launch.py \
     cam_names:=$CAMERA_NAMES_4 cam_models:=$CAMERA_TYPES_4 cam_serials:=$CAMERA_SN_4 \
     performance_test_duration:=$TEST_DURATION \
-    results_file_path:="results_4_cams.txt" \
+    results_file_path:="results_4_cams.json" \
     ros_params_override_path:=$TEST_CONFIG_PATH\
    
 # Get process ID of the last background command 
