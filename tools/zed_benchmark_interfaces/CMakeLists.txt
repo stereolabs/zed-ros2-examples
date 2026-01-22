@@ -69,7 +69,7 @@ endif()
 ###############################################################################
 # Add all files in subdirectories of the project in
 # a dummy_target so qtcreator have access to all files
-file(GLOB_RECURSE extra_files ${CMAKE_SOURCE_DIR}/*)
+file(GLOB_RECURSE extra_files ${CMAKE_CURRENT_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${extra_files})
 ###############################################################################
 
