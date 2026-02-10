@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
     <name>zed_aruco_localization</name>
-<version>5.1.0</version>
+<version>5.2.0</version>
     <description>Contains a ros2 examples node that subscribes to a ZED BGRA image topic and converts it to BGR</description>
     <maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
     <license>Apache License 2.0</license>
