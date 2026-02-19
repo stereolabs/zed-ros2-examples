@@ -60,7 +60,7 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   # dependencies
   set(DEPENDENCIES
     rclcpp
-    rclcpp_components    
+    rclcpp_components  
     zed_topic_benchmark_interfaces
   )
 
@@ -72,6 +72,7 @@ if(${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
   find_package(zed_topic_benchmark_interfaces REQUIRED)
+  find_package(nlohmann_json REQUIRED)
 
 
   if(BUILD_TESTING)
