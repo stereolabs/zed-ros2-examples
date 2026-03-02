@@ -21,7 +21,7 @@ git clone https://github.com/westonrobot/async_port.git
 cd ..
 sudo apt update
 rosdep update
-rosdep install --from-paths src --ignore-src -r -y # install dependencies
+rosdep install --from-paths src --ignore-src -r -y --skip-keys scout_description # install dependencies
 colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release --parallel-workers $(nproc) # build the workspace
 source ~/.bashrc
 ```

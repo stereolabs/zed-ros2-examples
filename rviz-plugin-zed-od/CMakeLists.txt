@@ -62,34 +62,34 @@ endif()
 # Remove FindOpenGL warning
 cmake_policy(SET CMP0072 NEW)
 
-# Tests currently only run on OS X @ OSRF jenkins
-# Enable on Linux by providing a display, enable on Windows via EnableDisplayTests=True
-option(EnableDisplayTests "EnableDisplayTests")
-set(DisplayTests "False" CACHE STRING "DisplayTestsVariable")
+# # Tests currently only run on OS X @ OSRF jenkins
+# # Enable on Linux by providing a display, enable on Windows via EnableDisplayTests=True
+# option(EnableDisplayTests "EnableDisplayTests")
+# set(DisplayTests "False" CACHE STRING "DisplayTestsVariable")
 
-if(DEFINED ENV{DISPLAY})
-  set(DISPLAYPRESENT TRUE)
-endif()
+# if(DEFINED ENV{DISPLAY})
+#   set(DISPLAYPRESENT TRUE)
+# endif()
 
-if(APPLE OR DISPLAYPRESENT OR EnableDisplayTests STREQUAL "True")
-  message(STATUS "Enabling tests requiring a display")
-else()
-  set(SKIP_DISPLAY_TESTS "SKIP_TEST")
-endif()
+# if(APPLE OR DISPLAYPRESENT OR EnableDisplayTests STREQUAL "True")
+#   message(STATUS "Enabling tests requiring a display")
+# else()
+#   set(SKIP_DISPLAY_TESTS "SKIP_TEST")
+# endif()
 
-# options and directories for visual tests (see visual_testing_framework documentation)
-option(EnableVisualTests "decides whether or not to enable the tests")
+# # options and directories for visual tests (see visual_testing_framework documentation)
+# option(EnableVisualTests "decides whether or not to enable the tests")
 
-# Run visual tests only if "EnableVisualTests=True"
-if(EnableVisualTests STREQUAL "True")
-  message(STATUS "Enabling visual tests")
-else()
-  set(SKIP_VISUAL_TESTS "SKIP_TEST")
-endif()
+# # Run visual tests only if "EnableVisualTests=True"
+# if(EnableVisualTests STREQUAL "True")
+#   message(STATUS "Enabling visual tests")
+# else()
+#   set(SKIP_VISUAL_TESTS "SKIP_TEST")
+# endif()
 
-if(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-endif()
+# if(MSVC)
+#   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+# endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -107,6 +107,14 @@ find_package(rviz_ogre_vendor REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Widgets Test)
 
 find_package(zed_msgs REQUIRED)
+
+set(DEPENDENCIES
+  rclcpp
+  rviz_common
+  rviz_ogre_vendor
+  rviz_rendering
+  zed_msgs
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -158,11 +166,6 @@ target_include_directories(rviz_plugin_zed_od PUBLIC
   ${TinyXML_INCLUDE_DIRS}
 )
 
-#target_link_libraries(rviz_plugin_zed_od
-#  resource_retriever::resource_retriever
-#  rviz_common::rviz_common
-#)
-
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(rviz_plugin_zed_od PRIVATE "ZED_OD_PLUGIN_BUILDING_DLL")
@@ -173,10 +176,8 @@ target_compile_definitions(rviz_plugin_zed_od PUBLIC "PLUGINLIB__DISABLE_BOOST_F
 pluginlib_export_plugin_description_file(rviz_common plugins_description.xml)
 
 ament_target_dependencies(rviz_plugin_zed_od
-  PUBLIC
-  zed_msgs
-  rclcpp
-  rviz_common
+  SYSTEM
+  ${DEPENDENCIES}
 )
 
 ament_export_include_directories(include)
@@ -213,6 +214,15 @@ install(DIRECTORY
 install(
   DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/icons"
   DESTINATION "share/${PROJECT_NAME}"
+)
+
+ament_export_include_directories(include)
+ament_export_targets(${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(
+  Qt5
+  rviz_common
+  zed_msgs
+  rclcpp
 )
 
 ament_package()

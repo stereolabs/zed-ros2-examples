@@ -32,7 +32,7 @@ git clone https://github.com/stereolabs/zed-ros2-examples.git
 cd ../
 sudo apt update
 rosdep update
-rosdep install --from-paths src --ignore-src -r -y
+rosdep install --from-paths src --ignore-src -r -y --skip-keys scout_description
 colcon build --symlink-install --cmake-args=-DCMAKE_BUILD_TYPE=Release
 source ~/.bashrc
 ```
