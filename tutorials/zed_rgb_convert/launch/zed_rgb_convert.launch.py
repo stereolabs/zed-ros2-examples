@@ -35,8 +35,9 @@ def generate_launch_description():
 
     # URDF/xacro file to be loaded by the Robot State Publisher node
     xacro_path = os.path.join(
-        get_package_share_directory('zed_wrapper'),
-        'urdf', 'zed_descr.urdf.xacro'
+        get_package_share_directory('zed_description'),
+        'urdf', 
+        'zed_descr.urdf.xacro'
     )
 
     # ZED Configurations to be loaded by ZED Node

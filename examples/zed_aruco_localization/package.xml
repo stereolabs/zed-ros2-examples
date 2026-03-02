@@ -35,6 +35,7 @@
     <exec_depend>tf2_ros</exec_depend>
     <exec_depend>tf2_geometry_msgs</exec_depend>
     <exec_depend>zed_msgs</exec_depend>
+    <exec_depend>zed_description</exec_depend>
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_lint_common</test_depend>
     <test_depend>ament_cmake_clang_format</test_depend>

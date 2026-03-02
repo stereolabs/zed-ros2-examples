@@ -20,8 +20,9 @@
   <depend>rviz_common</depend>
   <depend>rviz_ogre_vendor</depend>
   <depend>rviz_rendering</depend>
-  <depend>zed_msgs</depend>
+  <depend>zed_msgs</depend>  
 
+  <exec_depend>zed_description</exec_depend>
   <exec_depend>libqt5-core</exec_depend>
   <exec_depend>libqt5-gui</exec_depend>
   <exec_depend>libqt5-opengl</exec_depend>
