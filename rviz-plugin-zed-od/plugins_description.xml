@@ -3,8 +3,8 @@
          type="rviz_plugin_zed_od::displays::ZedOdDisplay"
          base_class_type="rviz_common::Display">
     <description>
-      Displays the results of the Object Detection module of the Stereolabs ZED SDK.
+      Displays the results of the Object Detection and Skeleton Tracking modules of the StereoLabs ZED SDK.
     </description>
-    <message_type>zed_msgs/msg/Objects</message_type>
+    <message_type>zed_msgs/msg/ObjectsStamped</message_type>
   </class>
 </library>

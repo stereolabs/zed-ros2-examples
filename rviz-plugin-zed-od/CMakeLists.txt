@@ -212,8 +212,8 @@ install(DIRECTORY
 )
 
 install(
-  DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/icons"
-  DESTINATION "share/${PROJECT_NAME}"
+  FILES icons/classes/ZedOdDisplay.png
+  DESTINATION share/${PROJECT_NAME}/icons/classes
 )
 
 ament_export_include_directories(include)
