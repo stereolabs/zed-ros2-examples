@@ -136,13 +136,13 @@
         "frame:zed_imu_link": {
           "visible": false
         },
-        "frame:zed_left_camera_optical_frame": {
+        "frame:zed_left_camera_frame_optical": {
           "visible": false
         },
         "frame:zed_right_camera_frame": {
           "visible": false
         },
-        "frame:zed_right_camera_optical_frame": {
+        "frame:zed_right_camera_frame_optical": {
           "visible": false
         },
         "frame:zed_camera_center": {
