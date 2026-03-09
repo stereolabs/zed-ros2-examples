@@ -15,23 +15,26 @@
 import os
 
 from launch import LaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument, 
+    OpaqueFunction
+)
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-from launch.substitutions import Command
+from launch.substitutions import (
+    Command,
+    LaunchConfiguration,
+    TextSubstitution
+)
 
+def launch_setup(context, *args, **kwargs):
+    return_array = []
 
-def generate_launch_description():
-    # Define LaunchDescription variable
-    ld = LaunchDescription()
-
-    # use:
-    #  - 'zed' for 'ZED' camera
-    #  - 'zedm' for 'ZED mini' camera
-    #  - 'zed2' for 'ZED2' camera
-    camera_model = 'zed2'
+    # Launch configuration variables
+    camera_model = LaunchConfiguration('camera_model').perform(context)
 
     # Camera name
-    camera_name = 'zed2i'
+    camera_name = camera_model
 
     # URDF/xacro file to be loaded by the Robot State Publisher node
     xacro_path = os.path.join(
@@ -85,12 +88,24 @@ def generate_launch_description():
         ],
         remappings=[
             ('zed_image_4ch', 'zed_node/rgb/color/rect/image'),
-            ('camera_info', 'zed_node/rgb/color/rect/image')
+            ('camera_info', 'zed_node/rgb/color/rect/camera_info')
         ]
     )
 
-    # Add nodes to LaunchDescription
-    ld.add_action(rsp_node)
-    ld.add_action(zed_node)
+    # Add nodes to return array
+    return_array.append(rsp_node)
+    return_array.append(zed_node)
 
-    return ld
+    return return_array
+
+
+def generate_launch_description():
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                'camera_model',
+                description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
+                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'zedxhdr', 'zedxhdrmini', 'zedxhdrmax', 'virtual', 'zedxonegs', 'zedxone4k', 'zedxonehdr']),
+            OpaqueFunction(function=launch_setup)
+        ]
+    )
