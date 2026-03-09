@@ -87,7 +87,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed_left_camera_optical_frame:
+        zed_left_camera_frame_optical:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -95,7 +95,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        zed_right_camera_optical_frame:
+        zed_right_camera_frame_optical:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -279,11 +279,11 @@ Visualization Manager:
               Value: false
             zed_left_camera_frame:
               Value: true
-            zed_left_camera_optical_frame:
+            zed_left_camera_frame_optical:
               Value: false
             zed_right_camera_frame:
               Value: true
-            zed_right_camera_optical_frame:
+            zed_right_camera_frame_optical:
               Value: false
           Marker Scale: 0.15000000596046448
           Name: TF
@@ -302,10 +302,10 @@ Visualization Manager:
                     zed_left_camera_frame:
                       zed_imu_link:
                         {}
-                      zed_left_camera_optical_frame:
+                      zed_left_camera_frame_optical:
                         {}
                     zed_right_camera_frame:
-                      zed_right_camera_optical_frame:
+                      zed_right_camera_frame_optical:
                         {}
           Update Interval: 0.20000000298023224
           Value: true
