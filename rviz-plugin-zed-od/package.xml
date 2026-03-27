@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rviz_plugin_zed_od</name>
-  <version>5.2.2</version>
+  <version>5.2.3</version>
   <description>Plugin to display Object Detection results on RVIZ2</description>
   <maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
 
@@ -13,10 +13,10 @@
   <url type="bugtracker">https://github.com/stereolabs/zed-ros2-wrapper/issues</url>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+
   <build_depend>ament_cmake_auto</build_depend>
 
-  <build_depend>qtbase5-dev</build_depend>
-
+  <depend>qtbase5-dev</depend>
   <depend>rviz_common</depend>
   <depend>rviz_ogre_vendor</depend>
   <depend>rviz_rendering</depend>
@@ -26,8 +26,7 @@
   <exec_depend>libqt5-core</exec_depend>
   <exec_depend>libqt5-gui</exec_depend>
   <exec_depend>libqt5-opengl</exec_depend>
-  <exec_depend>libqt5-widgets</exec_depend>
-  
+  <exec_depend>libqt5-widgets</exec_depend>  
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
