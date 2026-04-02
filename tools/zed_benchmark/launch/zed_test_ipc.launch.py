@@ -59,9 +59,11 @@ def launch_setup(context, *args, **kwargs):
     models = LaunchConfiguration('cam_models')
     serials = LaunchConfiguration('cam_serials')
     disable_tf = LaunchConfiguration('disable_tf')
+    topic_name = LaunchConfiguration('topic_name')
     use_ipc = LaunchConfiguration('use_ipc')
 
     use_ipc_val = use_ipc.perform(context)
+    topic_name_val = topic_name.perform(context)
 
     # Call the multi-camera launch file
     multi_camera_launch_file = os.path.join(
@@ -88,7 +90,7 @@ def launch_setup(context, *args, **kwargs):
     for i in range(cam_count):
 
         # Topic name to subscribe to
-        topic_name = '/zed_multi/' + name_array[i] + '/point_cloud/cloud_registered'
+        topic_name_full = '/zed_multi/' + name_array[i] + topic_name_val
 
         if( use_ipc_val=='True'):
             # Create the point cloud node
@@ -98,7 +100,7 @@ def launch_setup(context, *args, **kwargs):
                 name='benchmark_' + str(i),
                 namespace='zed_multi',
                 parameters=[{
-                    'topic_name': topic_name,
+                    'topic_name': topic_name_full,
                     'use_ros_log': True
                 }],
                 extra_arguments=[{'use_intra_process_comms': True}]
@@ -119,7 +121,7 @@ def launch_setup(context, *args, **kwargs):
                 namespace='zed_multi',
                 output='screen',
                 parameters=[{
-                    'topic_name': topic_name,
+                    'topic_name': topic_name_full,
                     'use_ros_log': True,
                     'avg_win_size': 5000
                 }]
@@ -148,6 +150,10 @@ def generate_launch_description():
                 'use_ipc',
                 default_value='True',
                 description='If `True` load the benchmark nodes in the same ZED Camera container using IPC communication.'),
+            DeclareLaunchArgument(
+                'topic_name',
+                default_value='/point_cloud/cloud_registered',
+                description='The name of the topic to benchmark, without prefix.'),
             OpaqueFunction(function=launch_setup)
         ]
     )
