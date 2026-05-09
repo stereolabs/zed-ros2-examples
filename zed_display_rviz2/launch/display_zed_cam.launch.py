@@ -30,6 +30,7 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 
+
 def launch_setup(context, *args, **kwargs):
 
     # Launch configuration variables
@@ -46,15 +47,15 @@ def launch_setup(context, *args, **kwargs):
         camera_name_val = 'zed'
 
     camera_type = ''
-    if( camera_model_val=='zed' or
-        camera_model_val=='zedm' or
-        camera_model_val=='zed2' or
-        camera_model_val=='zed2i' or
-        camera_model_val=='zedx' or
-        camera_model_val=='zedxm' or
-        camera_model_val=='virtual'):
+    if (camera_model_val == 'zed' or
+        camera_model_val == 'zedm' or
+        camera_model_val == 'zed2' or
+        camera_model_val == 'zed2i' or
+        camera_model_val == 'zedx' or
+        camera_model_val == 'zedxm' or
+            camera_model_val == 'virtual'):
         camera_type = 'stereo'
-    else: # 'zedxonegs' or 'zedxone4k')
+    else:  # 'zedxonegs' or 'zedxone4k')
         camera_type = 'mono'
 
     # RVIZ2 Configurations to be loaded by ZED Node
@@ -69,7 +70,7 @@ def launch_setup(context, *args, **kwargs):
         package='rviz2',
         namespace=camera_name_val,
         executable='rviz2',
-        name=camera_model_val +'_rviz2',
+        name=camera_model_val + '_rviz2',
         output='screen',
         arguments=[['-d'], [config_rviz2]],
         parameters=[{'use_sim_time': publish_svo_clock}]

@@ -55,6 +55,7 @@ default_xacro_path = os.path.join(
     'zed_descr.urdf.xacro'
 )
 
+
 def launch_setup(context, *args, **kwargs):
 
     # Launch configuration variables
@@ -91,7 +92,7 @@ def launch_setup(context, *args, **kwargs):
     # RVIZ2 Configurations to be loaded by ZED Node
     config_rviz2 = os.path.join(
         get_package_share_directory('zed_depth_to_laserscan'),
-        'rviz2','zed_depth_to_laserscan.rviz'
+        'rviz2', 'zed_depth_to_laserscan.rviz'
     )
 
     # Camera depth frame for the laser scan topic
@@ -102,7 +103,7 @@ def launch_setup(context, *args, **kwargs):
         condition=IfCondition(start_rviz),
         package='rviz2',
         executable='rviz2',
-        name=camera_model_val +'_rviz2',
+        name=camera_model_val + '_rviz2',
         output='screen',
         arguments=[['-d'], [config_rviz2]],
     )
@@ -159,23 +160,23 @@ def launch_setup(context, *args, **kwargs):
                 'output_frame': camera_depth_frame
             }],
         remappings=[
-                ('depth', zed_node_name_val + '/depth/depth_registered'),
-                ('depth_camera_info', zed_node_name_val + '/depth/camera_info')
-            ],
-        #extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package
+            ('depth', zed_node_name_val + '/depth/depth_registered'),
+            ('depth_camera_info', zed_node_name_val + '/depth/camera_info')
+        ],
+        # extra_arguments=[{'use_intra_process_comms': True}] # Uncomment when supported by the package
     )
 
     # ROS 2 Component Container
     container = ComposableNodeContainer(
-            name='zed_depth_to_laserscan',
-            namespace=camera_name_val,
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
+        name='zed_depth_to_laserscan',
+        namespace=camera_name_val,
+        package='rclcpp_components',
+        executable='component_container',
+        composable_node_descriptions=[
                 zed_wrapper_component,
                 zed_cvt_component
-            ],
-            output='screen',
+        ],
+        output='screen',
     )
 
     return [
