@@ -82,12 +82,21 @@ endif()
 #############################################
 # Dependencies
 
-find_package(OpenCV 4 REQUIRED)
-cmake_policy(SET CMP0146 OLD)
-cmake_policy(SET CMP0153 OLD)
+find_package(OpenCV REQUIRED)
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
+  cmake_policy(SET CMP0146 OLD)
+endif()
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+  cmake_policy(SET CMP0153 OLD)
+endif()
 find_package(ZED REQUIRED)
-cmake_policy(SET CMP0146 NEW)
-cmake_policy(SET CMP0153 NEW)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
+  cmake_policy(SET CMP0146 NEW)
+endif()
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+  cmake_policy(SET CMP0153 NEW)
+endif()
 
 execute_process(COMMAND uname -p OUTPUT_VARIABLE CMAKE_SYSTEM_NAME2 OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(CMAKE_SYSTEM_NAME2 MATCHES "aarch64") # Jetson TX
