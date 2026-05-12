@@ -65,10 +65,11 @@ def launch_setup(context, *args, **kwargs):
     camera_model = LaunchConfiguration('camera_model')
 
     disable_tf_val = disable_tf.perform(context)
-    
+
     # ROS 2 Component Container
     container_name = 'zed_container'
-    info = '* Starting Composable node container: ' + namespace_val + '/' + container_name
+    info = '* Starting Composable node container: ' +\
+        namespace_val + '/' + container_name
     actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
     # Note: It is crucial that the 'executable' field is set to be 'component_container_mt'
@@ -84,7 +85,6 @@ def launch_setup(context, *args, **kwargs):
     )
     actions.append(zed_container)
 
-   
     # ZED Wrapper launch file
     zed_wrapper_launch = IncludeLaunchDescription(
         launch_description_source=PythonLaunchDescriptionSource([
@@ -183,6 +183,7 @@ def launch_setup(context, *args, **kwargs):
     actions.append(load_april_tag_node)
 
     return actions
+
 
 def generate_launch_description():
     return LaunchDescription(

@@ -20,7 +20,7 @@ The node publishes a message on the topic `<name_of_the_topic_to_test>_stats` co
 Open a new terminal console and start the benchmark node:
 
 ```bash
-$ ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=<name_of_the_topic_to_test>
+ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args -p topic_name:=<name_of_the_topic_to_test>
 ```
 
 for example:
@@ -51,7 +51,7 @@ The node will print all the topic information on the console:
 The node published a message on the topic `<name_of_the_topic_to_test>_stats` containing the previous information to be plotted.
 The topic is a custom message of type `BenchmarkStatsStamped` defined as:
 
-```
+``` ros
 # Standard Header
 std_msgs/Header header
 
@@ -67,4 +67,5 @@ float32 topic_avg_bw
 ```
 
 ## Advanced
+
 The package provides a ROS 2 component called `stereolabs::TopicBenchmarkComponent` to be used with [Composition](https://docs.ros.org/en/humble/Tutorials/Intermediate/Composition.html) to test [Intra Process Communication (IPC)](https://design.ros2.org/articles/intraprocess_communications.html) performances.

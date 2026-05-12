@@ -34,6 +34,7 @@ from launch_ros.actions import (
     ComposableNodeContainer
 )
 
+
 def parse_array_param(param):
     str = param.replace('[', '')
     str = str.replace(']', '')
@@ -45,18 +46,19 @@ def parse_array_param(param):
 
     return arr
 
+
 def launch_setup(context, *args, **kwargs):
 
     # List of actions to be launched
     actions = []
 
     namespace_val = 'zed_multi'
-    
+
     # URDF/xacro file to be loaded by the Robot State Publisher node
     multi_zed_xacro_path = os.path.join(
-    get_package_share_directory('zed_multi_camera'),
-    'urdf',
-    'zed_multi.urdf.xacro')
+        get_package_share_directory('zed_multi_camera'),
+        'urdf',
+        'zed_multi.urdf.xacro')
 
     names = LaunchConfiguration('cam_names')
     models = LaunchConfiguration('cam_models')
@@ -84,17 +86,18 @@ def launch_setup(context, *args, **kwargs):
             LogInfo(msg=TextSubstitution(
                 text='The `cam_serials` or `cam_ids` array argument must match the size of the `cam_names` array argument.'))
         ]
-    
+
     # ROS 2 Component Container
     container_name = 'zed_multi_container'
     distro = os.environ['ROS_DISTRO']
     if distro == 'foxy':
         # Foxy does not support the isolated mode
-        container_exec='component_container'
+        container_exec = 'component_container'
     else:
-        container_exec='component_container_isolated'
-    
-    info = '* Starting Composable node container: /' + namespace_val + '/' + container_name
+        container_exec = 'component_container_isolated'
+
+    info = '* Starting Composable node container: /' +\
+        namespace_val + '/' + container_name
     actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
     zed_container = ComposableNodeContainer(
@@ -121,14 +124,14 @@ def launch_setup(context, *args, **kwargs):
             id = ids_arr[cam_idx]
         else:
             id = '-1'
-        
+
         pose = '['
 
-        info = '* Starting a ZED ROS2 node for camera ' + name + \
-            ' (' + model        
-        if(serial != '0'):
+        info = '* Starting a ZED ROS2 node for camera ' + name +\
+            ' (' + model
+        if (serial != '0'):
             info += ', serial: ' + serial
-        elif( id!= '-1'):
+        elif (id != '-1'):
             info += ', id: ' + id
         info += ')'
 
@@ -176,11 +179,11 @@ def launch_setup(context, *args, **kwargs):
         xacro_command.append('camera_name_'+str(cam_idx)+':=')
         xacro_command.append(name)
         xacro_command.append(' ')
-        cam_idx+=1
+        cam_idx += 1
 
     # Robot State Publisher node
     # this will publish the static reference link for a multi-camera configuration
-    # and all the joints. See 'urdf/zed_dual.urdf.xacro' as an example    
+    # and all the joints. See 'urdf/zed_dual.urdf.xacro' as an example
     rsp_name = 'state_publisher'
     info = '* Starting robot_state_publisher node to link all the frames: ' + rsp_name
     actions.append(LogInfo(msg=TextSubstitution(text=info)))

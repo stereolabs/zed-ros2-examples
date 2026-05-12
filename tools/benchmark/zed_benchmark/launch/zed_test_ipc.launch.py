@@ -38,16 +38,19 @@ from launch_ros.descriptions import (
 )
 
 # Function to parse array parameters
+
+
 def parse_array_param(param):
     str = param.replace('[', '')
     str = str.replace(']', '')
     str = str.replace(' ', '')
     arr = str.split(',')
-    
+
     if arr[0] == '':
         return []
-        
+
     return arr
+
 
 def launch_setup(context, *args, **kwargs):
 
@@ -72,7 +75,8 @@ def launch_setup(context, *args, **kwargs):
         'zed_multi_camera.launch.py'
     )
     zed_multi_camera = IncludeLaunchDescription(
-        launch_description_source=PythonLaunchDescriptionSource(multi_camera_launch_file),
+        launch_description_source=PythonLaunchDescriptionSource(
+            multi_camera_launch_file),
         launch_arguments={
             'cam_names': names,
             'cam_models': models,
@@ -81,10 +85,9 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
     actions.append(zed_multi_camera)
-    
+
     cam_count = len(names.perform(context).split(','))
 
-    
     # Start a benchmark node for each point cloud topic of each camera
     name_array = parse_array_param(names.perform(context))
     for i in range(cam_count):
@@ -92,7 +95,7 @@ def launch_setup(context, *args, **kwargs):
         # Topic name to subscribe to
         topic_name_full = '/zed_multi/' + name_array[i] + topic_name_val
 
-        if( use_ipc_val=='True'):
+        if (use_ipc_val == 'True'):
             # Create the point cloud node
             benchmark_node = ComposableNode(
                 package='zed_topic_benchmark_component',
@@ -129,6 +132,7 @@ def launch_setup(context, *args, **kwargs):
             actions.append(benchmark_node)
 
     return actions
+
 
 def generate_launch_description():
     return LaunchDescription(

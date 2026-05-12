@@ -55,6 +55,7 @@ default_xacro_path = os.path.join(
     'zed_descr.urdf.xacro'
 )
 
+
 def launch_setup(context, *args, **kwargs):
     wrapper_dir = get_package_share_directory('zed_wrapper')
 
@@ -97,7 +98,7 @@ def launch_setup(context, *args, **kwargs):
     # RVIZ2 Configurations to be loaded by ZED Node
     config_rviz2 = os.path.join(
         get_package_share_directory('zed_aruco_localization'),
-        'rviz2','aruco.rviz'
+        'rviz2', 'aruco.rviz'
     )
 
     # RVIZ2 node
@@ -105,7 +106,7 @@ def launch_setup(context, *args, **kwargs):
         condition=IfCondition(start_rviz),
         package='rviz2',
         executable='rviz2',
-        name=camera_model_val +'_rviz2',
+        name=camera_model_val + '_rviz2',
         output='screen',
         arguments=[['-d'], [config_rviz2]],
     )
@@ -163,23 +164,24 @@ def launch_setup(context, *args, **kwargs):
         parameters=[config_path_aruco],
         remappings=[
                 ('in/zed_image', zed_node_name_val + '/rgb/color/rect/image'),
-                ('in/camera_info', zed_node_name_val + '/rgb/color/rect/camera_info'),
+                ('in/camera_info', zed_node_name_val +
+                 '/rgb/color/rect/camera_info'),
                 ('set_pose', zed_node_name_val + '/set_pose')
-            ],
+        ],
         extra_arguments=[{'use_intra_process_comms': True}]
     )
 
     # ROS 2 Component Container
     container = ComposableNodeContainer(
-            name='zed_aruco_localization',
-            namespace=camera_name_val,
-            package='rclcpp_components',
-            executable='component_container',
-            composable_node_descriptions=[
+        name='zed_aruco_localization',
+        namespace=camera_name_val,
+        package='rclcpp_components',
+        executable='component_container',
+        composable_node_descriptions=[
                 zed_wrapper_component,
                 zed_aruco_component
-            ],
-            output='screen',
+        ],
+        output='screen',
     )
 
     return [

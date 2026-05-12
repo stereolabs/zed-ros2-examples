@@ -38,7 +38,7 @@ camera_model = 'zedx'
 # RVIZ2 Configurations to be loaded by ZED Node
 config_rviz2 = os.path.join(
     get_package_share_directory('zed_robot_integration'),
-    'rviz2','view_config.rviz'
+    'rviz2', 'view_config.rviz'
 )
 
 # URDF/xacro file to be loaded by the Robot State Publisher node
@@ -48,19 +48,19 @@ xacro_path = os.path.join(
     'zed_robot_mono.urdf.xacro'
 )
 
-def launch_setup(context, *args, **kwargs):
-     # Launch configuration variables
-    use_zed_localization = LaunchConfiguration('use_zed_localization')
 
+def launch_setup(context, *args, **kwargs):
+    # Launch configuration variables
+    use_zed_localization = LaunchConfiguration('use_zed_localization')
 
     # Robot URDF from xacro
     robot_description = Command(
-                [
-                    'xacro', ' ', xacro_path, ' ',
-                    'camera_name:=', camera_name, ' ',
-                    'camera_model:=', camera_model, ' ',
-                    'use_zed_localization:=', use_zed_localization, 
-                ])
+        [
+            'xacro', ' ', xacro_path, ' ',
+            'camera_name:=', camera_name, ' ',
+            'camera_model:=', camera_model, ' ',
+            'use_zed_localization:=', use_zed_localization,
+        ])
 
     # RVIZ2 node
     rviz2_node = Node(
@@ -96,6 +96,7 @@ def launch_setup(context, *args, **kwargs):
         jsp_node
     ]
 
+
 def generate_launch_description():
     return LaunchDescription(
         [
@@ -104,6 +105,6 @@ def generate_launch_description():
                 default_value='true',
                 description='Creates a TF tree with `camera_link` as root frame if `true`, otherwise the root is `base_ling`.',
                 choices=['true', 'false']),
-            OpaqueFunction(function=launch_setup)    
+            OpaqueFunction(function=launch_setup)
         ]
     )

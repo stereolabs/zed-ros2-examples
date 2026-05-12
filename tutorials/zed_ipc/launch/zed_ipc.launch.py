@@ -34,16 +34,19 @@ from launch_ros.actions import (
 from launch_ros.descriptions import ComposableNode
 
 # Function to parse array parameters
+
+
 def parse_array_param(param):
     str = param.replace('[', '')
     str = str.replace(']', '')
     str = str.replace(' ', '')
     arr = str.split(',')
-    
+
     if arr[0] == '':
         return []
-        
+
     return arr
+
 
 def launch_setup(context, *args, **kwargs):
 
@@ -64,7 +67,8 @@ def launch_setup(context, *args, **kwargs):
         'zed_multi_camera.launch.py'
     )
     zed_multi_camera = IncludeLaunchDescription(
-        launch_description_source=PythonLaunchDescriptionSource(multi_camera_launch_file),
+        launch_description_source=PythonLaunchDescriptionSource(
+            multi_camera_launch_file),
         launch_arguments={
             'cam_names': names,
             'cam_models': models,
@@ -74,7 +78,7 @@ def launch_setup(context, *args, **kwargs):
         }.items()
     )
     actions.append(zed_multi_camera)
-    
+
     cam_count = len(names.perform(context).split(','))
 
     # Create topic remappings for the point cloud node
