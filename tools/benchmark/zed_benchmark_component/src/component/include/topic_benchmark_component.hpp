@@ -27,7 +27,7 @@
 
 #include "visibility_control.hpp"
 #include "winavg.hpp"
-#include "zed_topic_benchmark_interfaces/msg/benchmark_stats_stamped.hpp"
+#include <zed_topic_benchmark_interfaces/msg/benchmark_stats_stamped.hpp>
 
 #define DEFAULT_TOPIC_NAME std::string("topic_name")
 

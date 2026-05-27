@@ -16,7 +16,7 @@ import os
 
 from launch import LaunchDescription
 from launch.actions import (
-    DeclareLaunchArgument, 
+    DeclareLaunchArgument,
     OpaqueFunction
 )
 from launch_ros.actions import Node
@@ -26,6 +26,7 @@ from launch.substitutions import (
     LaunchConfiguration,
     TextSubstitution
 )
+
 
 def launch_setup(context, *args, **kwargs):
     return_array = []
@@ -39,7 +40,7 @@ def launch_setup(context, *args, **kwargs):
     # URDF/xacro file to be loaded by the Robot State Publisher node
     xacro_path = os.path.join(
         get_package_share_directory('zed_description'),
-        'urdf', 
+        'urdf',
         'zed_descr.urdf.xacro'
     )
 
@@ -105,7 +106,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'camera_model',
                 description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
-                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'zedxhdr', 'zedxhdrmini', 'zedxhdrmax', 'virtual', 'zedxonegs', 'zedxone4k', 'zedxonehdr']),
+                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'zedxnano', 'zedxhdr', 'zedxhdrmini', 'zedxhdrmax', 'virtual', 'zedxonegs', 'zedxone4k', 'zedxonehdr']),
             OpaqueFunction(function=launch_setup)
         ]
     )

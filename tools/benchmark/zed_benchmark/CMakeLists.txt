@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(zed_topic_benchmark_component)
+project(zed_topic_benchmark)
 
 ## Generate symbols for IDE indexer
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -46,7 +46,9 @@ else()
 endif()
 ################################################
 
-if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR "${FOUND_ROS2_DISTRO}" STREQUAL "iron")
+if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR 
+   "${FOUND_ROS2_DISTRO}" STREQUAL "iron" OR 
+   "${FOUND_ROS2_DISTRO}" STREQUAL "jazzy")
   # if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
   if(NOT CMAKE_BUILD_TYPE)
       set(CMAKE_BUILD_TYPE Release)
@@ -60,8 +62,8 @@ if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR "${FOUND_ROS2_DISTRO}" STREQUAL "
   # dependencies
   set(DEPENDENCIES
     rclcpp
-    rclcpp_components    
-    zed_topic_benchmark_interfaces
+    rclcpp_components
+    zed_topic_benchmark_component
   )
 
   find_package(ament_cmake_auto REQUIRED)
@@ -69,8 +71,7 @@ if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR "${FOUND_ROS2_DISTRO}" STREQUAL "
 
   find_package(rclcpp REQUIRED)
   find_package(rclcpp_components REQUIRED)
-  find_package(zed_topic_benchmark_interfaces REQUIRED)
-
+  find_package(zed_topic_benchmark_component REQUIRED)
 
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
@@ -85,47 +86,28 @@ if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR "${FOUND_ROS2_DISTRO}" STREQUAL "
   ###############################################################################
 
   ## Sources
-  set(SRC_COMP
-    src/component/src/topic_benchmark_component.cpp
-    src/component/src/winavg.cpp)
+  set(SRC_CONT src/topic_benchmark_container.cpp)
 
-  add_library(${PROJECT_NAME} SHARED
-    ${SRC_COMP}
-  )
-  target_compile_definitions(${PROJECT_NAME}
-    PRIVATE "COMPOSITION_BUILDING_DLL"
-  )
+  ## Build
+  add_executable(${PROJECT_NAME} ${SRC_CONT})
   ament_target_dependencies(${PROJECT_NAME}
     ${DEPENDENCIES}
   )
 
-  target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/component/include>
-    $<INSTALL_INTERFACE:include>
-  )
-
-  rclcpp_components_register_nodes(${PROJECT_NAME} "stereolabs::TopicBenchmarkComponent")
-  set(node_plugins "${node_plugins}stereolabs::TopicBenchmarkComponent;$<TARGET_FILE:${PROJECT_NAME}>\n")
-
+  # Install executable
   install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
 
+  # Install LAUNCH files
   install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/
-    DESTINATION include/${PROJECT_NAME}
+    launch
+    DESTINATION share/${PROJECT_NAME}
   )
 
-  ament_export_include_directories(include)
-  ament_export_libraries(${PROJECT_NAME})
-  ament_export_dependencies(${DEPENDENCIES})
   ament_package()
 endif()
-
-
 
 

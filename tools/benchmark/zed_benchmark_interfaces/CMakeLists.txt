@@ -73,7 +73,9 @@ file(GLOB_RECURSE extra_files ${CMAKE_CURRENT_SOURCE_DIR}/*)
 add_custom_target(all_${PROJECT_NAME}_files SOURCES ${extra_files})
 ###############################################################################
 
-if( ${FOUND_ROS2_DISTRO} STREQUAL "humble" OR ${FOUND_ROS2_DISTRO} STREQUAL "iron")
+if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR 
+   "${FOUND_ROS2_DISTRO}" STREQUAL "iron" OR 
+   "${FOUND_ROS2_DISTRO}" STREQUAL "jazzy")
     set(MSG_FILES
         "msg/BenchmarkStatsStamped.msg"
     )

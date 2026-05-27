@@ -58,7 +58,8 @@ def launch_setup(context, *args, **kwargs):
 
     # ROS 2 Component Container
     container_name = 'zed_container'
-    info = '* Starting Composable node container: ' + namespace_val + '/' + container_name
+    info = '* Starting Composable node container: ' +\
+        namespace_val + '/' + container_name
     actions.append(LogInfo(msg=TextSubstitution(text=info)))
 
     # Note: It is crucial that the 'executable' field is set to be 'component_container_mt'
@@ -69,12 +70,12 @@ def launch_setup(context, *args, **kwargs):
         namespace=namespace_val,
         package='rclcpp_components',
         executable='component_container_mt',
-        #executable='component_container_isolated',
+        # executable='component_container_isolated',
         arguments=['--ros-args', '--log-level', 'info'],
         output='screen',
     )
     actions.append(zed_container)
-   
+
     # ZED Wrapper launch file
     zed_wrapper_launch = IncludeLaunchDescription(
         launch_description_source=PythonLaunchDescriptionSource([
@@ -119,13 +120,14 @@ def launch_setup(context, *args, **kwargs):
 
     return actions
 
+
 def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
                 'camera_model',
                 description='[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features.',
-                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'virtual', 'zedxonegs', 'zedxone4k']),
+                choices=['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'zedxnano', 'zedxhdr', 'zedxhdrmini', 'zedxhdrmax', 'virtual', 'zedxonegs', 'zedxone4k', 'zedxonehdr']),
             DeclareLaunchArgument(
                 'topic_name',
                 default_value='',
