@@ -76,6 +76,14 @@ if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
+
+    # launch_testing integration test: runs the benchmark node against a
+    # synthetic publisher and checks the report/termination behavior.
+    find_package(launch_testing_ament_cmake REQUIRED)
+    add_launch_test(
+      test/test_benchmark_integration.py
+      TIMEOUT 120
+    )
   endif()
 
   ###############################################################################
@@ -105,6 +113,12 @@ if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR
   install(DIRECTORY
     launch
     DESTINATION share/${PROJECT_NAME}
+  )
+
+  # Install helper scripts (runnable via `ros2 run ${PROJECT_NAME} <script>`)
+  install(PROGRAMS
+    scripts/zed_check_ros2_config.sh
+    DESTINATION lib/${PROJECT_NAME}
   )
 
   ament_package()

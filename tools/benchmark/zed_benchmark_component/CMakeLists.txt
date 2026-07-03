@@ -76,6 +76,22 @@ if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     ament_lint_auto_find_test_dependencies()
+
+    # Unit tests for the statistics engine (no ROS dependencies: the WinAvg
+    # source is compiled directly into each test executable).
+    find_package(ament_cmake_gtest REQUIRED)
+
+    ament_add_gtest(test_winavg
+      test/test_winavg.cpp
+      src/component/src/winavg.cpp)
+    target_include_directories(test_winavg PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include)
+
+    ament_add_gtest(test_statistics
+      test/test_statistics.cpp
+      src/component/src/winavg.cpp)
+    target_include_directories(test_statistics PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include)
   endif()
 
   ###############################################################################

@@ -14,8 +14,6 @@
 
 import os
 
-from sympy import use
-
 from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -64,9 +62,15 @@ def launch_setup(context, *args, **kwargs):
     disable_tf = LaunchConfiguration('disable_tf')
     topic_name = LaunchConfiguration('topic_name')
     use_ipc = LaunchConfiguration('use_ipc')
+    test_duration_sec = LaunchConfiguration('test_duration_sec')
+    test_sample_count = LaunchConfiguration('test_sample_count')
+    log_file_path = LaunchConfiguration('log_file_path')
 
     use_ipc_val = use_ipc.perform(context)
     topic_name_val = topic_name.perform(context)
+    test_duration_sec_val = float(test_duration_sec.perform(context))
+    test_sample_count_val = int(test_sample_count.perform(context))
+    log_file_path_val = log_file_path.perform(context)
 
     # Call the multi-camera launch file
     multi_camera_launch_file = os.path.join(
@@ -95,6 +99,13 @@ def launch_setup(context, *args, **kwargs):
         # Topic name to subscribe to
         topic_name_full = '/zed_multi/' + name_array[i] + topic_name_val
 
+        # Derive a per-camera log file so concurrent benchmark nodes do not
+        # overwrite each other (e.g. report.txt -> report_zed_front.txt).
+        log_file_path_full = ''
+        if log_file_path_val != '':
+            base, ext = os.path.splitext(log_file_path_val)
+            log_file_path_full = base + '_' + name_array[i] + ext
+
         if (use_ipc_val == 'True'):
             # Create the point cloud node
             benchmark_node = ComposableNode(
@@ -104,7 +115,10 @@ def launch_setup(context, *args, **kwargs):
                 namespace='zed_multi',
                 parameters=[{
                     'topic_name': topic_name_full,
-                    'use_ros_log': True
+                    'use_ros_log': True,
+                    'test_duration_sec': test_duration_sec_val,
+                    'test_sample_count': test_sample_count_val,
+                    'log_file_path': log_file_path_full
                 }],
                 extra_arguments=[{'use_intra_process_comms': True}]
             )
@@ -126,7 +140,10 @@ def launch_setup(context, *args, **kwargs):
                 parameters=[{
                     'topic_name': topic_name_full,
                     'use_ros_log': True,
-                    'avg_win_size': 5000
+                    'avg_win_size': 5000,
+                    'test_duration_sec': test_duration_sec_val,
+                    'test_sample_count': test_sample_count_val,
+                    'log_file_path': log_file_path_full
                 }]
             )
             actions.append(benchmark_node)
@@ -158,6 +175,18 @@ def generate_launch_description():
                 'topic_name',
                 default_value='/point_cloud/cloud_registered',
                 description='The name of the topic to benchmark, without prefix.'),
+            DeclareLaunchArgument(
+                'test_duration_sec',
+                default_value='0.0',
+                description='Duration of the benchmark test in seconds. `0.0` runs until interrupted with Ctrl+C.'),
+            DeclareLaunchArgument(
+                'test_sample_count',
+                default_value='0',
+                description='Number of messages to acquire before stopping the test. `0` runs until interrupted with Ctrl+C.'),
+            DeclareLaunchArgument(
+                'log_file_path',
+                default_value='',
+                description='Path of the file where the benchmark report is saved. Empty disables file logging. With multiple cameras the camera name is appended to the file name to keep the reports separate.'),
             OpaqueFunction(function=launch_setup)
         ]
     )
