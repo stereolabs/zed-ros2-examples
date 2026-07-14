@@ -14,7 +14,7 @@ if(DEFINED ENV{ROS_DISTRO})
     #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
 else()
     message("* ROS2 distro variable not set. Trying to figure it out...")
-    set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;jazzy;rolling")
+    set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;jazzy;lyrical;rolling")
     set(ROS2_FOUND FALSE)
     foreach(distro ${ROS2_DISTROS})
         if(NOT ROS2_FOUND)
@@ -35,12 +35,13 @@ if(ROS2_FOUND)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "humble")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_HUMBLE)
-    elseif(${FOUND_ROS2_DISTRO} STREQUAL "iron")
-        #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
-        add_definitions(-DFOUND_IRON)
     elseif(${FOUND_ROS2_DISTRO} STREQUAL "jazzy")
         #message("* ROS2 ${FOUND_ROS2_DISTRO} is officially supported by this package.")
         add_definitions(-DFOUND_JAZZY)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "lyrical")
+        add_definitions(-DFOUND_LYRICAL)
+    elseif(${FOUND_ROS2_DISTRO} STREQUAL "rolling")
+        add_definitions(-DFOUND_ROLLING)
     else()
         message("*** WARNING *** Unsupported ROS2 ${FOUND_ROS2_DISTRO}. '${PROJECT_NAME}' may not work correctly.")
     endif()
@@ -81,6 +82,27 @@ file(GLOB_RECURSE extra_files ${CMAKE_CURRENT_SOURCE_DIR}/*)
 add_custom_target(${PROJECT_NAME}_files SOURCES ${extra_files})
 ###############################################################################
 
+###############################################################################
+# ament_target_dependencies() replacement: ROS 2 Lyrical's ament_cmake removed
+# that macro outright. For each dependency, link its exported modern CMake
+# target(s) (${dep}_TARGETS), falling back to the classic
+# ${dep}_INCLUDE_DIRS / ${dep}_LIBRARIES variables for dependencies that only
+# export those.
+macro(zed_link_ros_dependencies target)
+  foreach(_dep ${ARGN})
+    if(${_dep}_TARGETS)
+      target_link_libraries(${target} ${${_dep}_TARGETS})
+    else()
+      if(${_dep}_INCLUDE_DIRS)
+        target_include_directories(${target} PUBLIC ${${_dep}_INCLUDE_DIRS})
+      endif()
+      if(${_dep}_LIBRARIES)
+        target_link_libraries(${target} ${${_dep}_LIBRARIES})
+      endif()
+    endif()
+  endforeach()
+endmacro()
+
 # includes
 include_directories(
     ${rclcpp_INCLUDE_DIRS}
@@ -89,7 +111,7 @@ include_directories(
 
 ## Build
 add_executable(zed_tutorial_pos_tracking src/zed_tutorial_pos_tracking.cpp)
-ament_target_dependencies(zed_tutorial_pos_tracking
+zed_link_ros_dependencies(zed_tutorial_pos_tracking
   rclcpp
   geometry_msgs
   nav_msgs

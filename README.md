@@ -15,10 +15,19 @@ This package contains examples and tutorials for effectively using ZED cameras w
 
 ### Prerequisites
 
-- ROS 2 Foxy Fitzroy (deprecated), ROS 2 Humble Hawksbill, or ROS 2 Jazzy Jalisco:
-  - [Foxy on Ubuntu 20.04](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html) - [**Not recommended. EOL reached**]
-  - [Humble on Ubuntu 22.04](https://docs.ros.org/en/humble/Installation/Linux-Install-Debians.html) - [EOL May 2027]
-  - [Jazzy Jalisco on Ubuntu 24.04](https://docs.ros.org/en/jazzy/Installation/Linux-Install-Debians.html) - [EOL May 2029]
+- A supported ROS 2 distribution (see [Supported ROS 2 distributions](#supported-ros-2-distributions) below):
+  - [Humble Hawksbill on Ubuntu 22.04](https://docs.ros.org/en/humble/Installation/Linux-Install-Debians.html) - LTS [EOL May 2027]
+  - [Jazzy Jalisco on Ubuntu 24.04](https://docs.ros.org/en/jazzy/Installation/Linux-Install-Debians.html) - LTS [EOL May 2029]
+  - [Lyrical on Ubuntu 26.04](https://docs.ros.org/en/lyrical/Installation/Linux-Install-Debians.html) - LTS
+  - [Foxy Fitzroy on Ubuntu 20.04](https://docs.ros.org/en/foxy/Installation/Linux-Install-Debians.html) - backward compatibility only [EOL reached]
+  - [Rolling Ridley](https://docs.ros.org/en/rolling/Installation/Linux-Install-Debians.html) - for developers
+
+### Supported ROS 2 distributions
+
+- :white_check_mark: **All the current LTS distributions are officially supported**: ROS 2 Humble Hawksbill (Ubuntu 22.04), Jazzy Jalisco (Ubuntu 24.04), and Lyrical (Ubuntu 26.04).
+- :warning: **Foxy Fitzroy** (Ubuntu 20.04) is still supported for **backward compatibility**, with limitations when newer packages are not available for it (Foxy reached its End Of Life).
+- :hammer_and_wrench: **Rolling Ridley** is supported for **developers**, but we cannot always guarantee that breaking changes introduced in Rolling are supported immediately.
+- :grey_question: **Non-LTS distributions** (e.g. Iron, Kilted) are **not officially tested**, but they could work.
 
 ### Build the package
 
