@@ -14,7 +14,7 @@ if(DEFINED ENV{ROS_DISTRO})
     #message("* Found ROS2 ${FOUND_ROS2_DISTRO}")
 else()
     message("* ROS2 distro variable not set. Trying to figure it out...")
-    set(ROS2_DISTROS "ardent;crystal;dashing;eloquent;foxy;galactic;humble;jazzy;lyrical;rolling")
+    set(ROS2_DISTROS "ardent;bouncy;crystal;dashing;eloquent;foxy;galactic;humble;iron;jazzy;kilted;lyrical;rolling")
     set(ROS2_FOUND FALSE)
     foreach(distro ${ROS2_DISTROS})
         if(NOT ROS2_FOUND)
@@ -47,9 +47,25 @@ else()
 endif()
 ################################################
 
-if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR 
-   "${FOUND_ROS2_DISTRO}" STREQUAL "iron" OR 
-   "${FOUND_ROS2_DISTRO}" STREQUAL "jazzy")
+################################################
+# The benchmark tool subscribes to topics whose type is only known at runtime
+# ("generic subscriptions"). That API is missing in Foxy and older
+# distributions, so on those the package is still registered but nothing is
+# built. Every newer distribution (Humble, Jazzy, Lyrical, Rolling, ...) is
+# built: using an exclusion list instead of an allow list means a new ROS 2
+# release does not silently produce an empty package.
+set(ZED_BENCHMARK_UNSUPPORTED_DISTROS "ardent;bouncy;crystal;dashing;eloquent;foxy")
+if("${FOUND_ROS2_DISTRO}" IN_LIST ZED_BENCHMARK_UNSUPPORTED_DISTROS)
+  message("*** WARNING *** ROS2 ${FOUND_ROS2_DISTRO} lacks generic topic subscriptions: '${PROJECT_NAME}' will not be built.")
+  set(ZED_BENCHMARK_BUILD FALSE)
+else()
+  set(ZED_BENCHMARK_BUILD TRUE)
+endif()
+################################################
+
+find_package(ament_cmake REQUIRED)
+
+if(ZED_BENCHMARK_BUILD)
   # if CMAKE_BUILD_TYPE is not specified, take 'Release' as default
   if(NOT CMAKE_BUILD_TYPE)
       set(CMAKE_BUILD_TYPE Release)
@@ -140,8 +156,11 @@ if("${FOUND_ROS2_DISTRO}" STREQUAL "humble" OR
     scripts/zed_check_ros2_config.sh
     DESTINATION lib/${PROJECT_NAME}
   )
-
-  ament_package()
 endif()
+
+# Always call ament_package(), even when nothing is built, so that the package
+# is correctly registered in the ament index on unsupported distributions
+# instead of failing the workspace build.
+ament_package()
 
 

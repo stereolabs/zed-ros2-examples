@@ -13,7 +13,7 @@ For each topic the following information will be available:
 
 The node publishes a message on the topic `<name_of_the_topic_to_test>_stats` containing all the information, so that it can optionally be plotted.
 
-**Note:** This tool is not available for the Foxy distribution because it lacks an important feature required to subscribe to "generic topics".
+**Note:** This tool is available for Humble, Jazzy, Lyrical and newer distributions. It is not available for Foxy and older distributions because they lack an important feature required to subscribe to "generic topics".
 
 ## Usage
 

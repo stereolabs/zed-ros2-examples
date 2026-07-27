@@ -3,6 +3,7 @@ LATEST CHANGES
 
 v5.4.1
 ----------
+- Added support for ROS 2 Lyrical Luth. The benchmark packages previously built only on Humble, Iron and Jazzy: on any other distribution they were silently configured as empty, so the workspace build succeeded but the message, the component library and the ``zed_topic_benchmark`` executable were never produced. The distribution check is now an exclusion list (only Foxy and older lack the "generic subscription" API this tool requires), so Lyrical, Rolling and future releases build without further changes. On an unsupported distribution the packages now emit an explicit warning and are still registered in the ament index.
 - Added the ``zed_check_ros2_config.sh`` script to validate a ROS 2 setup. It benchmarks the ZED RGB image, depth and point cloud topics, in both standard and IPC (composition) mode, and prints a report for each test so the user can verify that their ROS 2 / DDS / system configuration delivers the camera data at the expected rate and bandwidth. Run it with ``ros2 run zed_topic_benchmark zed_check_ros2_config.sh <camera_model>``.
 - Added the possibility to run the benchmark for a limited time or number of samples and to save a report:
 
