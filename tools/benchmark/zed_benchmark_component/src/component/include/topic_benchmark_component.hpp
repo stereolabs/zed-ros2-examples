@@ -42,6 +42,21 @@ public:
   explicit TopicBenchmarkComponent(const rclcpp::NodeOptions & options);
   virtual ~TopicBenchmarkComponent();
 
+  /// @brief Map the `qos.*` parameter strings onto an rclcpp::QoS.
+  ///
+  /// Pure so it can be unit tested: any unrecognised value is replaced by the
+  /// default and appended to `warnings` rather than silently ignored.
+  /// @param[out] warnings One message per input that had to be corrected.
+  TOPIC_BENCHMARK_PUBLIC
+  static rclcpp::QoS makeQos(
+    const std::string & reliability, const std::string & durability,
+    const std::string & history, int depth,
+    std::vector<std::string> & warnings);
+
+  /// @brief Human-readable form of a QoS, for logs and the report.
+  TOPIC_BENCHMARK_PUBLIC
+  static std::string qosToString(const rclcpp::QoS & qos);
+
 protected:
   void init();
 
@@ -70,6 +85,19 @@ protected:
   /// @brief Fold the end-to-end latency of `sample` into the statistics, when
   ///        the sample carries a usable publisher-side timestamp.
   void updateLatency(const Sample & sample);
+
+  /// @brief Warn when the user passed a `qos_overrides.*` for the benchmarked
+  ///        topic that the generic subscription path cannot honour.
+  void warnIfQosOverrideIgnored();
+
+  /// @brief Build the subscriber QoS from the `qos.*` parameters.
+  ///
+  /// These are declared by this node rather than relying on rclcpp's
+  /// `qos_overrides.*` mechanism, because that mechanism is not applied to a
+  /// generic subscription. The QoS *argument* to create_generic_subscription()
+  /// is honoured, so setting it explicitly is what makes the policies
+  /// effective on every subscription path.
+  rclcpp::QoS buildSubscriberQos();
 
   /// @brief Check whether a test termination condition has been reached and,
   ///        if so, mark the test as complete and request shutdown.
@@ -103,6 +131,20 @@ private:
   ///   topic type is supported, "generic" otherwise. This keeps the historical
   ///   wire-accurate behaviour for ordinary separate-process runs.
   std::string mSubscriptionMode = "auto";
+
+  // ----> Subscriber QoS parameters
+  // Defaults reproduce the historical QoS: a Best Effort subscriber is
+  // compatible with both Reliable and Best Effort publishers, so it matches
+  // sensor-data topics out of the box.
+  std::string mQosReliability = "best_effort";  ///< best_effort | reliable
+  std::string mQosDurability = "volatile";      ///< volatile | transient_local
+  std::string mQosHistory = "keep_last";        ///< keep_last | keep_all
+  int mQosDepth = 1;                            ///< depth, for keep_last
+  /// The QoS actually granted by the middleware, read back from the
+  /// subscription. Reported instead of the requested values, so the report
+  /// cannot claim a policy that was never applied.
+  std::string mActualQosDesc;
+  // <---- Subscriber QoS parameters
 
   std::atomic<bool> mTopicAvailable;  ///< Indicate if the benchmarked topic is
                                       ///< published by other nodes

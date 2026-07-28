@@ -269,6 +269,15 @@ if(ZED_BENCHMARK_BUILD)
     target_include_directories(test_cpu_meter PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include)
 
+    # QoS parameter mapping. Pure logic, but it lives on the component class,
+    # so the test links the library.
+    ament_add_gtest(test_qos test/test_qos.cpp)
+    target_include_directories(test_qos PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
+    zed_link_ros_dependencies(test_qos ${DEPENDENCIES})
+    target_link_libraries(test_qos ${PROJECT_NAME})
+
     # Typed/zero-copy subscription paths. These need a real ROS context, so the
     # test links the component library rather than recompiling the sources.
     ament_add_gtest(test_typed_subscriber test/test_typed_subscriber.cpp)

@@ -203,6 +203,39 @@ TEST_F(TypedSubscriberTest, TypedSubscriptionReportsSizeAndStamp) {
   EXPECT_TRUE(samples.front().has_stamp);
 }
 
+// A typed subscription must actually honour a qos_overrides parameter, because
+// that is the documented way to change the QoS: rclcpp::create_subscription()
+// calls declare_qos_parameters(), so the override reaches the endpoint. The
+// generic path cannot do this at all (create_generic_subscription() never reads
+// options.qos_overriding_options), which is why the tool warns there instead of
+// discarding the request silently.
+TEST_F(TypedSubscriberTest, TypedSubscriptionHonoursQosOverrides) {
+  rclcpp::NodeOptions opts;
+  opts.parameter_overrides(
+  {
+    rclcpp::Parameter(
+      "qos_overrides./qos_t.subscription.reliability",
+      "reliable")
+  });
+  auto node = std::make_shared<rclcpp::Node>("t_qos", opts);
+
+  auto sub_opt = rclcpp::SubscriptionOptions();
+  sub_opt.qos_overriding_options =
+    rclcpp::QosOverridingOptions::with_default_policies();
+
+  auto result = createTypedSubscription(
+    *node, "/qos_t", "sensor_msgs/msg/PointCloud2",
+    rclcpp::QoS(1).best_effort(), sub_opt, false, [](const Sample &) {});
+  ASSERT_NE(result.sub, nullptr);
+
+  // The override must have been declared as a parameter and applied to the
+  // endpoint, turning the Best Effort default into Reliable.
+  EXPECT_TRUE(node->has_parameter("qos_overrides./qos_t.subscription.reliability"));
+  EXPECT_EQ(
+    result.sub->get_actual_qos().reliability(),
+    rclcpp::ReliabilityPolicy::Reliable);
+}
+
 // A zero stamp must not be treated as a timestamp: a latency measured against
 // the epoch would be far worse than reporting no latency at all.
 TEST_F(TypedSubscriberTest, ZeroStampIsNotReportedAsUsable) {

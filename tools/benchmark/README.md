@@ -79,6 +79,7 @@ The live line is updated in place and shows, for frequency and bandwidth, the `i
 * `log_file_path`: path of a file where the final report is written (in addition to the console). Empty means console only. [Default: `""`]
 * `use_ros_log`: if `true`, prints the live statistics and report through the ROS logging system instead of the console. [Default: `false`]
 * `subscription_mode`: which subscription path to use — `auto`, `generic` or `typed`. [Default: `auto`] See [Measuring Intra Process Communication](#measuring-intra-process-communication).
+* `qos.reliability`, `qos.durability`, `qos.history`, `qos.depth`: the subscriber QoS, effective on every subscription path. [Defaults: `best_effort`, `volatile`, `keep_last`, `1`] See [QoS](#qos).
 
 When both `test_duration_sec` and `test_sample_count` are set, the test stops as soon as the first of the two limits is reached.
 
@@ -147,13 +148,39 @@ The two latency fields are `0.0` on the `generic` path, which has no directly us
 
 ## QoS
 
-The benchmark subscriber uses a `Best Effort`, `KEEP_LAST` (depth 1) QoS by default. A `Best Effort` subscriber is compatible with both `Reliable` and `Best Effort` publishers, so it works out of the box with sensor-data topics (images, point clouds). If you specifically need `Reliable` reliability you can override it at runtime:
+The subscriber QoS is fully configurable through four parameters, and they apply on **every** subscription path — `generic` and `typed` alike:
+
+| Parameter | Values | Default |
+| --- | --- | --- |
+| `qos.reliability` | `best_effort`, `reliable` | `best_effort` |
+| `qos.durability` | `volatile`, `transient_local` | `volatile` |
+| `qos.history` | `keep_last`, `keep_all` | `keep_last` |
+| `qos.depth` | integer >= 1 (used by `keep_last`) | `1` |
+
+The defaults reproduce the historical behaviour: a `Best Effort` subscriber is compatible with both `Reliable` and `Best Effort` publishers, so it works out of the box with sensor-data topics (images, point clouds).
 
 ```bash
 ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args \
   -p topic_name:=<topic> \
-  -p qos_overrides./<topic>.subscription.reliability:=reliable
+  -p qos.reliability:=reliable \
+  -p qos.durability:=transient_local \
+  -p qos.history:=keep_last \
+  -p qos.depth:=10
 ```
+
+An unrecognised value is replaced by the default **and reported as a warning** — never applied silently. `qos.depth` below 1 is clamped to 1, also with a warning. Every report states the QoS the middleware actually granted, read back from the subscription rather than echoing what was asked for, e.g. `Subscriber QoS: Reliable, Transient Local, KEEP_LAST, depth 7`.
+
+> **Warning:** a `Reliable` subscriber cannot match a `Best Effort` publisher. ZED image and point cloud topics are published `Best Effort`, so `qos.reliability:=reliable` on them yields **no messages at all**. The benchmark logs this caveat whenever you select `reliable`, and the report then shows the QoS alongside `No message received`, so the cause is visible rather than mysterious.
+
+### Why not `qos_overrides`?
+
+ROS 2's usual mechanism, `-p qos_overrides.<topic>.subscription.reliability:=reliable`, **does not work on the default `generic` path** and is silently discarded: `rclcpp::create_generic_subscription()` forwards the subscription options to the `GenericSubscription` constructor but never calls `declare_qos_parameters()`, so no `qos_overrides.*` parameter is ever declared and the requested policy never reaches the endpoint. Its own documentation admits *"Not all publisher options are currently respected"*. This holds on the `humble`, `jazzy`, `lyrical` and `rolling` branches of rclcpp alike. Three ways to see it: `ros2 topic info -v <topic>` still reports `BEST_EFFORT`, `ros2 param get` answers *"Parameter not set"*, and the parameter is absent from `ros2 param list`.
+
+The `qos.*` parameters above avoid the problem entirely by setting the QoS *argument* of the subscription, which every path does honour. If you pass a `qos_overrides.*` anyway, the benchmark **warns** that it is being ignored and points you at `qos.*`, instead of dropping it in silence.
+
+On the `typed` path `qos_overrides.*` does work (there rclcpp calls `declare_qos_parameters()`), and it is applied on top of `qos.*`. Prefer `qos.*` regardless: it behaves the same on both paths.
+
+For an independent cross-check, note that `ros2 topic hz` and `ros2 topic bw` expose **no** QoS options at all — both hard-code `qos_profile_sensor_data` (Best Effort, `KEEP_LAST`, depth 5). The only CLI verb that lets you pick the subscriber QoS is `ros2 topic echo --qos-reliability ...`, which measures nothing but does confirm whether a `Reliable` subscriber can match the publisher.
 
 ## Note on the statistics
 

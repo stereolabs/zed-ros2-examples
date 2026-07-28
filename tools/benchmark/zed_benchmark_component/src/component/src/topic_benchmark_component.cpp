@@ -175,6 +175,17 @@ void TopicBenchmarkComponent::getParameters()
     mSubscriptionMode = "auto";
   }
 
+  // ----> Subscriber QoS
+  // Declared here, and applied by passing the resulting QoS to the
+  // subscription, so that the policies take effect on the generic path too.
+  getParam(
+    "qos.reliability", mQosReliability, mQosReliability,
+    "QoS reliability: ");
+  getParam("qos.durability", mQosDurability, mQosDurability, "QoS durability: ");
+  getParam("qos.history", mQosHistory, mQosHistory, "QoS history: ");
+  getParam("qos.depth", mQosDepth, mQosDepth, "QoS depth: ");
+  // <---- Subscriber QoS
+
   getParam(
     "test_duration_sec", mTestDurationSec, mTestDurationSec,
     "Test duration [sec] (0 = infinite): ");
@@ -225,18 +236,113 @@ void TopicBenchmarkComponent::updateTopicInfo()
   }
 }
 
+rclcpp::QoS TopicBenchmarkComponent::makeQos(
+  const std::string & reliability, const std::string & durability,
+  const std::string & history, int depth,
+  std::vector<std::string> & warnings)
+{
+  if (depth < 1) {
+    warnings.push_back(
+      "'qos.depth' must be >= 1, got " + std::to_string(depth) + ". Using 1.");
+    depth = 1;
+  }
+
+  // History decides how the QoS object is constructed, so resolve it first.
+  std::string hist = history;
+  if (hist != "keep_all" && hist != "keep_last") {
+    warnings.push_back(
+      "Unknown 'qos.history' value '" + hist +
+      "'. Valid values are 'keep_last' and 'keep_all'. Using 'keep_last'.");
+    hist = "keep_last";
+  }
+  rclcpp::QoS qos = (hist == "keep_all") ?
+    rclcpp::QoS(rclcpp::KeepAll()) :
+    rclcpp::QoS(rclcpp::KeepLast(static_cast<size_t>(depth)));
+
+  if (reliability == "reliable") {
+    qos.reliable();
+  } else {
+    if (reliability != "best_effort") {
+      warnings.push_back(
+        "Unknown 'qos.reliability' value '" + reliability +
+        "'. Valid values are 'best_effort' and 'reliable'. Using 'best_effort'.");
+    }
+    qos.best_effort();
+  }
+
+  if (durability == "transient_local") {
+    qos.transient_local();
+  } else {
+    if (durability != "volatile") {
+      warnings.push_back(
+        "Unknown 'qos.durability' value '" + durability +
+        "'. Valid values are 'volatile' and 'transient_local'. Using "
+        "'volatile'.");
+    }
+    qos.durability_volatile();
+  }
+
+  return qos;
+}
+
+rclcpp::QoS TopicBenchmarkComponent::buildSubscriberQos()
+{
+  std::vector<std::string> warnings;
+  const rclcpp::QoS qos = makeQos(
+    mQosReliability, mQosDurability, mQosHistory, mQosDepth, warnings);
+  for (const auto & w : warnings) {
+    RCLCPP_WARN_STREAM(get_logger(), w);
+  }
+
+  // A Reliable subscriber cannot match a Best Effort publisher, so this is the
+  // one combination that can silently yield no data at all. Say so up front
+  // rather than leaving the user with an empty report.
+  if (qos.reliability() == rclcpp::ReliabilityPolicy::Reliable) {
+    RCLCPP_INFO(
+      get_logger(),
+      "Subscribing with RELIABLE reliability: note that a Reliable subscriber "
+      "cannot match a Best Effort publisher, so if the topic is published Best "
+      "Effort (usual for images and point clouds) no message will arrive.");
+  }
+
+  return qos;
+}
+
+std::string TopicBenchmarkComponent::qosToString(const rclcpp::QoS & qos)
+{
+  std::stringstream ss;
+  switch (qos.reliability()) {
+    case rclcpp::ReliabilityPolicy::Reliable: ss << "Reliable"; break;
+    case rclcpp::ReliabilityPolicy::BestEffort: ss << "Best Effort"; break;
+    case rclcpp::ReliabilityPolicy::SystemDefault: ss << "System Default"; break;
+    default: ss << "Unknown"; break;
+  }
+  switch (qos.durability()) {
+    case rclcpp::DurabilityPolicy::TransientLocal: ss << ", Transient Local";
+      break;
+    case rclcpp::DurabilityPolicy::Volatile: ss << ", Volatile"; break;
+    case rclcpp::DurabilityPolicy::SystemDefault: ss << ", System Default";
+      break;
+    default: ss << ", Unknown"; break;
+  }
+  if (qos.history() == rclcpp::HistoryPolicy::KeepAll) {
+    ss << ", KEEP_ALL";
+  } else {
+    ss << ", KEEP_LAST, depth " << qos.depth();
+  }
+  return ss.str();
+}
+
 void TopicBenchmarkComponent::subscribeToTopic(const std::string & topic_type)
 {
   auto sub_opt = rclcpp::SubscriptionOptions();
   sub_opt.qos_overriding_options =
     rclcpp::QosOverridingOptions::with_default_policies();
 
-  // Subscribe with Best Effort reliability by default: a Best Effort
-  // subscriber is compatible with both Reliable and Best Effort publishers,
-  // while a Reliable subscriber cannot connect to a Best Effort publisher
-  // (common for sensor data such as images and point clouds). The reliability
-  // can still be overridden at runtime via the `qos_overrides` parameters.
-  const auto qos = rclcpp::QoS(QOS_QUEUE_SIZE).best_effort();
+  // The QoS comes from this node's own `qos.*` parameters. Passing it as the
+  // subscription's QoS argument is what makes the policies effective on every
+  // path, including the generic one that ignores qos_overriding_options.
+  const auto qos = buildSubscriberQos();
 
   const bool ipc_enabled = get_node_options().use_intra_process_comms();
 
@@ -262,6 +368,12 @@ void TopicBenchmarkComponent::subscribeToTopic(const std::string & topic_type)
       mIntraProcessCapable = ipc_enabled;
       mSizeSemantics = SizeSemantics::MessageContent;
       mSubPathDesc = typed.description;
+      // Read the QoS back from the subscription: on this path rclcpp may still
+      // have applied a qos_overrides.* on top of the qos.* parameters, so the
+      // requested values are not necessarily the granted ones.
+      mActualQosDesc = qosToString(typed.sub->get_actual_qos());
+      RCLCPP_INFO_STREAM(
+        get_logger(), "Subscriber QoS: " << mActualQosDesc);
 
       RCLCPP_INFO_STREAM(
         get_logger(),
@@ -309,10 +421,57 @@ void TopicBenchmarkComponent::subscribeToTopic(const std::string & topic_type)
   mIntraProcessCapable = false;
   mZeroCopy = false;
 
-  mSubMap[topic_type] = create_generic_subscription(
+  // rclcpp::create_generic_subscription() never reads
+  // options.qos_overriding_options: it forwards the options to the
+  // GenericSubscription constructor but never calls declare_qos_parameters(),
+  // so no `qos_overrides.*` parameter is declared and any override the user
+  // passed is silently discarded. True from Humble through Rolling. The QoS of
+  // this path is therefore fixed at the values above.
+  //
+  // Silently ignoring an explicit instruction is the worst outcome, so say so.
+  warnIfQosOverrideIgnored();
+
+  auto generic_sub = create_generic_subscription(
     mTopicName, topic_type, qos,
     std::bind(&TopicBenchmarkComponent::topicCallback, this, _1),
     sub_opt);
+  mActualQosDesc = qosToString(generic_sub->get_actual_qos());
+  RCLCPP_INFO_STREAM(get_logger(), "Subscriber QoS: " << mActualQosDesc);
+  mSubMap[topic_type] = generic_sub;
+}
+
+void TopicBenchmarkComponent::warnIfQosOverrideIgnored()
+{
+  // The parameter is never declared on this path, so it cannot be read back
+  // with get_parameter(): look instead at the overrides the node was given.
+  // NodeOptions::parameter_overrides() is NOT enough - it only holds what was
+  // set programmatically, not what came from the command line. The parameters
+  // interface merges both.
+  const std::string prefix = "qos_overrides." + mTopicName + ".subscription.";
+  std::vector<std::string> ignored;
+  for (const auto & entry :
+    get_node_parameters_interface()->get_parameter_overrides())
+  {
+    if (entry.first.rfind(prefix, 0) == 0) {
+      ignored.push_back(entry.first);
+    }
+  }
+  if (ignored.empty()) {
+    return;
+  }
+
+  std::stringstream ss;
+  for (size_t i = 0; i < ignored.size(); ++i) {
+    ss << (i ? ", " : "") << ignored[i];
+  }
+  RCLCPP_WARN_STREAM(
+    get_logger(),
+    "The QoS override(s) " << ss.str() <<
+      " will be IGNORED on this subscription path: rclcpp's "
+      "create_generic_subscription() does not honour qos_overriding_options. "
+      "Use this node's own parameters instead - qos.reliability, "
+      "qos.durability, qos.history and qos.depth - which are applied on every "
+      "subscription path.");
 }
 
 void TopicBenchmarkComponent::topicCallback(
@@ -627,6 +786,11 @@ void TopicBenchmarkComponent::generateReport()
   "serialized wire bytes" :
   "message content bytes (no CDR framing) - NOT comparable to wire bytes")
       << "\n";
+  // The QoS is part of the measurement's provenance: a Reliable subscriber and
+  // a Best Effort one can see very different rates on a lossy link. This is the
+  // QoS the middleware actually granted, read back from the subscription.
+  rep << "Subscriber QoS:    "
+      << (mActualQosDesc.empty() ? "n/a" : mActualQosDesc) << "\n";
   rep << "Stop reason:       " << mStopReason << "\n";
 
   if (mMsgCount == 0) {
