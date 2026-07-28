@@ -120,17 +120,27 @@ trap cleanup EXIT INT TERM
 # A no-subscriber baseline is also taken, so the transport cost can be read as
 # the increase over a ZED node that is publishing to nobody.
 
-# find_zed_pid : pid of the process that has the ZED SDK mapped.
-# Deliberately not a command-line match: the launch wrapper, this script and its
-# subshells all contain the same strings, and matching those would pick the
-# wrong process (or this one).
+# find_zed_pid : pid of the process running the ZED node.
+#
+# Identified by having the ZED SDK mapped, deliberately not by a command-line
+# match: the launch wrapper, this script and its subshells all contain the same
+# strings, and matching those would pick the wrong process (or this one).
+#
+# The benchmark component itself also links the ZED SDK, for the type-adapted
+# zero-copy path, so a mapped libsl_zed alone is not enough to identify the
+# camera node: any benchmark process must be excluded explicitly, or its CPU
+# would be counted twice.
 find_zed_pid() {
-  local p
+  local p pid cl
   for p in /proc/[0-9]*; do
-    if grep -q libsl_zed "${p}/maps" 2>/dev/null; then
-      basename "${p}"
-      return 0
-    fi
+    grep -q libsl_zed "${p}/maps" 2>/dev/null || continue
+    pid=$(basename "${p}")
+    cl=$(tr '\0' ' ' < "${p}/cmdline" 2>/dev/null)
+    case "${cl}" in
+      *zed_topic_benchmark*) continue ;;   # the benchmark, not the camera node
+    esac
+    echo "${pid}"
+    return 0
   done
   return 1
 }

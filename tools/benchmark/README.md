@@ -224,7 +224,30 @@ Measured on a **ZED 2i**, `rgb/color/rect/image` (3.52 MB, ~1.7 Gbps) at 60 Hz w
 | ZED node with no subscriber | 70.0% | 70.0% |
 | Frequency | 59.87 Hz | 59.76 Hz |
 
-So on this machine zero-copy saves about **2 ms of latency and 4 points of CPU** on a 1.7 Gbps stream. The gain looks modest because both figures are dominated by work that is not the transport: 70 of those CPU points are capture plus depth, and ~18 ms of the latency is the camera pipeline (see [Reading the latency correctly](#reading-the-latency-correctly)). Isolating the transport with a synthetic type-adapted publisher — one that stamps at publish time and does no camera work — the same code reports **0.02 ms vs 3.32 ms** and 0.34% vs 2.04% CPU.
+So on that desktop zero-copy saves about **2 ms of latency and 4 points of CPU** on a 1.7 Gbps stream. The gain looks modest because both figures are dominated by work that is not the transport: 70 of those CPU points are capture plus depth, and ~18 ms of the latency is the camera pipeline (see [Reading the latency correctly](#reading-the-latency-correctly)). Isolating the transport with a synthetic type-adapted publisher — one that stamps at publish time and does no camera work — the same code reports **0.02 ms vs 3.32 ms** and 0.34% vs 2.04% CPU.
+
+**The gain is far larger on an embedded target**, where the CPU is weaker relative to the data rate. On a **Jetson AGX Orin** (JetPack 6 / L4T R36.5) with a GMSL2 **ZED X Mini** at HD1200, `rgb/color/rect/image` is 8.79 MB at 30 Hz — about 2.1 Gbps:
+
+| | composed, zero-copy | separate process |
+| --- | --- | --- |
+| Latency mean | **48.25 ms** | **54.17 ms** |
+| Total CPU (all processes) | **44.2%** of one core | **69.5%** |
+| ZED node with no subscriber | 29.5% | 31.2% |
+| Transport cost (total − idle) | **14.8%** | **38.3%** |
+| Frequency | 30.01 Hz | 29.84 Hz |
+
+Zero-copy costs **2.6× less CPU for the transport** and saves ~6 ms of latency there.
+
+With **four GMSL2 cameras** (2× ZED X Mini + 2× ZED X) in one container, all four confirmed zero-copy at 8.79 MB per frame — roughly **8 Gbps aggregate**:
+
+| | composed, zero-copy | separate processes |
+| --- | --- | --- |
+| Per-camera rate | 29.9 / 27.8 / 29.5 / 29.1 Hz | 25.0 / 20.4 / 24.5 / 26.0 Hz |
+| Aggregate rate | **116.3 Hz** | **95.9 Hz** |
+| Latency mean | 54–65 ms | 64–72 ms |
+| Total CPU (all processes) | **161%** of one core | **287%** |
+
+Composed, the cameras nearly hold their nominal 30 Hz; as separate processes the middleware cannot keep up and every camera drops frames, for **78% more CPU**.
 
 #### Reading the latency correctly
 

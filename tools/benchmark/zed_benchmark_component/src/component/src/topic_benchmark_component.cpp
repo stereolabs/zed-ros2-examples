@@ -572,6 +572,30 @@ void TopicBenchmarkComponent::generateReport()
   // bandwidth over wire bytes and one over message content are different
   // quantities, and an inter-process figure must never be mistaken for an
   // intra-process one.
+  // If no subscription was ever created the topic was never seen, so there is
+  // no path to describe. Printing the default would assert a subscription that
+  // never existed.
+  const bool subscribed = !mSubMap.empty() || mTypedSub != nullptr;
+  if (!subscribed) {
+    rep << "Subscription:      none - the topic was never seen\n";
+    rep << "Delivery path:     n/a\n";
+    rep << "Stop reason:       " << mStopReason << "\n";
+    rep << "No message received: no statistics available.\n";
+    rep << "===========================================================\n";
+    if (mUseRosLog && rclcpp::ok()) {
+      RCLCPP_INFO_STREAM(get_logger(), rep.str());
+    } else {
+      std::cout << "\n" << rep.str() << std::endl;
+    }
+    if (!mLogFilePath.empty()) {
+      std::ofstream ofs(mLogFilePath, std::ios::out | std::ios::trunc);
+      if (ofs.is_open()) {
+        ofs << rep.str();
+      }
+    }
+    return;
+  }
+
   rep << "Subscription:      " << mSubPathDesc << "\n";
   rep << "Delivery path:     ";
   if (mIntraProcessObserved.load()) {
