@@ -16,6 +16,21 @@
     <depend>zed_topic_benchmark_interfaces</depend>
     <depend>rclcpp</depend>
     <depend>rclcpp_components</depend>
+    <depend>sensor_msgs</depend>
+
+    <!-- Optional: enables the ZED type-adapted (zero-copy) subscription path.
+         The benchmark builds and works without it, but cannot report true
+         zero-copy delivery. -->
+    <build_depend>zed_components</build_depend>
+    <exec_depend>zed_components</exec_depend>
+
+    <!-- Optional: typed support for the non-sensor_msgs transports of
+         image_transport and point_cloud_transport. Each is used only if
+         present at build time; without it those topics fall back to the
+         generic subscription. sensor_msgs/CompressedImage already covers the
+         compressed, compressedDepth and zstd image transports. -->
+    <build_depend>theora_image_transport</build_depend>
+    <build_depend>point_cloud_interfaces</build_depend>
 
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_lint_common</test_depend>

@@ -18,10 +18,29 @@
 # ZED ROS 2 configuration check
 #
 # Runs the topic benchmark against a real ZED node for a set of representative
-# topics, in both "standard" (separate process) and "IPC" (composition) mode,
-# and prints a report for each test. It is meant to verify that the user's
-# ROS 2 / DDS / system configuration is able to deliver the camera data at the
-# expected rate and bandwidth.
+# topics and prints a report for each test. It is meant to verify that the
+# user's ROS 2 / DDS / system configuration is able to deliver the camera data
+# at the expected rate and bandwidth, and to quantify what composing a
+# subscriber in the camera container actually buys.
+#
+# Each topic is measured twice, always with a *typed* subscription so the two
+# runs use the very same size and latency accounting:
+#   * interprocess : the benchmark runs as a separate process, so messages are
+#                    serialized and routed through the middleware.
+#   * ipc          : the benchmark is loaded as a component in the ZED
+#                    container with intra-process comms enabled.
+#
+# The ZED node keeps enable_ipc:=true in both runs, so the publisher is
+# identical and the only variable is where the subscriber lives.
+#
+# What to compare: LATENCY and CPU, not bandwidth. On the intra-process path no
+# bytes are transported at all, so its "bandwidth" is a notional payload figure
+# and the frequency is simply whatever the publisher produces. Latency and CPU
+# are what actually change.
+#
+# Note: a typed subscription is required because a runtime-typed
+# (rclcpp::GenericSubscription) subscriber is never registered with the
+# IntraProcessManager and therefore can never take the intra-process path.
 #
 # Topics tested:
 #   * /zed/zed_node/rgb/color/rect/image          (depth mode NONE)
@@ -33,10 +52,19 @@
 #
 # Environment overrides:
 #   CAMERA_MODEL   ZED camera model (default: zed2i)
+#   CAMERA_SN      Serial number of the camera to use. Optional with a single
+#                  camera, but STRONGLY recommended on a multi-camera rig: with
+#                  several cameras attached and no serial given, the wrapper has
+#                  to pick one itself and may open none, which shows up here as
+#                  "topic not available" and a skipped test.
 #   DURATION       Seconds of measurement per test (default: 15)
 #   WIN_SIZE       Benchmark averaging window size (default: 100)
 #   TOPIC_TIMEOUT  Max seconds to wait for a topic to appear (default: 120)
 #   SETTLE         Seconds to wait between tests (default: 5)
+#   WARMUP         Seconds to let the node reach steady state before the
+#                  no-subscriber CPU baseline is taken (default: 25). Too
+#                  short and the baseline lands in the neural-depth warm-up,
+#                  yielding a CPU_IDLE above CPU_TOT.
 #   OUTPUT_DIR     Where to store the reports (default: ./zed_config_reports/<timestamp>)
 # -----------------------------------------------------------------------------
 
@@ -48,6 +76,8 @@ DURATION="${2:-${DURATION:-15}}"
 WIN_SIZE="${WIN_SIZE:-100}"
 TOPIC_TIMEOUT="${TOPIC_TIMEOUT:-120}"
 SETTLE="${SETTLE:-5}"
+WARMUP="${WARMUP:-25}"
+CAMERA_SN="${CAMERA_SN:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-$(pwd)/zed_config_reports/$(date +%Y%m%d_%H%M%S)}"
 
 CONTAINER="/zed/zed_container"   # default ZED node component container
@@ -62,7 +92,7 @@ SCENARIOS=(
   "depth|/zed/zed_node/depth/depth_registered|NEURAL_LIGHT"
   "cloud|/zed/zed_node/point_cloud/cloud_registered|NEURAL_LIGHT"
 )
-MODES=("standard" "ipc")
+MODES=("interprocess" "ipc")
 # <---- Configuration
 
 ZED_PID=""   # PID of the currently running ZED launch (process group leader)
@@ -91,6 +121,90 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+# ----> CPU accounting across every process involved
+# The benchmark reports the CPU of its OWN process. That is not comparable
+# between the two modes: composed, its process is the ZED node, so the figure
+# also covers camera capture, depth and publishing. The only fair comparison is
+# the total across all the processes involved, which is what these helpers build:
+#   interprocess : ZED node CPU + benchmark process CPU
+#   ipc          : ZED node CPU (the benchmark runs inside it)
+# A no-subscriber baseline is also taken, so the transport cost can be read as
+# the increase over a ZED node that is publishing to nobody.
+
+# find_zed_pid : pid of the process running the ZED node.
+#
+# Identified by having the ZED SDK mapped, deliberately not by a command-line
+# match: the launch wrapper, this script and its subshells all contain the same
+# strings, and matching those would pick the wrong process (or this one).
+#
+# The benchmark component itself also links the ZED SDK, for the type-adapted
+# zero-copy path, so a mapped libsl_zed alone is not enough to identify the
+# camera node: any benchmark process must be excluded explicitly, or its CPU
+# would be counted twice.
+find_zed_pid() {
+  local p pid cl
+  for p in /proc/[0-9]*; do
+    grep -q libsl_zed "${p}/maps" 2>/dev/null || continue
+    pid=$(basename "${p}")
+    cl=$(tr '\0' ' ' < "${p}/cmdline" 2>/dev/null)
+    case "${cl}" in
+      *zed_topic_benchmark*) continue ;;   # the benchmark, not the camera node
+    esac
+    echo "${pid}"
+    return 0
+  done
+  return 1
+}
+
+# proc_cpu_sec <pid> : utime+stime of <pid>, in seconds.
+# The comm field is parenthesized and may contain spaces, so fields are counted
+# after the last ')'.
+proc_cpu_sec() {
+  local pid="$1" tick
+  tick=$(getconf CLK_TCK)
+  awk -v t="${tick}" '{
+      s = $0; sub(/^.*\) /, "", s); split(s, f, " ");
+      printf "%.3f", (f[12] + f[13]) / t
+    }' "/proc/${pid}/stat" 2>/dev/null
+}
+
+# cpu_percent <cpu_seconds> <wall_seconds>
+cpu_percent() {
+  awk -v c="$1" -v w="$2" 'BEGIN{ if (w > 0) printf "%.1f", 100*c/w; else printf "n/a" }'
+}
+# <---- CPU accounting across every process involved
+
+# load_benchmark_component <topic> <report_path>
+#
+# `ros2 component load` resolves the container through the ROS graph, and the
+# ros2 CLI daemon caches that graph. A stale cache makes the load fail with
+# "Unable to find container node" even though the container's load_node service
+# is present and working - seen on a Jetson AGX Orin, where it silently cost the
+# whole 'ipc' half of the matrix. Stopping the daemon forces direct discovery, so
+# retry once that way before giving up.
+load_benchmark_component() {
+  local topic="$1" report="$2" attempt
+  for attempt in 1 2; do
+    if ros2 component load "${CONTAINER}" "${BENCH_COMP_PKG}" "${BENCH_PLUGIN}" \
+      -e use_intra_process_comms:=true \
+      -p topic_name:="${topic}" \
+      -p subscription_mode:=typed \
+      -p test_duration_sec:="${DURATION}.0" \
+      -p avg_win_size:="${WIN_SIZE}" \
+      -p use_ros_log:=true \
+      -p log_file_path:="${report}"
+    then
+      return 0
+    fi
+    if [[ "${attempt}" == 1 ]]; then
+      info "Component load failed; clearing the ros2 CLI daemon cache and retrying..."
+      ros2 daemon stop > /dev/null 2>&1
+      sleep 3
+    fi
+  done
+  return 1
+}
+
 wait_for_topic() {
   # Wait until <topic> is advertised, up to TOPIC_TIMEOUT seconds.
   local topic="$1"
@@ -107,9 +221,8 @@ wait_for_topic() {
 
 run_test() {
   local mode="$1" name="$2" topic="$3" depth_mode="$4"
-  local enable_ipc report zed_log
+  local report zed_log
 
-  [[ "${mode}" == "ipc" ]] && enable_ipc="true" || enable_ipc="false"
   report="${OUTPUT_DIR}/report_${mode}_${name}.txt"
   zed_log="${OUTPUT_DIR}/zed_${mode}_${name}.log"
 
@@ -119,9 +232,17 @@ run_test() {
   echo "==================================================================="
 
   # ----> Start the ZED node (composable node inside its container)
+  # enable_ipc stays true in BOTH modes so the publisher is byte-for-byte the
+  # same experiment and the only variable is where the subscriber lives. With
+  # IPC enabled the ZED node publishes images through its TypeAdapter, which
+  # feeds the intra-process path AND the middleware, so an out-of-process
+  # subscriber still receives a normal sensor_msgs/Image.
+  local sn_arg=()
+  [[ -n "${CAMERA_SN}" ]] && sn_arg=("serial_number:=${CAMERA_SN}")
   setsid ros2 launch zed_wrapper zed_camera.launch.py \
     camera_model:="${CAMERA_MODEL}" \
-    enable_ipc:="${enable_ipc}" \
+    "${sn_arg[@]}" \
+    enable_ipc:=true \
     param_overrides:="depth.depth_mode:=${depth_mode}" \
     > "${zed_log}" 2>&1 &
   ZED_PID=$!
@@ -133,35 +254,80 @@ run_test() {
     sleep "${SETTLE}"
     return 1
   fi
-  info "Topic available. Letting the node stabilize..."
-  sleep 3
+  # A depth-enabled ZED node is still warming up when its topics first appear:
+  # the neural depth engine initialises lazily and the first seconds cost far
+  # more CPU than the steady state. Sampling the baseline too early yields an
+  # idle figure ABOVE the measured total, i.e. a negative transport cost. On a
+  # Jetson AGX Orin with NEURAL_LIGHT that took about 25 s to settle.
+  info "Topic available. Letting the node reach steady state (${WARMUP}s)..."
+  sleep "${WARMUP}"
   # <---- Start the ZED node
 
+  # ----> No-subscriber CPU baseline
+  # Taken before anything subscribes. image_transport/point_cloud_transport
+  # publish lazily, so with no subscriber this is the cost of capture and depth
+  # alone, and the transport cost of each mode can be read as the rise above it.
+  local zed_pid base_a base_b base_cpu=""
+  zed_pid=$(find_zed_pid || true)
+  if [[ -n "${zed_pid}" ]]; then
+    base_a=$(proc_cpu_sec "${zed_pid}")
+    sleep 6
+    base_b=$(proc_cpu_sec "${zed_pid}")
+    base_cpu=$(awk -v a="${base_a}" -v b="${base_b}" 'BEGIN{printf "%.3f", b-a}')
+    base_cpu=$(cpu_percent "${base_cpu}" 6)
+    info "ZED node CPU with no subscriber: ${base_cpu}% of one core"
+  else
+    err "Could not locate the ZED node process: CPU totals will be unavailable."
+  fi
+  echo "${base_cpu}" > "${OUTPUT_DIR}/base_cpu_${mode}_${name}.txt"
+  # <---- No-subscriber CPU baseline
+
+  local zed_cpu_before="" zed_cpu_after=""
+  [[ -n "${zed_pid}" ]] && zed_cpu_before=$(proc_cpu_sec "${zed_pid}")
+
   # ----> Run the benchmark
-  if [[ "${mode}" == "standard" ]]; then
+  # Both modes use subscription_mode:=typed so the size and latency accounting
+  # is identical and the two reports really are comparable.
+  if [[ "${mode}" == "interprocess" ]]; then
     # Separate process: blocks until the benchmark self-terminates.
     ros2 run "${BENCH_PKG}" "${BENCH_EXE}" --ros-args \
       -p topic_name:="${topic}" \
+      -p subscription_mode:=typed \
       -p test_duration_sec:="${DURATION}.0" \
       -p avg_win_size:="${WIN_SIZE}" \
       -p use_ros_log:=true \
       -p log_file_path:="${report}"
   else
-    # IPC: load the benchmark as a component into the ZED container, with
-    # intra-process communication enabled. On completion the component shuts
-    # the container down (and the report is written before that happens).
-    ros2 component load "${CONTAINER}" "${BENCH_COMP_PKG}" "${BENCH_PLUGIN}" \
-      -e use_intra_process_comms:=true \
-      -p topic_name:="${topic}" \
-      -p test_duration_sec:="${DURATION}.0" \
-      -p avg_win_size:="${WIN_SIZE}" \
-      -p use_ros_log:=true \
-      -p log_file_path:="${report}" || \
+    # Composed in the ZED container with intra-process comms enabled. On
+    # completion the component shuts the container down, after writing the
+    # report.
+    load_benchmark_component "${topic}" "${report}" || \
       err "Failed to load the benchmark component into '${CONTAINER}'."
     # 'component load' returns immediately: wait for the measurement to finish.
     sleep "$((DURATION + 8))"
   fi
   # <---- Run the benchmark
+
+  # ----> Total CPU across every process involved
+  if [[ -n "${zed_pid}" ]] && kill -0 "${zed_pid}" 2>/dev/null; then
+    zed_cpu_after=$(proc_cpu_sec "${zed_pid}")
+  fi
+  local zed_delta="0" bench_sec="0" total_sec
+  if [[ -n "${zed_cpu_before}" && -n "${zed_cpu_after}" ]]; then
+    zed_delta=$(awk -v a="${zed_cpu_before}" -v b="${zed_cpu_after}" \
+      'BEGIN{printf "%.3f", (b>a) ? b-a : 0}')
+  fi
+  if [[ "${mode}" == "interprocess" && -f "${report}" ]]; then
+    # Composed, the benchmark's own CPU is already inside the ZED node's, so it
+    # must only be added for the separate-process mode.
+    bench_sec=$(grep -oE "Process CPU:[[:space:]]+[0-9.]+" "${report}" |
+      grep -oE "[0-9.]+" | head -1)
+    bench_sec="${bench_sec:-0}"
+  fi
+  total_sec=$(awk -v a="${zed_delta}" -v b="${bench_sec}" 'BEGIN{printf "%.3f", a+b}')
+  cpu_percent "${total_sec}" "${DURATION}" > "${OUTPUT_DIR}/total_cpu_${mode}_${name}.txt"
+  info "Total CPU over the run (all processes): $(cat "${OUTPUT_DIR}/total_cpu_${mode}_${name}.txt")% of one core"
+  # <---- Total CPU across every process involved
 
   if [[ -f "${report}" ]]; then
     info "Report saved: ${report}"
@@ -177,24 +343,53 @@ run_test() {
 print_summary() {
   echo
   echo "############################# SUMMARY #############################"
-  printf "%-8s %-9s %-9s %-12s %-14s\n" "TOPIC" "MODE" "MSGS" "FREQ[Hz]" "BW[Mbps]"
-  echo "-------------------------------------------------------------------"
-  local s name topic mode report msgs freq bw
-  for mode in "${MODES[@]}"; do
-    for s in "${SCENARIOS[@]}"; do
-      IFS='|' read -r name topic _ <<< "${s}"
+  printf "%-7s %-13s %-7s %-10s %-12s %-11s %-10s\n" \
+    "TOPIC" "MODE" "MSGS" "FREQ[Hz]" "LATENCY[ms]" "CPU_TOT[%]" "CPU_IDLE[%]"
+  echo "---------------------------------------------------------------------------------"
+  local s name topic mode report msgs freq lat cpu base
+  for s in "${SCENARIOS[@]}"; do
+    IFS='|' read -r name topic _ <<< "${s}"
+    for mode in "${MODES[@]}"; do
       report="${OUTPUT_DIR}/report_${mode}_${name}.txt"
       if [[ -f "${report}" ]]; then
         msgs=$(grep -E "Messages received:" "${report}" | grep -oE "[0-9]+" | head -1)
         freq=$(grep -E "Frequency \[Hz\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
-        bw=$(grep -E "Bandwidth \[Mbps\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
+        lat=$(grep -E "Latency \[ms\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
+        [[ "${lat}" == *"not available"* ]] && lat="n/a"
       else
-        msgs="-"; freq="NO DATA"; bw="-"
+        msgs="-"; freq="NO DATA"; lat="-"
       fi
-      printf "%-8s %-9s %-9s %-12s %-14s\n" "${name}" "${mode}" "${msgs:-?}" "${freq:-?}" "${bw:-?}"
+      cpu=$(cat "${OUTPUT_DIR}/total_cpu_${mode}_${name}.txt" 2>/dev/null)
+      base=$(cat "${OUTPUT_DIR}/base_cpu_${mode}_${name}.txt" 2>/dev/null)
+      printf "%-7s %-13s %-7s %-10s %-12s %-11s %-10s\n" \
+        "${name}" "${mode}" "${msgs:-?}" "${freq:-?}" "${lat:-?}" \
+        "${cpu:-?}" "${base:-?}"
     done
   done
-  echo "-------------------------------------------------------------------"
+  echo "---------------------------------------------------------------------------------"
+  echo "Compare LATENCY and CPU_TOT between the two modes: those are what the"
+  echo "intra-process path changes. Frequency is set by the publisher, and the"
+  echo "bandwidth of an intra-process run is notional (nothing is transported),"
+  echo "so neither of them shows the IPC gain."
+  echo
+  echo "CPU_TOT is the total across EVERY process involved (ZED node + benchmark"
+  echo "for 'interprocess', the ZED node alone for 'ipc', where the benchmark"
+  echo "runs inside it). The per-process figure printed in each report is NOT"
+  echo "comparable between the two modes, because composed it also covers"
+  echo "capture, depth and publishing."
+  echo "CPU_IDLE is the ZED node with no subscriber at all, so the transport"
+  echo "cost of each mode is CPU_TOT - CPU_IDLE. A CPU_IDLE ABOVE CPU_TOT means"
+  echo "the baseline was taken while the node was still warming up: re-run with"
+  echo "a larger WARMUP (currently ${WARMUP}s)."
+  echo
+  echo "LATENCY runs from the publisher's header.stamp to arrival. For ZED image"
+  echo "and cloud topics that stamp is the frame ACQUISITION time, so the value"
+  echo "includes the whole camera pipeline and only the difference between the"
+  echo "two modes reflects the transport. Set the wrapper's 'use_pub_timestamps'"
+  echo "to true to time the transport alone."
+  echo
+  echo "Each report states its own delivery path, and says explicitly when"
+  echo "intra-process delivery was confirmed rather than merely possible."
   echo "Full reports in: ${OUTPUT_DIR}"
   echo "###################################################################"
 }
@@ -204,13 +399,23 @@ print_summary() {
 command -v ros2 >/dev/null 2>&1 || { err "'ros2' not found. Source your ROS 2 / workspace setup first."; exit 1; }
 
 mkdir -p "${OUTPUT_DIR}"
+
+# Every ros2 CLI call below goes through the CLI daemon, which caches the ROS
+# graph. A stale cache makes `ros2 topic list` return an incomplete graph and
+# `ros2 component load` fail to find the container - both seen on a Jetson AGX
+# Orin, where they silently turned into "topic not available" skips and a
+# missing 'ipc' half of the matrix. Drop the cache once, up front, so the whole
+# run uses direct discovery.
+ros2 daemon stop > /dev/null 2>&1 || true
+sleep 2
+
 info "ZED ROS 2 configuration check"
 info "Camera model: ${CAMERA_MODEL} | Duration: ${DURATION}s | Window: ${WIN_SIZE}"
 info "Reports directory: ${OUTPUT_DIR}"
 
-for mode in "${MODES[@]}"; do
-  for s in "${SCENARIOS[@]}"; do
-    IFS='|' read -r name topic depth_mode <<< "${s}"
+for s in "${SCENARIOS[@]}"; do
+  IFS='|' read -r name topic depth_mode <<< "${s}"
+  for mode in "${MODES[@]}"; do
     run_test "${mode}" "${name}" "${topic}" "${depth_mode}"
   done
 done
