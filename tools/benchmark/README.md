@@ -78,17 +78,21 @@ The live line is updated in place and shows, for frequency and bandwidth, the `i
 * `test_sample_count`: number of messages to acquire before stopping the test and generating the report. `0` means run until interrupted. [Default: `0` → infinite]
 * `log_file_path`: path of a file where the final report is written (in addition to the console). Empty means console only. [Default: `""`]
 * `use_ros_log`: if `true`, prints the live statistics and report through the ROS logging system instead of the console. [Default: `false`]
+* `subscription_mode`: which subscription path to use — `auto`, `generic` or `typed`. [Default: `auto`] See [Measuring Intra Process Communication](#measuring-intra-process-communication).
 
 When both `test_duration_sec` and `test_sample_count` are set, the test stops as soon as the first of the two limits is reached.
 
 ## Final report
 
-When the test completes (a duration or sample-count limit is reached) **or** when it is interrupted by the user with `Ctrl+C`, a summary report is printed to the console — and written to `log_file_path` if set — containing the topic name and type, the stop reason, the test duration, the number of received messages, the total received data, and the mean / min / max of frequency, message size and bandwidth over the whole test:
+When the test completes (a duration or sample-count limit is reached) **or** when it is interrupted by the user with `Ctrl+C`, a summary report is printed to the console — and written to `log_file_path` if set. Besides the statistics, it always states which subscription path was used, which delivery path was measured, and how the reported sizes must be read, so a stored report cannot be misinterpreted later:
 
 ```text
 ================ ZED TOPIC BENCHMARK REPORT ================
 Topic name:        /zed/zed_node/point_cloud/cloud_registered
 Topic type:        sensor_msgs/msg/PointCloud2
+Subscription:      generic (runtime-typed)
+Delivery path:     inter-process (middleware) - a generic subscription can never take the intra-process path
+Size semantics:    serialized wire bytes
 Stop reason:       test completed (sample count reached)
 Test duration:     10.00 s
 Messages received: 150
@@ -97,7 +101,21 @@ Frequency [Hz]   - mean: 15.00 | min: 14.82 | max: 15.13
 Msg size         - mean: 3.93 MB | min: 3.93 MB | max: 3.93 MB
 Bandwidth [Mbps] - mean: 471.62 | min: 465.74 | max: 475.49
 Total data:        589.82 MB
+Latency [ms]     - not available on this subscription path
+Process CPU:       1.240 s (12.40% of one core)
+                   whole process, including any other component loaded in it
 ===========================================================
+```
+
+The same topic benchmarked with a zero-copy subscription composed in the camera container:
+
+```text
+Subscription:      type-adapted (zero-copy, sl::Mat by pointer)
+Delivery path:     intra-process, zero-copy - CONFIRMED (publisher's buffer received by pointer)
+Size semantics:    message content bytes (no CDR framing) - NOT comparable to wire bytes
+...
+Latency [ms]     - mean: 0.02 | min: 0.01 | max: 0.05 (60 samples)
+Process CPU:       0.010 s (0.34% of one core)
 ```
 
 ## Custom message
@@ -118,7 +136,14 @@ float32 topic_avg_freq
 float32 topic_bw
 # Average Bandwidth
 float32 topic_avg_bw
+
+# Instant end-to-end latency [msec], 0.0 when unavailable
+float32 topic_latency
+# Average end-to-end latency [msec], 0.0 when unavailable
+float32 topic_avg_latency
 ```
+
+The two latency fields are `0.0` on the `generic` path, which has no directly usable publisher timestamp.
 
 ## QoS
 
@@ -136,17 +161,67 @@ The *instant* frequency/bandwidth are computed from the last inter-arrival inter
 
 In the final report, the **mean** frequency/bandwidth are computed over the whole test (total messages / total time and total data / total time). The **min/max** are tracked on the *windowed average* rate — not on the raw single-sample instantaneous rate — and only after the averaging window has filled. This avoids reporting meaningless extremes caused by a single short inter-arrival interval (e.g. two messages delivered back-to-back by the executor or a publisher burst), which would otherwise show up as an enormous instantaneous frequency. Message sizes are printed with adaptive units (B / KB / MB / GB) so small messages are not rounded to `0.00 MB`.
 
-## Advanced - using IPC and composition
+## Measuring Intra Process Communication
 
-The package provides a ROS 2 component called `stereolabs::TopicBenchmarkComponent` to be used with [Composition](https://docs.ros.org/en/humble/Tutorials/Intermediate/Composition.html) to test [Intra Process Communication (IPC)](https://design.ros2.org/articles/intraprocess_communications.html) performance.
+The package provides a ROS 2 component, `stereolabs::TopicBenchmarkComponent`, that can be loaded into a component container with [Composition](https://docs.ros.org/en/humble/Tutorials/Intermediate/Composition.html) so the benchmark runs in the publisher's process. Composing it is what makes [Intra Process Communication (IPC)](https://design.ros2.org/articles/intraprocess_communications.html) measurable — but it is **not sufficient on its own**, and the reason drives the design of this tool.
 
-**Note:** when several benchmark components run in the same process via IPC composition, setting a finite `test_duration_sec`/`test_sample_count` will shut the whole container down once a limit is reached (the report of each component is still produced). Leave the limits at their default (infinite) and stop the container with `Ctrl+C` to benchmark composed nodes for an arbitrary time.
+### Why a generic subscription can never measure IPC
+
+By default the benchmark subscribes to a topic whose type is discovered at runtime, which requires an `rclcpp::GenericSubscription`. In rclcpp, a subscription is registered with the `IntraProcessManager` **only** from the constructor of the *templated* `rclcpp::Subscription<T>` (through `resolve_use_intra_process()` / `setup_intra_process()`). `GenericSubscription` derives directly from `SubscriptionBase` and never does that — on every distribution from Humble to Rolling. There is also no serialized intra-process path to opt into: `IntraProcessManager` has no notion of `SerializedMessage` at all.
+
+So a generic subscription always receives through the middleware, even inside the publisher's own container with `use_intra_process_comms:=true`. Worth spelling out, because it is genuinely confusing: the ZED node can correctly log `[IPC type-adapted zero-copy]` while this tool measures the inter-process path, since with IPC enabled the publisher feeds *both* paths and only a real intra-process subscriber benefits.
+
+### The `subscription_mode` parameter
+
+| Mode | Subscription | Can take the intra-process path | Message size reported |
+| ------ | ------------ | ------------------------------ | --------------------- |
+| `generic` | `rclcpp::GenericSubscription` (any type) | No, ever | Exact serialized **wire bytes** |
+| `typed` | `rclcpp::Subscription<T>` (supported types only) | Yes | **Message content bytes** |
+| `auto` (default) | `typed` when intra-process comms are enabled on the node **and** the type is supported, `generic` otherwise | When it resolves to `typed` | Depends on the resolved path |
+
+`auto` is chosen so that an ordinary separate-process run keeps the historical generic subscription, and therefore keeps reporting wire-accurate bandwidth exactly as before, while a composed run with IPC enabled automatically gets a subscription that can actually use it.
+
+Supported types for `typed`: `sensor_msgs/msg/Image`, `sensor_msgs/msg/CompressedImage`, `sensor_msgs/msg/PointCloud2`, `sensor_msgs/msg/CameraInfo`, `sensor_msgs/msg/Imu`. Any other type falls back to `generic`, with a warning saying so.
+
+### Two tiers of typed delivery
+
+Not all intra-process delivery is zero-copy, and the difference is large:
+
+* **Plain typed subscription** — skips serialization and the middleware entirely, but rclcpp still copies the message into the subscription's buffer. When the publisher is type-adapted, rclcpp first calls `convert_to_ros_message()` and then copies that result into a `shared_ptr`, i.e. *two* full copies of the image.
+* **ZED type-adapted subscription** — built on the very same `TypeAdapter<StampedSlMat, sensor_msgs::msg::Image>` the ZED node publishes with, so the publisher's `sl::Mat` arrives **by pointer**: no serialization, no conversion, no copy. This is genuine zero-copy, and it is selected automatically for `sensor_msgs/msg/Image` topics when intra-process comms are enabled.
+
+The type-adapted tier needs `zed_components` and the ZED SDK at build time. The dependency is **optional**: without it the benchmark still builds and still measures the plain typed intra-process path, it just cannot report true zero-copy. The build prints which of the two it configured.
+
+### What to compare — not bandwidth
+
+On the intra-process path no bytes are transported, so a "bandwidth" figure there is notional payload throughput and is **not** comparable to an inter-process one. Frequency is set by the publisher and barely moves either. The metrics that actually show the gain are **latency** and **CPU**, both of which the report now includes.
+
+Measured on a synthetic 1280x720 RGBA publisher at 20 Hz (a type-adapted publisher standing in for the ZED node, so the figures isolate the transport and do not include any camera work):
+
+| | composed, zero-copy | separate process |
+| --- | --- | --- |
+| Latency mean | **0.02 ms** | **3.32 ms** |
+| Latency max | 0.05 ms | 5.60 ms |
+| Process CPU | 0.010 s (0.34% of one core) | 0.060 s (2.04%) |
+| Frequency | 20.00 Hz | 20.02 Hz |
+
+Latency is measured from the publisher-side `header.stamp` to the arrival in the benchmark callback, so it needs a publisher that fills the stamp; it is reported as *not available* on the `generic` path, which has no directly usable timestamp. The CPU figure covers the **whole process**, which in a composed run includes every other component in the container — that is deliberate, since the fair comparison is total CPU across all the processes involved.
+
+### What the report claims, and what it does not
+
+A typed subscription on a node with IPC enabled takes the intra-process path *only* for publishers that live in the same process, and that cannot be checked from inside a callback. The report therefore distinguishes:
+
+* `intra-process, zero-copy - CONFIRMED` — only the type-adapted path can prove this, because the custom C++ type it receives has no wire representation and so cannot have come through the middleware.
+* `intra-process capable, NOT confirmed` — typed subscription, IPC enabled, but delivery is not verifiable per message. Compare the latency against an inter-process run to see which path you got.
+* `inter-process (middleware)` — with the reason, including the case where a generic subscription makes the intra-process path impossible by construction.
+
+**Note:** when several benchmark components run in the same process, setting a finite `test_duration_sec`/`test_sample_count` will shut the whole container down once a limit is reached (the report of each component is still produced). Leave the limits at their default (infinite) and stop the container with `Ctrl+C` to benchmark composed nodes for an arbitrary time.
 
 ## How to use this tool to test your ROS 2 configuration
 
 The package ships a helper script, `zed_check_ros2_config.sh`, that runs a fixed set of benchmarks against a **real ZED node** and prints a report for each one. Its purpose is to **verify that your ROS 2 / DDS / system configuration is able to deliver the camera data at the expected rate and bandwidth** — a quick way to validate a new setup or to investigate performance problems.
 
-The script starts the ZED node and benchmarks the following topics, each in both **standard** (the benchmark runs as a separate process) and **IPC** (the benchmark is loaded as a component in the same container as the ZED node, with Intra Process Communication) mode:
+The script starts the ZED node and benchmarks the following topics **twice** each — once with the benchmark in a separate process (`interprocess`) and once composed in the camera container with intra-process comms enabled (`ipc`) — always with a typed subscription, so the two runs use identical size and latency accounting and really are comparable. The ZED node keeps `enable_ipc:=true` in both, so the publisher is the same and the only variable is where the subscriber lives.
 
 | Topic | Depth mode |
 |-------|------------|
@@ -172,22 +247,28 @@ The camera model is required (e.g. `zed`, `zed2`, `zed2i`, `zedx`, `zedxm`, ...)
 
 A full report (see [Final report](#final-report)) is saved for each test in the output directory, and a summary table is printed at the end:
 
+The layout of the summary (the values below are placeholders showing the format, not measurements — the numbers depend entirely on your camera, resolution, DDS and machine):
+
 ```text
 ############################# SUMMARY #############################
-TOPIC    MODE      MSGS      FREQ[Hz]     BW[Mbps]
+TOPIC   MODE          MSGS    FREQ[Hz]   LATENCY[ms]  CPU[%]
 -------------------------------------------------------------------
-image    standard  595       29.78        1953.21
-depth    standard  448       14.92        977.10
-cloud    standard  447       14.90        477.30
-image    ipc       598       29.92        1962.45
-depth    ipc       450       15.01        982.55
-cloud    ipc       451       15.04        481.92
+image   interprocess  <n>     <freq>     <lat>        <cpu>
+image   ipc           <n>     <freq>     <lat>        <cpu>
+depth   interprocess  <n>     <freq>     <lat>        <cpu>
+depth   ipc           <n>     <freq>     <lat>        <cpu>
+cloud   interprocess  <n>     <freq>     <lat>        <cpu>
+cloud   ipc           <n>     <freq>     <lat>        <cpu>
 -------------------------------------------------------------------
 ```
 
+Expect the two `FREQ` values of a topic to be close (the publisher sets the rate) and the `LATENCY`/`CPU` values to differ, often by a large factor. For an actual measured example, see [What to compare — not bandwidth](#what-to-compare--not-bandwidth).
+
+Compare **LATENCY** and **CPU** between the two modes: those are what the intra-process path changes. Frequency is set by the publisher, and the bandwidth of an intra-process run is notional because nothing is transported — see [What to compare — not bandwidth](#what-to-compare--not-bandwidth).
+
 ### When the results are not as expected
 
-If the measured frequencies/bandwidths are lower than expected, or if IPC mode does not improve on the standard mode, your ROS 2 middleware or system is likely not tuned for high-throughput data. Refer to the online documentation:
+If the measured frequencies/bandwidths are lower than expected, or the `interprocess` latency is high, your ROS 2 middleware or system is likely not tuned for high-throughput data. Refer to the online documentation:
 
 * ROS 2 Documentation: <https://docs.stereolabs.com/docs/integrations/ros-2>
 * DDS and Network Tuning for ROS 2: <https://docs.stereolabs.com/docs/integrations/ros-2/dds-and-network-tuning>

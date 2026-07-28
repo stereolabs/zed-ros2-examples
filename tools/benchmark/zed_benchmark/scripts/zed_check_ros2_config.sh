@@ -18,10 +18,29 @@
 # ZED ROS 2 configuration check
 #
 # Runs the topic benchmark against a real ZED node for a set of representative
-# topics, in both "standard" (separate process) and "IPC" (composition) mode,
-# and prints a report for each test. It is meant to verify that the user's
-# ROS 2 / DDS / system configuration is able to deliver the camera data at the
-# expected rate and bandwidth.
+# topics and prints a report for each test. It is meant to verify that the
+# user's ROS 2 / DDS / system configuration is able to deliver the camera data
+# at the expected rate and bandwidth, and to quantify what composing a
+# subscriber in the camera container actually buys.
+#
+# Each topic is measured twice, always with a *typed* subscription so the two
+# runs use the very same size and latency accounting:
+#   * interprocess : the benchmark runs as a separate process, so messages are
+#                    serialized and routed through the middleware.
+#   * ipc          : the benchmark is loaded as a component in the ZED
+#                    container with intra-process comms enabled.
+#
+# The ZED node keeps enable_ipc:=true in both runs, so the publisher is
+# identical and the only variable is where the subscriber lives.
+#
+# What to compare: LATENCY and CPU, not bandwidth. On the intra-process path no
+# bytes are transported at all, so its "bandwidth" is a notional payload figure
+# and the frequency is simply whatever the publisher produces. Latency and CPU
+# are what actually change.
+#
+# Note: a typed subscription is required because a runtime-typed
+# (rclcpp::GenericSubscription) subscriber is never registered with the
+# IntraProcessManager and therefore can never take the intra-process path.
 #
 # Topics tested:
 #   * /zed/zed_node/rgb/color/rect/image          (depth mode NONE)
@@ -62,7 +81,7 @@ SCENARIOS=(
   "depth|/zed/zed_node/depth/depth_registered|NEURAL_LIGHT"
   "cloud|/zed/zed_node/point_cloud/cloud_registered|NEURAL_LIGHT"
 )
-MODES=("standard" "ipc")
+MODES=("interprocess" "ipc")
 # <---- Configuration
 
 ZED_PID=""   # PID of the currently running ZED launch (process group leader)
@@ -107,9 +126,8 @@ wait_for_topic() {
 
 run_test() {
   local mode="$1" name="$2" topic="$3" depth_mode="$4"
-  local enable_ipc report zed_log
+  local report zed_log
 
-  [[ "${mode}" == "ipc" ]] && enable_ipc="true" || enable_ipc="false"
   report="${OUTPUT_DIR}/report_${mode}_${name}.txt"
   zed_log="${OUTPUT_DIR}/zed_${mode}_${name}.log"
 
@@ -119,9 +137,14 @@ run_test() {
   echo "==================================================================="
 
   # ----> Start the ZED node (composable node inside its container)
+  # enable_ipc stays true in BOTH modes so the publisher is byte-for-byte the
+  # same experiment and the only variable is where the subscriber lives. With
+  # IPC enabled the ZED node publishes images through its TypeAdapter, which
+  # feeds the intra-process path AND the middleware, so an out-of-process
+  # subscriber still receives a normal sensor_msgs/Image.
   setsid ros2 launch zed_wrapper zed_camera.launch.py \
     camera_model:="${CAMERA_MODEL}" \
-    enable_ipc:="${enable_ipc}" \
+    enable_ipc:=true \
     param_overrides:="depth.depth_mode:=${depth_mode}" \
     > "${zed_log}" 2>&1 &
   ZED_PID=$!
@@ -138,21 +161,25 @@ run_test() {
   # <---- Start the ZED node
 
   # ----> Run the benchmark
-  if [[ "${mode}" == "standard" ]]; then
+  # Both modes use subscription_mode:=typed so the size and latency accounting
+  # is identical and the two reports really are comparable.
+  if [[ "${mode}" == "interprocess" ]]; then
     # Separate process: blocks until the benchmark self-terminates.
     ros2 run "${BENCH_PKG}" "${BENCH_EXE}" --ros-args \
       -p topic_name:="${topic}" \
+      -p subscription_mode:=typed \
       -p test_duration_sec:="${DURATION}.0" \
       -p avg_win_size:="${WIN_SIZE}" \
       -p use_ros_log:=true \
       -p log_file_path:="${report}"
   else
-    # IPC: load the benchmark as a component into the ZED container, with
-    # intra-process communication enabled. On completion the component shuts
-    # the container down (and the report is written before that happens).
+    # Composed in the ZED container with intra-process comms enabled. On
+    # completion the component shuts the container down, after writing the
+    # report.
     ros2 component load "${CONTAINER}" "${BENCH_COMP_PKG}" "${BENCH_PLUGIN}" \
       -e use_intra_process_comms:=true \
       -p topic_name:="${topic}" \
+      -p subscription_mode:=typed \
       -p test_duration_sec:="${DURATION}.0" \
       -p avg_win_size:="${WIN_SIZE}" \
       -p use_ros_log:=true \
@@ -177,24 +204,34 @@ run_test() {
 print_summary() {
   echo
   echo "############################# SUMMARY #############################"
-  printf "%-8s %-9s %-9s %-12s %-14s\n" "TOPIC" "MODE" "MSGS" "FREQ[Hz]" "BW[Mbps]"
+  printf "%-7s %-13s %-7s %-10s %-12s %-9s\n" \
+    "TOPIC" "MODE" "MSGS" "FREQ[Hz]" "LATENCY[ms]" "CPU[%]"
   echo "-------------------------------------------------------------------"
-  local s name topic mode report msgs freq bw
-  for mode in "${MODES[@]}"; do
-    for s in "${SCENARIOS[@]}"; do
-      IFS='|' read -r name topic _ <<< "${s}"
+  local s name topic mode report msgs freq lat cpu
+  for s in "${SCENARIOS[@]}"; do
+    IFS='|' read -r name topic _ <<< "${s}"
+    for mode in "${MODES[@]}"; do
       report="${OUTPUT_DIR}/report_${mode}_${name}.txt"
       if [[ -f "${report}" ]]; then
         msgs=$(grep -E "Messages received:" "${report}" | grep -oE "[0-9]+" | head -1)
         freq=$(grep -E "Frequency \[Hz\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
-        bw=$(grep -E "Bandwidth \[Mbps\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
+        lat=$(grep -E "Latency \[ms\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
+        [[ "${lat}" == *"not available"* ]] && lat="n/a"
+        cpu=$(grep -E "Process CPU:" "${report}" | sed -E 's/.*\(([0-9.]+)%.*/\1/')
       else
-        msgs="-"; freq="NO DATA"; bw="-"
+        msgs="-"; freq="NO DATA"; lat="-"; cpu="-"
       fi
-      printf "%-8s %-9s %-9s %-12s %-14s\n" "${name}" "${mode}" "${msgs:-?}" "${freq:-?}" "${bw:-?}"
+      printf "%-7s %-13s %-7s %-10s %-12s %-9s\n" \
+        "${name}" "${mode}" "${msgs:-?}" "${freq:-?}" "${lat:-?}" "${cpu:-?}"
     done
   done
   echo "-------------------------------------------------------------------"
+  echo "Compare LATENCY and CPU between the two modes: those are what the"
+  echo "intra-process path changes. Frequency is set by the publisher, and the"
+  echo "bandwidth of an intra-process run is notional (nothing is transported),"
+  echo "so neither of them shows the IPC gain."
+  echo "Each report states its own delivery path, and says explicitly when"
+  echo "intra-process delivery was confirmed rather than merely possible."
   echo "Full reports in: ${OUTPUT_DIR}"
   echo "###################################################################"
 }
@@ -208,9 +245,9 @@ info "ZED ROS 2 configuration check"
 info "Camera model: ${CAMERA_MODEL} | Duration: ${DURATION}s | Window: ${WIN_SIZE}"
 info "Reports directory: ${OUTPUT_DIR}"
 
-for mode in "${MODES[@]}"; do
-  for s in "${SCENARIOS[@]}"; do
-    IFS='|' read -r name topic depth_mode <<< "${s}"
+for s in "${SCENARIOS[@]}"; do
+  IFS='|' read -r name topic depth_mode <<< "${s}"
+  for mode in "${MODES[@]}"; do
     run_test "${mode}" "${name}" "${topic}" "${depth_mode}"
   done
 done

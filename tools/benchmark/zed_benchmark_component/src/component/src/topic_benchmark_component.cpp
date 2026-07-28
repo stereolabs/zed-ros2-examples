@@ -75,6 +75,9 @@ TopicBenchmarkComponent::TopicBenchmarkComponent(
     get_logger(),
     "Advertised on topic: " << mPub->get_topic_name());
 
+  // Start accounting CPU before any message is processed.
+  mCpuMeter.start();
+
   // Make sure the final report is produced when the process is shut down,
   // either because a test limit has been reached or because the user pressed
   // Ctrl+C. The report is generated at most once (see generateReport()).
@@ -155,7 +158,22 @@ void TopicBenchmarkComponent::getParameters()
   getParam("avg_win_size", mWinSize, mWinSize, "Average window size: ");
   mPeriodAvg.setNewSize(mWinSize);
   mSizeAvg.setNewSize(mWinSize);
+  mLatencyAvg.setNewSize(mWinSize);
   getParam("use_ros_log", mUseRosLog, mUseRosLog, "ROS Log: ");
+
+  getParam(
+    "subscription_mode", mSubscriptionMode, mSubscriptionMode,
+    "Subscription mode: ");
+  if (mSubscriptionMode != "auto" && mSubscriptionMode != "generic" &&
+    mSubscriptionMode != "typed")
+  {
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "Unknown 'subscription_mode' value '"
+        << mSubscriptionMode << "'. Valid values are 'auto', 'generic' and "
+        "'typed'. Falling back to 'auto'.");
+    mSubscriptionMode = "auto";
+  }
 
   getParam(
     "test_duration_sec", mTestDurationSec, mTestDurationSec,
@@ -190,23 +208,7 @@ void TopicBenchmarkComponent::updateTopicInfo()
                                          << "' of type: '"
                                          << topic_type << "'");
 
-        auto sub_opt = rclcpp::SubscriptionOptions();
-        sub_opt.qos_overriding_options =
-          rclcpp::QosOverridingOptions::with_default_policies();
-
-        // Subscribe with Best Effort reliability by default: a Best Effort
-        // subscriber is compatible with both Reliable and Best Effort
-        // publishers, while a Reliable subscriber cannot connect to a Best
-        // Effort publisher (common for sensor data such as images and point
-        // clouds). The reliability can still be overridden at runtime via the
-        // `qos_overrides` parameters.
-        std::shared_ptr<rclcpp::GenericSubscription> sub =
-          create_generic_subscription(
-          mTopicName, topic_type, rclcpp::QoS(QOS_QUEUE_SIZE).best_effort(),
-          std::bind(&TopicBenchmarkComponent::topicCallback, this, _1),
-          sub_opt);
-
-        mSubMap[topic_type] = sub;
+        subscribeToTopic(topic_type);
       }
     }
   }
@@ -223,9 +225,143 @@ void TopicBenchmarkComponent::updateTopicInfo()
   }
 }
 
+void TopicBenchmarkComponent::subscribeToTopic(const std::string & topic_type)
+{
+  auto sub_opt = rclcpp::SubscriptionOptions();
+  sub_opt.qos_overriding_options =
+    rclcpp::QosOverridingOptions::with_default_policies();
+
+  // Subscribe with Best Effort reliability by default: a Best Effort
+  // subscriber is compatible with both Reliable and Best Effort publishers,
+  // while a Reliable subscriber cannot connect to a Best Effort publisher
+  // (common for sensor data such as images and point clouds). The reliability
+  // can still be overridden at runtime via the `qos_overrides` parameters.
+  const auto qos = rclcpp::QoS(QOS_QUEUE_SIZE).best_effort();
+
+  const bool ipc_enabled = get_node_options().use_intra_process_comms();
+
+  // Only a typed subscription can ever take the intra-process path, so "auto"
+  // switches to it exactly when that path is available. Ordinary
+  // separate-process runs keep the generic subscription and therefore keep
+  // reporting exact wire bytes, as they always did.
+  bool want_typed = false;
+  if (mSubscriptionMode == "typed") {
+    want_typed = true;
+  } else if (mSubscriptionMode == "auto") {
+    want_typed = ipc_enabled;
+  }
+
+  if (want_typed) {
+    auto typed = createTypedSubscription(
+      *this, mTopicName, topic_type, qos, sub_opt, ipc_enabled,
+      [this](const Sample & sample) {this->recordSample(sample);});
+
+    if (typed.sub) {
+      mTypedSub = typed.sub;
+      mZeroCopy = typed.zero_copy;
+      mIntraProcessCapable = ipc_enabled;
+      mSizeSemantics = SizeSemantics::MessageContent;
+      mSubPathDesc = typed.description;
+
+      RCLCPP_INFO_STREAM(
+        get_logger(),
+        "Subscription path: " << mSubPathDesc
+                              << (ipc_enabled ?
+        " - intra-process enabled" :
+        " - intra-process NOT enabled on this node"));
+      if (mZeroCopy) {
+        RCLCPP_INFO(
+          get_logger(),
+          "Zero-copy capable: if the publisher is in this process, its buffer "
+          "is received by pointer with no serialization and no copy. The "
+          "report confirms whether that actually happened.");
+      } else if (ipc_enabled) {
+        RCLCPP_INFO(
+          get_logger(),
+          "Intra-process capable: for publishers in this same process there is "
+          "no serialization and no middleware, though rclcpp still copies the "
+          "message into this subscription. A publisher in another process is "
+          "still delivered through the middleware. Only the ZED type-adapted "
+          "image path is truly zero-copy.");
+      }
+      return;
+    }
+
+    // No typed subscription exists for this type. Say so instead of silently
+    // measuring something else than the user asked for.
+    RCLCPP_WARN_STREAM(
+      get_logger(),
+      "No typed subscription is available for '"
+        << topic_type
+        << "', so the intra-process path cannot be used for this topic. "
+        "Falling back to a generic subscription over the middleware.");
+  } else if (ipc_enabled) {
+    RCLCPP_WARN(
+      get_logger(),
+      "Intra-process communication is enabled but 'subscription_mode' is "
+      "'generic': a generic (runtime-typed) subscription never takes the "
+      "intra-process path in rclcpp, so this run measures the inter-process "
+      "path. Use 'subscription_mode:=typed' to benchmark IPC.");
+  }
+
+  mSizeSemantics = SizeSemantics::SerializedWire;
+  mSubPathDesc = "generic (runtime-typed)";
+  mIntraProcessCapable = false;
+  mZeroCopy = false;
+
+  mSubMap[topic_type] = create_generic_subscription(
+    mTopicName, topic_type, qos,
+    std::bind(&TopicBenchmarkComponent::topicCallback, this, _1),
+    sub_opt);
+}
+
 void TopicBenchmarkComponent::topicCallback(
   std::shared_ptr<rclcpp::SerializedMessage> msg)
 {
+  // A generic subscription receives the serialized buffer, so its size is the
+  // exact wire byte count. It carries no directly usable timestamp, hence no
+  // latency measurement on this path.
+  Sample sample;
+  sample.size_bytes = msg->size();
+  sample.has_stamp = false;
+  recordSample(sample);
+}
+
+void TopicBenchmarkComponent::updateLatency(const Sample & sample)
+{
+  if (!sample.has_stamp) {
+    return;
+  }
+
+  // End-to-end latency: publisher-side stamp to arrival in this callback. Both
+  // sides must share the same clock, which is the case for a publisher and a
+  // subscriber in the same ROS graph (and trivially so when composed).
+  const double latency_msec =
+    (get_clock()->now() - sample.stamp).nanoseconds() / 1e6;
+
+  // A negative latency means the stamps are not comparable (e.g. the publisher
+  // uses a different clock, or `use_sim_time` differs). Dropping the sample is
+  // better than folding a meaningless value into the average.
+  if (latency_msec < 0.0) {
+    return;
+  }
+
+  mLatencyAvg.addValue(latency_msec);
+
+  std::lock_guard<std::mutex> lock(mStatsMux);
+  ++mLatencyCount;
+  mTotalLatencyMsec += latency_msec;
+  mMinLatencyMsec = (mLatencyCount == 1) ?
+    latency_msec : std::min(mMinLatencyMsec, latency_msec);
+  mMaxLatencyMsec = std::max(mMaxLatencyMsec, latency_msec);
+}
+
+void TopicBenchmarkComponent::recordSample(const Sample & sample)
+{
+  if (sample.intra_process_confirmed) {
+    mIntraProcessObserved.store(true);
+  }
+
   auto now = std::chrono::steady_clock::now();
 
   if (mTestComplete.load()) {
@@ -244,13 +380,14 @@ void TopicBenchmarkComponent::topicCallback(
 
     {
       std::lock_guard<std::mutex> lock(mStatsMux);
-      const double msg_size = static_cast<double>(msg->size());
+      const double msg_size = static_cast<double>(sample.size_bytes);
       mTestStartTime = now;
       mTestLastTime = now;
       mMsgCount = 1;
       mTotalBytes = msg_size;
       mMinSizeBytes = mMaxSizeBytes = msg_size;
     }
+    updateLatency(sample);
     checkTestCompletion();
     return;
   }
@@ -268,7 +405,7 @@ void TopicBenchmarkComponent::topicCallback(
     return;
   }
 
-  const double msg_size = static_cast<double>(msg->size());
+  const double msg_size = static_cast<double>(sample.size_bytes);
 
   // Instantaneous values from the last inter-arrival interval.
   double freq = 1e6 / elapsed_usec;
@@ -317,12 +454,17 @@ void TopicBenchmarkComponent::topicCallback(
   // layout is kept under 80 columns so it does not wrap on a default terminal:
   // a wrapped line would break the in-place (\r) update and flood the console.
   // Fixed-width fields also keep the columns from shifting as values change.
+  updateLatency(sample);
+
   std::stringstream ss;
   ss << std::fixed << std::setprecision(2)
      << "#" << std::setw(6) << std::left << ++mTopicCount << std::right
      << " | Freq " << std::setw(7) << freq << "/" << std::setw(7) << avg_freq
      << " Hz | BW " << std::setw(7) << bw << "/" << std::setw(7) << bw_avg
      << " Mbps | " << std::setw(9) << humanReadableSize(msg_size);
+  if (sample.has_stamp) {
+    ss << " | Lat " << std::setw(6) << mLatencyAvg.getAvg() << " ms";
+  }
 
   if (!mUseRosLog) {
     // '\r' rewinds to the start of the line; '\033[K' erases anything left
@@ -343,6 +485,17 @@ void TopicBenchmarkComponent::topicCallback(
   stat_msg->topic_avg_freq = avg_freq;
   stat_msg->topic_bw = bw;
   stat_msg->topic_avg_bw = bw_avg;
+  if (sample.has_stamp) {
+    stat_msg->topic_latency =
+      (stat_msg->header.stamp.sec == 0 && stat_msg->header.stamp.nanosec == 0) ?
+      0.0F :
+      static_cast<float>(
+      (rclcpp::Time(stat_msg->header.stamp) - sample.stamp).nanoseconds() / 1e6);
+    stat_msg->topic_avg_latency = static_cast<float>(mLatencyAvg.getAvg());
+  } else {
+    stat_msg->topic_latency = 0.0F;
+    stat_msg->topic_avg_latency = 0.0F;
+  }
 
   mPub->publish(std::move(stat_msg));
 
@@ -401,6 +554,10 @@ void TopicBenchmarkComponent::generateReport()
     return;  // generate the report at most once
   }
 
+  // Read the CPU counters before taking the lock: /proc access should not be
+  // done while holding the statistics mutex the callbacks contend on.
+  mCpuSeconds = mCpuMeter.cpuSeconds();
+
   std::lock_guard<std::mutex> lock(mStatsMux);
 
   constexpr double MB = 1024. * 1024.;
@@ -411,6 +568,41 @@ void TopicBenchmarkComponent::generateReport()
   rep << "Topic name:        " << mTopicName << "\n";
   rep << "Topic type:        "
       << (mFoundTopicType.empty() ? "N/A" : mFoundTopicType) << "\n";
+  // Always state which path was measured and how the sizes must be read: a
+  // bandwidth over wire bytes and one over message content are different
+  // quantities, and an inter-process figure must never be mistaken for an
+  // intra-process one.
+  rep << "Subscription:      " << mSubPathDesc << "\n";
+  rep << "Delivery path:     ";
+  if (mIntraProcessObserved.load()) {
+    // Only provable on the type-adapted path, where the custom C++ type that
+    // arrived has no wire representation at all.
+    rep << "intra-process, zero-copy - CONFIRMED (publisher's buffer received "
+      "by pointer)";
+  } else if (mIntraProcessCapable) {
+    // Deliberately stated as a capability. Enabling intra-process comms on this
+    // node says nothing about where the publisher lives, and claiming
+    // intra-process delivery here would be exactly the kind of unfounded
+    // assertion this report exists to avoid.
+    rep << "intra-process capable, NOT confirmed - a typed subscription with "
+      "intra-process comms enabled takes that path only for publishers in "
+      "this same process";
+  } else if (mZeroCopy) {
+    rep << "type-adapted subscription created, but no message was received "
+      "through it";
+  } else if (mSizeSemantics == SizeSemantics::SerializedWire) {
+    rep << "inter-process (middleware) - a generic subscription can never take "
+      "the intra-process path";
+  } else {
+    rep << "inter-process (middleware) - intra-process comms not enabled on "
+      "this node";
+  }
+  rep << "\n";
+  rep << "Size semantics:    "
+      << (mSizeSemantics == SizeSemantics::SerializedWire ?
+  "serialized wire bytes" :
+  "message content bytes (no CDR framing) - NOT comparable to wire bytes")
+      << "\n";
   rep << "Stop reason:       " << mStopReason << "\n";
 
   if (mMsgCount == 0) {
@@ -424,6 +616,7 @@ void TopicBenchmarkComponent::generateReport()
     uint64_t intervals = (mMsgCount > 1) ? (mMsgCount - 1) : 0;
     double mean_freq = (elapsed_sec > 0.0) ? intervals / elapsed_sec : 0.0;
     double mean_size = mTotalBytes / mMsgCount;
+    mCpuPercent = (elapsed_sec > 0.0) ? 100.0 * mCpuSeconds / elapsed_sec : 0.0;
     double mean_bw =
       (elapsed_sec > 0.0) ? (mTotalBytes * 8.0 / MB) / elapsed_sec : 0.0;
 
@@ -447,6 +640,31 @@ void TopicBenchmarkComponent::generateReport()
     rep << "Bandwidth [Mbps] - mean: " << mean_bw
         << " | min: " << mMinBw << " | max: " << mMaxBw << "\n";
     rep << "Total data:        " << humanReadableSize(mTotalBytes) << "\n";
+
+    // Latency is the figure that actually shows what the intra-process path
+    // buys: on that path nothing is transported, so "bandwidth" is notional.
+    if (mLatencyCount > 0) {
+      const double mean_latency = mTotalLatencyMsec / mLatencyCount;
+      rep << "Latency [ms]     - mean: " << mean_latency
+          << " | min: " << mMinLatencyMsec
+          << " | max: " << mMaxLatencyMsec
+          << " (" << mLatencyCount << " samples)\n";
+    } else {
+      rep << "Latency [ms]     - not available on this subscription path\n";
+    }
+
+    if (mCpuMeter.valid()) {
+      // Extra precision: a light topic can consume only a few milliseconds of
+      // CPU over the whole test, which two decimals would flatten to "0.00".
+      rep << "Process CPU:       " << std::setprecision(3) << mCpuSeconds
+          << " s (" << std::setprecision(2) << mCpuPercent
+          << "% of one core)\n";
+      // Scope matters: composed runs share the process with the publisher, so
+      // this figure is only comparable across runs when the reader knows what
+      // it covers. Total CPU across every process involved is the fair metric.
+      rep << "                   whole process, including any other component "
+        "loaded in it\n";
+    }
     rep << "===========================================================\n";
   }
 

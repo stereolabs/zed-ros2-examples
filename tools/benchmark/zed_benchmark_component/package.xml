@@ -16,6 +16,13 @@
     <depend>zed_topic_benchmark_interfaces</depend>
     <depend>rclcpp</depend>
     <depend>rclcpp_components</depend>
+    <depend>sensor_msgs</depend>
+
+    <!-- Optional: enables the ZED type-adapted (zero-copy) subscription path.
+         The benchmark builds and works without it, but cannot report true
+         zero-copy delivery. -->
+    <build_depend>zed_components</build_depend>
+    <exec_depend>zed_components</exec_depend>
 
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_lint_common</test_depend>

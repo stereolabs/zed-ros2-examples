@@ -62,11 +62,13 @@ def launch_setup(context, *args, **kwargs):
     disable_tf = LaunchConfiguration('disable_tf')
     topic_name = LaunchConfiguration('topic_name')
     use_ipc = LaunchConfiguration('use_ipc')
+    subscription_mode = LaunchConfiguration('subscription_mode')
     test_duration_sec = LaunchConfiguration('test_duration_sec')
     test_sample_count = LaunchConfiguration('test_sample_count')
     log_file_path = LaunchConfiguration('log_file_path')
 
     use_ipc_val = use_ipc.perform(context)
+    subscription_mode_val = subscription_mode.perform(context)
     topic_name_val = topic_name.perform(context)
     test_duration_sec_val = float(test_duration_sec.perform(context))
     test_sample_count_val = int(test_sample_count.perform(context))
@@ -107,7 +109,11 @@ def launch_setup(context, *args, **kwargs):
             log_file_path_full = base + '_' + name_array[i] + ext
 
         if (use_ipc_val == 'True'):
-            # Create the point cloud node
+            # Load the benchmark as a component in the camera container with
+            # intra-process comms enabled. 'subscription_mode' must resolve to
+            # a typed subscription for that path to be usable at all: rclcpp
+            # only registers the templated rclcpp::Subscription<T> with the
+            # IntraProcessManager, never a runtime-typed GenericSubscription.
             benchmark_node = ComposableNode(
                 package='zed_topic_benchmark_component',
                 plugin='stereolabs::TopicBenchmarkComponent',
@@ -115,6 +121,7 @@ def launch_setup(context, *args, **kwargs):
                 namespace='zed_multi',
                 parameters=[{
                     'topic_name': topic_name_full,
+                    'subscription_mode': subscription_mode_val,
                     'use_ros_log': True,
                     'test_duration_sec': test_duration_sec_val,
                     'test_sample_count': test_sample_count_val,
@@ -139,6 +146,10 @@ def launch_setup(context, *args, **kwargs):
                 output='screen',
                 parameters=[{
                     'topic_name': topic_name_full,
+                    # Same subscription_mode as the composed branch, so that
+                    # use_ipc:=True/False is a valid comparison: both runs then
+                    # account for message size and latency the same way.
+                    'subscription_mode': subscription_mode_val,
                     'use_ros_log': True,
                     'avg_win_size': 5000,
                     'test_duration_sec': test_duration_sec_val,
@@ -170,7 +181,11 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'use_ipc',
                 default_value='True',
-                description='If `True` load the benchmark nodes in the same ZED Camera container using IPC communication.'),
+                description='If `True` load the benchmark nodes as components in the same ZED Camera container, instead of starting them as separate processes. Note: despite the name this does NOT yield an Intra Process Communication measurement, because a generic (runtime-typed) subscription never takes the intra-process path in rclcpp. See the package README.'),
+            DeclareLaunchArgument(
+                'subscription_mode',
+                default_value='typed',
+                description='Subscription path of the benchmark nodes: `auto`, `generic` or `typed`. Only `typed` can take the intra-process path. Applied to both branches so that `use_ipc:=True`/`False` stay comparable.'),
             DeclareLaunchArgument(
                 'topic_name',
                 default_value='/point_cloud/cloud_registered',

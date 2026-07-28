@@ -19,7 +19,7 @@ $ ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args \
 
 ## Multi-camera launch
 
-The `zed_test_ipc.launch.py` launch file starts a multi-camera setup and one benchmark node per camera (in IPC composition or as separate processes):
+The `zed_test_ipc.launch.py` launch file starts a multi-camera setup and one benchmark node per camera (composed in the camera container, or as separate processes):
 
 ``` bash
 $ ros2 launch zed_topic_benchmark zed_test_ipc.launch.py \
@@ -30,10 +30,11 @@ Launch arguments:
 
 * `cam_names`, `cam_models`, `cam_serials`: arrays describing the cameras to start.
 * `disable_tf`: disable TF broadcasting for all cameras. [Default: `False`]
-* `use_ipc`: load the benchmark nodes in the camera container using Intra Process Communication. [Default: `True`]
+* `use_ipc`: load the benchmark nodes as components in the camera container, with intra-process comms enabled, instead of starting them as separate processes. [Default: `True`] The benchmark nodes are given `subscription_mode:=typed`, which is what makes the intra-process path usable — see [Measuring Intra Process Communication](../README.md#measuring-intra-process-communication).
+* `subscription_mode`: subscription path used by the benchmark nodes: `auto`, `generic` or `typed`. Applied to both branches so that `use_ipc:=True` and `use_ipc:=False` are directly comparable. [Default: `typed`]
 * `topic_name`: topic to benchmark, without the `/zed_multi/<cam_name>` prefix. [Default: `/point_cloud/cloud_registered`]
 * `test_duration_sec`: benchmark duration in seconds. `0.0` runs until `Ctrl+C`. [Default: `0.0`]
 * `test_sample_count`: number of messages to acquire before stopping. `0` runs until `Ctrl+C`. [Default: `0`]
 * `log_file_path`: file where the report is saved (the camera name is appended to keep per-camera reports separate). Empty disables file logging. [Default: `""`]
 
-**Note:** in IPC mode all benchmark nodes share the camera container, so a finite `test_duration_sec`/`test_sample_count` will stop the whole container once the limit is reached. Keep the limits at their defaults and stop with `Ctrl+C` to benchmark composed nodes for an arbitrary time.
+**Note:** with `use_ipc:=True` all benchmark nodes share the camera container, so a finite `test_duration_sec`/`test_sample_count` will stop the whole container once the limit is reached. Keep the limits at their defaults and stop with `Ctrl+C` to benchmark composed nodes for an arbitrary time.
