@@ -52,10 +52,19 @@
 #
 # Environment overrides:
 #   CAMERA_MODEL   ZED camera model (default: zed2i)
+#   CAMERA_SN      Serial number of the camera to use. Optional with a single
+#                  camera, but STRONGLY recommended on a multi-camera rig: with
+#                  several cameras attached and no serial given, the wrapper has
+#                  to pick one itself and may open none, which shows up here as
+#                  "topic not available" and a skipped test.
 #   DURATION       Seconds of measurement per test (default: 15)
 #   WIN_SIZE       Benchmark averaging window size (default: 100)
 #   TOPIC_TIMEOUT  Max seconds to wait for a topic to appear (default: 120)
 #   SETTLE         Seconds to wait between tests (default: 5)
+#   WARMUP         Seconds to let the node reach steady state before the
+#                  no-subscriber CPU baseline is taken (default: 25). Too
+#                  short and the baseline lands in the neural-depth warm-up,
+#                  yielding a CPU_IDLE above CPU_TOT.
 #   OUTPUT_DIR     Where to store the reports (default: ./zed_config_reports/<timestamp>)
 # -----------------------------------------------------------------------------
 
@@ -67,6 +76,8 @@ DURATION="${2:-${DURATION:-15}}"
 WIN_SIZE="${WIN_SIZE:-100}"
 TOPIC_TIMEOUT="${TOPIC_TIMEOUT:-120}"
 SETTLE="${SETTLE:-5}"
+WARMUP="${WARMUP:-25}"
+CAMERA_SN="${CAMERA_SN:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-$(pwd)/zed_config_reports/$(date +%Y%m%d_%H%M%S)}"
 
 CONTAINER="/zed/zed_container"   # default ZED node component container
@@ -163,6 +174,37 @@ cpu_percent() {
 }
 # <---- CPU accounting across every process involved
 
+# load_benchmark_component <topic> <report_path>
+#
+# `ros2 component load` resolves the container through the ROS graph, and the
+# ros2 CLI daemon caches that graph. A stale cache makes the load fail with
+# "Unable to find container node" even though the container's load_node service
+# is present and working - seen on a Jetson AGX Orin, where it silently cost the
+# whole 'ipc' half of the matrix. Stopping the daemon forces direct discovery, so
+# retry once that way before giving up.
+load_benchmark_component() {
+  local topic="$1" report="$2" attempt
+  for attempt in 1 2; do
+    if ros2 component load "${CONTAINER}" "${BENCH_COMP_PKG}" "${BENCH_PLUGIN}" \
+      -e use_intra_process_comms:=true \
+      -p topic_name:="${topic}" \
+      -p subscription_mode:=typed \
+      -p test_duration_sec:="${DURATION}.0" \
+      -p avg_win_size:="${WIN_SIZE}" \
+      -p use_ros_log:=true \
+      -p log_file_path:="${report}"
+    then
+      return 0
+    fi
+    if [[ "${attempt}" == 1 ]]; then
+      info "Component load failed; clearing the ros2 CLI daemon cache and retrying..."
+      ros2 daemon stop > /dev/null 2>&1
+      sleep 3
+    fi
+  done
+  return 1
+}
+
 wait_for_topic() {
   # Wait until <topic> is advertised, up to TOPIC_TIMEOUT seconds.
   local topic="$1"
@@ -195,8 +237,11 @@ run_test() {
   # IPC enabled the ZED node publishes images through its TypeAdapter, which
   # feeds the intra-process path AND the middleware, so an out-of-process
   # subscriber still receives a normal sensor_msgs/Image.
+  local sn_arg=()
+  [[ -n "${CAMERA_SN}" ]] && sn_arg=("serial_number:=${CAMERA_SN}")
   setsid ros2 launch zed_wrapper zed_camera.launch.py \
     camera_model:="${CAMERA_MODEL}" \
+    "${sn_arg[@]}" \
     enable_ipc:=true \
     param_overrides:="depth.depth_mode:=${depth_mode}" \
     > "${zed_log}" 2>&1 &
@@ -209,8 +254,13 @@ run_test() {
     sleep "${SETTLE}"
     return 1
   fi
-  info "Topic available. Letting the node stabilize..."
-  sleep 3
+  # A depth-enabled ZED node is still warming up when its topics first appear:
+  # the neural depth engine initialises lazily and the first seconds cost far
+  # more CPU than the steady state. Sampling the baseline too early yields an
+  # idle figure ABOVE the measured total, i.e. a negative transport cost. On a
+  # Jetson AGX Orin with NEURAL_LIGHT that took about 25 s to settle.
+  info "Topic available. Letting the node reach steady state (${WARMUP}s)..."
+  sleep "${WARMUP}"
   # <---- Start the ZED node
 
   # ----> No-subscriber CPU baseline
@@ -221,10 +271,10 @@ run_test() {
   zed_pid=$(find_zed_pid || true)
   if [[ -n "${zed_pid}" ]]; then
     base_a=$(proc_cpu_sec "${zed_pid}")
-    sleep 4
+    sleep 6
     base_b=$(proc_cpu_sec "${zed_pid}")
     base_cpu=$(awk -v a="${base_a}" -v b="${base_b}" 'BEGIN{printf "%.3f", b-a}')
-    base_cpu=$(cpu_percent "${base_cpu}" 4)
+    base_cpu=$(cpu_percent "${base_cpu}" 6)
     info "ZED node CPU with no subscriber: ${base_cpu}% of one core"
   else
     err "Could not locate the ZED node process: CPU totals will be unavailable."
@@ -251,14 +301,7 @@ run_test() {
     # Composed in the ZED container with intra-process comms enabled. On
     # completion the component shuts the container down, after writing the
     # report.
-    ros2 component load "${CONTAINER}" "${BENCH_COMP_PKG}" "${BENCH_PLUGIN}" \
-      -e use_intra_process_comms:=true \
-      -p topic_name:="${topic}" \
-      -p subscription_mode:=typed \
-      -p test_duration_sec:="${DURATION}.0" \
-      -p avg_win_size:="${WIN_SIZE}" \
-      -p use_ros_log:=true \
-      -p log_file_path:="${report}" || \
+    load_benchmark_component "${topic}" "${report}" || \
       err "Failed to load the benchmark component into '${CONTAINER}'."
     # 'component load' returns immediately: wait for the measurement to finish.
     sleep "$((DURATION + 8))"
@@ -335,7 +378,9 @@ print_summary() {
   echo "comparable between the two modes, because composed it also covers"
   echo "capture, depth and publishing."
   echo "CPU_IDLE is the ZED node with no subscriber at all, so the transport"
-  echo "cost of each mode is CPU_TOT - CPU_IDLE."
+  echo "cost of each mode is CPU_TOT - CPU_IDLE. A CPU_IDLE ABOVE CPU_TOT means"
+  echo "the baseline was taken while the node was still warming up: re-run with"
+  echo "a larger WARMUP (currently ${WARMUP}s)."
   echo
   echo "LATENCY runs from the publisher's header.stamp to arrival. For ZED image"
   echo "and cloud topics that stamp is the frame ACQUISITION time, so the value"
@@ -354,6 +399,16 @@ print_summary() {
 command -v ros2 >/dev/null 2>&1 || { err "'ros2' not found. Source your ROS 2 / workspace setup first."; exit 1; }
 
 mkdir -p "${OUTPUT_DIR}"
+
+# Every ros2 CLI call below goes through the CLI daemon, which caches the ROS
+# graph. A stale cache makes `ros2 topic list` return an incomplete graph and
+# `ros2 component load` fail to find the container - both seen on a Jetson AGX
+# Orin, where they silently turned into "topic not available" skips and a
+# missing 'ipc' half of the matrix. Drop the cache once, up front, so the whole
+# run uses direct discovery.
+ros2 daemon stop > /dev/null 2>&1 || true
+sleep 2
+
 info "ZED ROS 2 configuration check"
 info "Camera model: ${CAMERA_MODEL} | Duration: ${DURATION}s | Window: ${WIN_SIZE}"
 info "Reports directory: ${OUTPUT_DIR}"

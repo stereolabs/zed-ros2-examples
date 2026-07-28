@@ -294,15 +294,27 @@ rclcpp::QoS TopicBenchmarkComponent::buildSubscriberQos()
     RCLCPP_WARN_STREAM(get_logger(), w);
   }
 
-  // A Reliable subscriber cannot match a Best Effort publisher, so this is the
-  // one combination that can silently yield no data at all. Say so up front
-  // rather than leaving the user with an empty report.
+  // DDS only delivers when the request is no stronger than the offer, so these
+  // two requests can silently yield no data at all. Say so up front rather than
+  // leaving the user with an empty report and no explanation.
+  //
+  // Note on the ZED wrapper specifically: it publishes with rclcpp::QoS(1),
+  // i.e. the default profile, which is Reliable + Volatile. So `reliable` is
+  // compatible with it, while `transient_local` is not.
   if (qos.reliability() == rclcpp::ReliabilityPolicy::Reliable) {
     RCLCPP_INFO(
       get_logger(),
-      "Subscribing with RELIABLE reliability: note that a Reliable subscriber "
-      "cannot match a Best Effort publisher, so if the topic is published Best "
-      "Effort (usual for images and point clouds) no message will arrive.");
+      "Subscribing with RELIABLE reliability: this requires a Reliable "
+      "publisher. Against a Best Effort publisher no message will arrive. "
+      "Check the publisher with 'ros2 topic info -v <topic>'.");
+  }
+  if (qos.durability() == rclcpp::DurabilityPolicy::TransientLocal) {
+    RCLCPP_WARN(
+      get_logger(),
+      "Subscribing with TRANSIENT_LOCAL durability: this requires a Transient "
+      "Local publisher. Most sensor publishers, including the ZED wrapper, are "
+      "Volatile, in which case the QoS is incompatible and NO message will "
+      "arrive. Check the publisher with 'ros2 topic info -v <topic>'.");
   }
 
   return qos;

@@ -170,7 +170,12 @@ ros2 run zed_topic_benchmark zed_topic_benchmark --ros-args \
 
 An unrecognised value is replaced by the default **and reported as a warning** — never applied silently. `qos.depth` below 1 is clamped to 1, also with a warning. Every report states the QoS the middleware actually granted, read back from the subscription rather than echoing what was asked for, e.g. `Subscriber QoS: Reliable, Transient Local, KEEP_LAST, depth 7`.
 
-> **Warning:** a `Reliable` subscriber cannot match a `Best Effort` publisher. ZED image and point cloud topics are published `Best Effort`, so `qos.reliability:=reliable` on them yields **no messages at all**. The benchmark logs this caveat whenever you select `reliable`, and the report then shows the QoS alongside `No message received`, so the cause is visible rather than mysterious.
+> **Warning — an incompatible QoS request yields no messages at all.** DDS only delivers when the subscriber's request is *no stronger* than what the publisher offers, so:
+>
+> * `qos.reliability:=reliable` needs a `Reliable` publisher. The ZED wrapper publishes with `rclcpp::QoS(1)`, i.e. the default profile, which **is** `Reliable`/`Volatile`/`KEEP_LAST(1)` — so `reliable` works on ZED topics. Verified on a Jetson AGX Orin: 40/40 messages received.
+> * `qos.durability:=transient_local` needs a `Transient Local` publisher. The ZED wrapper is `Volatile`, so this request is **incompatible and delivers nothing**. Verified: 0 messages, with the ZED node logging *"requesting incompatible QoS ... Last incompatible policy: DURABILITY_QOS_POLICY"*.
+>
+> When it happens the report pairs the QoS it requested with `No message received`, so the cause is visible rather than mysterious, and `ros2 topic info -v <topic>` shows the publisher's side for comparison.
 
 ### Why not `qos_overrides`?
 
@@ -282,7 +287,9 @@ Latency runs from the publisher-side `header.stamp` to the arrival in the benchm
 
 > **The ZED node stamps images and clouds with the frame ACQUISITION time** (`sl::TIME_REFERENCE::IMAGE`), not the publish time. The reported latency therefore covers the *whole* pipeline — capture, USB transfer, SDK retrieve, rectification/depth, publish, deliver — and the transport is only a small part of it. Measured on a ZED 2i at 60 Hz, the rectified RGB image reports ~18–20 ms in **both** modes, of which only ~2 ms is the transport. So compare the *difference* between the two modes, not the absolute value.
 >
-> Two useful cross-checks from the same camera: `rgb/color/rect/camera_info` reports **0.09 ms**, because a `CameraInfo` is built at publish time and so times the transport alone; and `depth/depth_registered/compressedDepth` reports **53.9 ms**, because the stamp predates the compression the transport plugin then performs. Set the wrapper's `use_pub_timestamps` parameter to `true` to make every topic time the transport alone.
+> The same holds for the other topics: the wrapper stamps them all from the frame timestamp (`header.stamp = mUsePubTimestamps ? now() : frame_ts`), `camera_info` included, so none of them isolates the transport on their own. A compressing transport adds its own work on top of that: `depth/depth_registered/compressedDepth` reports **53.9 ms** on a ZED 2i and **253 ms** on a Jetson AGX Orin, because the stamp predates the compression the plugin then performs.
+>
+> **To time the transport alone, set the wrapper's `use_pub_timestamps` parameter to `true`**, which stamps at publish time instead. That is the only reliable way to get a transport-only figure from this tool.
 
 #### Reading the CPU figure correctly
 
