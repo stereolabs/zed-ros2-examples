@@ -63,12 +63,22 @@ def launch_setup(context, *args, **kwargs):
     topic_name = LaunchConfiguration('topic_name')
     use_ipc = LaunchConfiguration('use_ipc')
     subscription_mode = LaunchConfiguration('subscription_mode')
+    qos_reliability = LaunchConfiguration('qos_reliability')
+    qos_durability = LaunchConfiguration('qos_durability')
+    qos_history = LaunchConfiguration('qos_history')
+    qos_depth = LaunchConfiguration('qos_depth')
+    avg_win_size = LaunchConfiguration('avg_win_size')
     test_duration_sec = LaunchConfiguration('test_duration_sec')
     test_sample_count = LaunchConfiguration('test_sample_count')
     log_file_path = LaunchConfiguration('log_file_path')
 
     use_ipc_val = use_ipc.perform(context)
     subscription_mode_val = subscription_mode.perform(context)
+    qos_reliability_val = qos_reliability.perform(context)
+    qos_durability_val = qos_durability.perform(context)
+    qos_history_val = qos_history.perform(context)
+    qos_depth_val = int(qos_depth.perform(context))
+    avg_win_size_val = int(avg_win_size.perform(context))
     topic_name_val = topic_name.perform(context)
     test_duration_sec_val = float(test_duration_sec.perform(context))
     test_sample_count_val = int(test_sample_count.perform(context))
@@ -108,6 +118,27 @@ def launch_setup(context, *args, **kwargs):
             base, ext = os.path.splitext(log_file_path_val)
             log_file_path_full = base + '_' + name_array[i] + ext
 
+        # Parameters shared by both branches, kept in one place on purpose:
+        # when each branch carried its own copy they drifted apart, and a
+        # use_ipc:=True run then measured something subtly different from a
+        # use_ipc:=False one, which makes the comparison worthless.
+        # The `qos.*` names are the node's own parameters, effective on every
+        # subscription path (unlike ROS 2's qos_overrides.*, which a generic
+        # subscription never reads).
+        benchmark_params = {
+            'topic_name': topic_name_full,
+            'subscription_mode': subscription_mode_val,
+            'qos.reliability': qos_reliability_val,
+            'qos.durability': qos_durability_val,
+            'qos.history': qos_history_val,
+            'qos.depth': qos_depth_val,
+            'avg_win_size': avg_win_size_val,
+            'use_ros_log': True,
+            'test_duration_sec': test_duration_sec_val,
+            'test_sample_count': test_sample_count_val,
+            'log_file_path': log_file_path_full
+        }
+
         if (use_ipc_val == 'True'):
             # Load the benchmark as a component in the camera container with
             # intra-process comms enabled. 'subscription_mode' must resolve to
@@ -119,14 +150,7 @@ def launch_setup(context, *args, **kwargs):
                 plugin='stereolabs::TopicBenchmarkComponent',
                 name='benchmark_' + str(i),
                 namespace='zed_multi',
-                parameters=[{
-                    'topic_name': topic_name_full,
-                    'subscription_mode': subscription_mode_val,
-                    'use_ros_log': True,
-                    'test_duration_sec': test_duration_sec_val,
-                    'test_sample_count': test_sample_count_val,
-                    'log_file_path': log_file_path_full
-                }],
+                parameters=[benchmark_params],
                 extra_arguments=[{'use_intra_process_comms': True}]
             )
 
@@ -144,18 +168,7 @@ def launch_setup(context, *args, **kwargs):
                 name='benchmark_' + str(i),
                 namespace='zed_multi',
                 output='screen',
-                parameters=[{
-                    'topic_name': topic_name_full,
-                    # Same subscription_mode as the composed branch, so that
-                    # use_ipc:=True/False is a valid comparison: both runs then
-                    # account for message size and latency the same way.
-                    'subscription_mode': subscription_mode_val,
-                    'use_ros_log': True,
-                    'avg_win_size': 5000,
-                    'test_duration_sec': test_duration_sec_val,
-                    'test_sample_count': test_sample_count_val,
-                    'log_file_path': log_file_path_full
-                }]
+                parameters=[benchmark_params]
             )
             actions.append(benchmark_node)
 
@@ -186,6 +199,35 @@ def generate_launch_description():
                 'subscription_mode',
                 default_value='typed',
                 description='Subscription path of the benchmark nodes: `auto`, `generic` or `typed`. Only `typed` can take the intra-process path. Applied to both branches so that `use_ipc:=True`/`False` stay comparable.'),
+            DeclareLaunchArgument(
+                'qos_reliability',
+                default_value='best_effort',
+                description='Subscriber QoS reliability: `best_effort` or '
+                            '`reliable`. Note that a Reliable subscriber '
+                            'cannot match a Best Effort publisher, which is '
+                            'how ZED image and cloud topics are published.'),
+            DeclareLaunchArgument(
+                'qos_durability',
+                default_value='volatile',
+                description='Subscriber QoS durability: `volatile` or '
+                            '`transient_local`.'),
+            DeclareLaunchArgument(
+                'qos_history',
+                default_value='keep_last',
+                description='Subscriber QoS history: `keep_last` or '
+                            '`keep_all`.'),
+            DeclareLaunchArgument(
+                'qos_depth',
+                default_value='1',
+                description='Subscriber QoS depth, used by `keep_last`. '
+                            'Must be >= 1.'),
+            DeclareLaunchArgument(
+                'avg_win_size',
+                default_value='500',
+                description='Window size of the running averages. Applied to '
+                            'both branches: the report min/max are tracked on '
+                            'the windowed average, so an asymmetric window '
+                            'would make use_ipc:=True/False incomparable.'),
             DeclareLaunchArgument(
                 'topic_name',
                 default_value='/point_cloud/cloud_registered',

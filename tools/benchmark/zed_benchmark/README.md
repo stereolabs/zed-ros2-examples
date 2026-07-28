@@ -32,6 +32,11 @@ Launch arguments:
 * `disable_tf`: disable TF broadcasting for all cameras. [Default: `False`]
 * `use_ipc`: load the benchmark nodes as components in the camera container, with intra-process comms enabled, instead of starting them as separate processes. [Default: `True`] The benchmark nodes are given `subscription_mode:=typed`, which is what makes the intra-process path usable — see [Measuring Intra Process Communication](../README.md#measuring-intra-process-communication).
 * `subscription_mode`: subscription path used by the benchmark nodes: `auto`, `generic` or `typed`. Applied to both branches so that `use_ipc:=True` and `use_ipc:=False` are directly comparable. [Default: `typed`]
+* `qos_reliability`: subscriber QoS reliability, `best_effort` or `reliable`. [Default: `best_effort`] A `Reliable` subscriber cannot match a `Best Effort` publisher, which is how ZED image and cloud topics are published, so `reliable` on those yields no messages.
+* `qos_durability`: subscriber QoS durability, `volatile` or `transient_local`. [Default: `volatile`]
+* `qos_history`: subscriber QoS history, `keep_last` or `keep_all`. [Default: `keep_last`]
+* `qos_depth`: subscriber QoS depth, used by `keep_last`. [Default: `1`]
+* `avg_win_size`: window size of the running averages. [Default: `500`] Applied to both branches: the report min/max are tracked on the windowed average, so an asymmetric window would make the two `use_ipc` runs incomparable.
 * `topic_name`: topic to benchmark, without the `/zed_multi/<cam_name>` prefix. [Default: `/point_cloud/cloud_registered`]
 * `test_duration_sec`: benchmark duration in seconds. `0.0` runs until `Ctrl+C`. [Default: `0.0`]
 * `test_sample_count`: number of messages to acquire before stopping. `0` runs until `Ctrl+C`. [Default: `0`]
