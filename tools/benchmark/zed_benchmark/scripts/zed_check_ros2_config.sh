@@ -110,6 +110,49 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+# ----> CPU accounting across every process involved
+# The benchmark reports the CPU of its OWN process. That is not comparable
+# between the two modes: composed, its process is the ZED node, so the figure
+# also covers camera capture, depth and publishing. The only fair comparison is
+# the total across all the processes involved, which is what these helpers build:
+#   interprocess : ZED node CPU + benchmark process CPU
+#   ipc          : ZED node CPU (the benchmark runs inside it)
+# A no-subscriber baseline is also taken, so the transport cost can be read as
+# the increase over a ZED node that is publishing to nobody.
+
+# find_zed_pid : pid of the process that has the ZED SDK mapped.
+# Deliberately not a command-line match: the launch wrapper, this script and its
+# subshells all contain the same strings, and matching those would pick the
+# wrong process (or this one).
+find_zed_pid() {
+  local p
+  for p in /proc/[0-9]*; do
+    if grep -q libsl_zed "${p}/maps" 2>/dev/null; then
+      basename "${p}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# proc_cpu_sec <pid> : utime+stime of <pid>, in seconds.
+# The comm field is parenthesized and may contain spaces, so fields are counted
+# after the last ')'.
+proc_cpu_sec() {
+  local pid="$1" tick
+  tick=$(getconf CLK_TCK)
+  awk -v t="${tick}" '{
+      s = $0; sub(/^.*\) /, "", s); split(s, f, " ");
+      printf "%.3f", (f[12] + f[13]) / t
+    }' "/proc/${pid}/stat" 2>/dev/null
+}
+
+# cpu_percent <cpu_seconds> <wall_seconds>
+cpu_percent() {
+  awk -v c="$1" -v w="$2" 'BEGIN{ if (w > 0) printf "%.1f", 100*c/w; else printf "n/a" }'
+}
+# <---- CPU accounting across every process involved
+
 wait_for_topic() {
   # Wait until <topic> is advertised, up to TOPIC_TIMEOUT seconds.
   local topic="$1"
@@ -160,6 +203,28 @@ run_test() {
   sleep 3
   # <---- Start the ZED node
 
+  # ----> No-subscriber CPU baseline
+  # Taken before anything subscribes. image_transport/point_cloud_transport
+  # publish lazily, so with no subscriber this is the cost of capture and depth
+  # alone, and the transport cost of each mode can be read as the rise above it.
+  local zed_pid base_a base_b base_cpu=""
+  zed_pid=$(find_zed_pid || true)
+  if [[ -n "${zed_pid}" ]]; then
+    base_a=$(proc_cpu_sec "${zed_pid}")
+    sleep 4
+    base_b=$(proc_cpu_sec "${zed_pid}")
+    base_cpu=$(awk -v a="${base_a}" -v b="${base_b}" 'BEGIN{printf "%.3f", b-a}')
+    base_cpu=$(cpu_percent "${base_cpu}" 4)
+    info "ZED node CPU with no subscriber: ${base_cpu}% of one core"
+  else
+    err "Could not locate the ZED node process: CPU totals will be unavailable."
+  fi
+  echo "${base_cpu}" > "${OUTPUT_DIR}/base_cpu_${mode}_${name}.txt"
+  # <---- No-subscriber CPU baseline
+
+  local zed_cpu_before="" zed_cpu_after=""
+  [[ -n "${zed_pid}" ]] && zed_cpu_before=$(proc_cpu_sec "${zed_pid}")
+
   # ----> Run the benchmark
   # Both modes use subscription_mode:=typed so the size and latency accounting
   # is identical and the two reports really are comparable.
@@ -190,6 +255,27 @@ run_test() {
   fi
   # <---- Run the benchmark
 
+  # ----> Total CPU across every process involved
+  if [[ -n "${zed_pid}" ]] && kill -0 "${zed_pid}" 2>/dev/null; then
+    zed_cpu_after=$(proc_cpu_sec "${zed_pid}")
+  fi
+  local zed_delta="0" bench_sec="0" total_sec
+  if [[ -n "${zed_cpu_before}" && -n "${zed_cpu_after}" ]]; then
+    zed_delta=$(awk -v a="${zed_cpu_before}" -v b="${zed_cpu_after}" \
+      'BEGIN{printf "%.3f", (b>a) ? b-a : 0}')
+  fi
+  if [[ "${mode}" == "interprocess" && -f "${report}" ]]; then
+    # Composed, the benchmark's own CPU is already inside the ZED node's, so it
+    # must only be added for the separate-process mode.
+    bench_sec=$(grep -oE "Process CPU:[[:space:]]+[0-9.]+" "${report}" |
+      grep -oE "[0-9.]+" | head -1)
+    bench_sec="${bench_sec:-0}"
+  fi
+  total_sec=$(awk -v a="${zed_delta}" -v b="${bench_sec}" 'BEGIN{printf "%.3f", a+b}')
+  cpu_percent "${total_sec}" "${DURATION}" > "${OUTPUT_DIR}/total_cpu_${mode}_${name}.txt"
+  info "Total CPU over the run (all processes): $(cat "${OUTPUT_DIR}/total_cpu_${mode}_${name}.txt")% of one core"
+  # <---- Total CPU across every process involved
+
   if [[ -f "${report}" ]]; then
     info "Report saved: ${report}"
   else
@@ -204,10 +290,10 @@ run_test() {
 print_summary() {
   echo
   echo "############################# SUMMARY #############################"
-  printf "%-7s %-13s %-7s %-10s %-12s %-9s\n" \
-    "TOPIC" "MODE" "MSGS" "FREQ[Hz]" "LATENCY[ms]" "CPU[%]"
-  echo "-------------------------------------------------------------------"
-  local s name topic mode report msgs freq lat cpu
+  printf "%-7s %-13s %-7s %-10s %-12s %-11s %-10s\n" \
+    "TOPIC" "MODE" "MSGS" "FREQ[Hz]" "LATENCY[ms]" "CPU_TOT[%]" "CPU_IDLE[%]"
+  echo "---------------------------------------------------------------------------------"
+  local s name topic mode report msgs freq lat cpu base
   for s in "${SCENARIOS[@]}"; do
     IFS='|' read -r name topic _ <<< "${s}"
     for mode in "${MODES[@]}"; do
@@ -217,19 +303,36 @@ print_summary() {
         freq=$(grep -E "Frequency \[Hz\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
         lat=$(grep -E "Latency \[ms\]" "${report}" | sed -E 's/.*mean:[[:space:]]*([0-9.]+).*/\1/')
         [[ "${lat}" == *"not available"* ]] && lat="n/a"
-        cpu=$(grep -E "Process CPU:" "${report}" | sed -E 's/.*\(([0-9.]+)%.*/\1/')
       else
-        msgs="-"; freq="NO DATA"; lat="-"; cpu="-"
+        msgs="-"; freq="NO DATA"; lat="-"
       fi
-      printf "%-7s %-13s %-7s %-10s %-12s %-9s\n" \
-        "${name}" "${mode}" "${msgs:-?}" "${freq:-?}" "${lat:-?}" "${cpu:-?}"
+      cpu=$(cat "${OUTPUT_DIR}/total_cpu_${mode}_${name}.txt" 2>/dev/null)
+      base=$(cat "${OUTPUT_DIR}/base_cpu_${mode}_${name}.txt" 2>/dev/null)
+      printf "%-7s %-13s %-7s %-10s %-12s %-11s %-10s\n" \
+        "${name}" "${mode}" "${msgs:-?}" "${freq:-?}" "${lat:-?}" \
+        "${cpu:-?}" "${base:-?}"
     done
   done
-  echo "-------------------------------------------------------------------"
-  echo "Compare LATENCY and CPU between the two modes: those are what the"
+  echo "---------------------------------------------------------------------------------"
+  echo "Compare LATENCY and CPU_TOT between the two modes: those are what the"
   echo "intra-process path changes. Frequency is set by the publisher, and the"
   echo "bandwidth of an intra-process run is notional (nothing is transported),"
   echo "so neither of them shows the IPC gain."
+  echo
+  echo "CPU_TOT is the total across EVERY process involved (ZED node + benchmark"
+  echo "for 'interprocess', the ZED node alone for 'ipc', where the benchmark"
+  echo "runs inside it). The per-process figure printed in each report is NOT"
+  echo "comparable between the two modes, because composed it also covers"
+  echo "capture, depth and publishing."
+  echo "CPU_IDLE is the ZED node with no subscriber at all, so the transport"
+  echo "cost of each mode is CPU_TOT - CPU_IDLE."
+  echo
+  echo "LATENCY runs from the publisher's header.stamp to arrival. For ZED image"
+  echo "and cloud topics that stamp is the frame ACQUISITION time, so the value"
+  echo "includes the whole camera pipeline and only the difference between the"
+  echo "two modes reflects the transport. Set the wrapper's 'use_pub_timestamps'"
+  echo "to true to time the transport alone."
+  echo
   echo "Each report states its own delivery path, and says explicitly when"
   echo "intra-process delivery was confirmed rather than merely possible."
   echo "Full reports in: ${OUTPUT_DIR}"

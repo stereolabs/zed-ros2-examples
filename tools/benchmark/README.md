@@ -194,7 +194,7 @@ So a generic subscription always receives through the middleware, even inside th
 | `image_transport` theora | `<base>/theora` | `theora_image_transport/msg/Packet` | `data` |
 | `image_transport` ffmpeg | `<base>/ffmpeg` | `ffmpeg_image_transport_msgs/msg/FFMPEGPacket` | `data` |
 | `point_cloud_transport` raw | `<base>` | `sensor_msgs/msg/PointCloud2` | `data` |
-| `point_cloud_transport` draco / zlib / zstd | `<base>/<transport>` | `point_cloud_interfaces/msg/CompressedPointCloud2` | `compressed_data` |
+| `point_cloud_transport` draco / zlib / zstd / cloudini | `<base>/<transport>` | `point_cloud_interfaces/msg/CompressedPointCloud2` | `compressed_data` |
 | — | — | `sensor_msgs/msg/CameraInfo` | matrices + distortion |
 | — | — | `sensor_msgs/msg/Imu` | fixed fields |
 
@@ -215,16 +215,30 @@ The type-adapted tier needs `zed_components` and the ZED SDK at build time. The 
 
 On the intra-process path no bytes are transported, so a "bandwidth" figure there is notional payload throughput and is **not** comparable to an inter-process one. Frequency is set by the publisher and barely moves either. The metrics that actually show the gain are **latency** and **CPU**, both of which the report now includes.
 
-Measured on a synthetic 1280x720 RGBA publisher at 20 Hz (a type-adapted publisher standing in for the ZED node, so the figures isolate the transport and do not include any camera work):
+Measured on a **ZED 2i**, `rgb/color/rect/image` (3.52 MB, ~1.7 Gbps) at 60 Hz with `NEURAL_LIGHT` depth running, on an RTX 4070 desktop. Both runs used `subscription_mode:=typed`, in the same camera session:
 
 | | composed, zero-copy | separate process |
 | --- | --- | --- |
-| Latency mean | **0.02 ms** | **3.32 ms** |
-| Latency max | 0.05 ms | 5.60 ms |
-| Process CPU | 0.010 s (0.34% of one core) | 0.060 s (2.04%) |
-| Frequency | 20.00 Hz | 20.02 Hz |
+| Latency mean | **18.06 ms** | **20.17 ms** |
+| Total CPU (all processes) | **89.4%** of one core | **93.6%** (87.4 ZED + 6.2 benchmark) |
+| ZED node with no subscriber | 70.0% | 70.0% |
+| Frequency | 59.87 Hz | 59.76 Hz |
 
-Latency is measured from the publisher-side `header.stamp` to the arrival in the benchmark callback, so it needs a publisher that fills the stamp; it is reported as *not available* on the `generic` path, which has no directly usable timestamp. The CPU figure covers the **whole process**, which in a composed run includes every other component in the container — that is deliberate, since the fair comparison is total CPU across all the processes involved.
+So on this machine zero-copy saves about **2 ms of latency and 4 points of CPU** on a 1.7 Gbps stream. The gain looks modest because both figures are dominated by work that is not the transport: 70 of those CPU points are capture plus depth, and ~18 ms of the latency is the camera pipeline (see [Reading the latency correctly](#reading-the-latency-correctly)). Isolating the transport with a synthetic type-adapted publisher — one that stamps at publish time and does no camera work — the same code reports **0.02 ms vs 3.32 ms** and 0.34% vs 2.04% CPU.
+
+#### Reading the latency correctly
+
+Latency runs from the publisher-side `header.stamp` to the arrival in the benchmark callback, so it needs a publisher that fills the stamp. It is reported as *not available* on the `generic` path, which has no directly usable timestamp.
+
+> **The ZED node stamps images and clouds with the frame ACQUISITION time** (`sl::TIME_REFERENCE::IMAGE`), not the publish time. The reported latency therefore covers the *whole* pipeline — capture, USB transfer, SDK retrieve, rectification/depth, publish, deliver — and the transport is only a small part of it. Measured on a ZED 2i at 60 Hz, the rectified RGB image reports ~18–20 ms in **both** modes, of which only ~2 ms is the transport. So compare the *difference* between the two modes, not the absolute value.
+>
+> Two useful cross-checks from the same camera: `rgb/color/rect/camera_info` reports **0.09 ms**, because a `CameraInfo` is built at publish time and so times the transport alone; and `depth/depth_registered/compressedDepth` reports **53.9 ms**, because the stamp predates the compression the transport plugin then performs. Set the wrapper's `use_pub_timestamps` parameter to `true` to make every topic time the transport alone.
+
+#### Reading the CPU figure correctly
+
+The report's `Process CPU` covers the **whole process**. Composed, that process *is* the ZED node, so the figure also includes capture, depth and publishing — it is therefore **not comparable** to the separate-process figure, which covers the benchmark alone. On a ZED 2i this reads 6.2% separate vs 89.4% composed, which naively suggests IPC is far worse while in fact the totals are the other way around.
+
+The fair comparison is the total across every process involved, which is what `zed_check_ros2_config.sh` reports in its `CPU_TOT` column (ZED node + benchmark for `interprocess`, the ZED node alone for `ipc`), alongside a `CPU_IDLE` no-subscriber baseline so the transport cost can be read as `CPU_TOT - CPU_IDLE`.
 
 ### What the report claims, and what it does not
 
@@ -270,18 +284,18 @@ The layout of the summary (the values below are placeholders showing the format,
 
 ```text
 ############################# SUMMARY #############################
-TOPIC   MODE          MSGS    FREQ[Hz]   LATENCY[ms]  CPU[%]
--------------------------------------------------------------------
-image   interprocess  <n>     <freq>     <lat>        <cpu>
-image   ipc           <n>     <freq>     <lat>        <cpu>
-depth   interprocess  <n>     <freq>     <lat>        <cpu>
-depth   ipc           <n>     <freq>     <lat>        <cpu>
-cloud   interprocess  <n>     <freq>     <lat>        <cpu>
-cloud   ipc           <n>     <freq>     <lat>        <cpu>
--------------------------------------------------------------------
+TOPIC   MODE          MSGS    FREQ[Hz]   LATENCY[ms]  CPU_TOT[%]  CPU_IDLE[%]
+---------------------------------------------------------------------------------
+image   interprocess  <n>     <freq>     <lat>        <total>     <idle>
+image   ipc           <n>     <freq>     <lat>        <total>     <idle>
+depth   interprocess  <n>     <freq>     <lat>        <total>     <idle>
+depth   ipc           <n>     <freq>     <lat>        <total>     <idle>
+cloud   interprocess  <n>     <freq>     <lat>        <total>     <idle>
+cloud   ipc           <n>     <freq>     <lat>        <total>     <idle>
+---------------------------------------------------------------------------------
 ```
 
-Expect the two `FREQ` values of a topic to be close (the publisher sets the rate) and the `LATENCY`/`CPU` values to differ, often by a large factor. For an actual measured example, see [What to compare — not bandwidth](#what-to-compare--not-bandwidth).
+`CPU_TOT` is the total across every process involved, so the two modes are directly comparable; `CPU_IDLE` is the ZED node with no subscriber, so the transport cost of a mode is `CPU_TOT - CPU_IDLE`. Expect the two `FREQ` values of a topic to be close (the publisher sets the rate) and `LATENCY`/`CPU_TOT` to differ. For actual measured values see [What to compare — not bandwidth](#what-to-compare--not-bandwidth).
 
 Compare **LATENCY** and **CPU** between the two modes: those are what the intra-process path changes. Frequency is set by the publisher, and the bandwidth of an intra-process run is notional because nothing is transported — see [What to compare — not bandwidth](#what-to-compare--not-bandwidth).
 
