@@ -93,6 +93,42 @@ if(ZED_BENCHMARK_BUILD)
   find_package(zed_topic_benchmark_interfaces REQUIRED)
 
   ###############################################################################
+  # Optional transport message types.
+  #
+  # image_transport and point_cloud_transport publish a topic once per transport
+  # plugin, each with its own message type. Those plugins are separate,
+  # individually installable packages, so each type is compiled in only when its
+  # package is available - the benchmark must not require them all. Missing ones
+  # simply fall back to the generic subscription.
+  #
+  # sensor_msgs/CompressedImage covers the compressed, compressedDepth and zstd
+  # image transports, and needs no extra package.
+  set(ZED_BENCHMARK_TRANSPORT_TYPES "")
+  foreach(_pkg_def
+      "theora_image_transport;ZED_BENCHMARK_HAS_THEORA"
+      "ffmpeg_image_transport_msgs;ZED_BENCHMARK_HAS_FFMPEG"
+      "point_cloud_interfaces;ZED_BENCHMARK_HAS_PC_INTERFACES")
+    list(GET _pkg_def 0 _pkg)
+    list(GET _pkg_def 1 _define)
+    find_package(${_pkg} QUIET)
+    if(${_pkg}_FOUND)
+      list(APPEND DEPENDENCIES ${_pkg})
+      list(APPEND ZED_BENCHMARK_TRANSPORT_DEFINES ${_define})
+      list(APPEND ZED_BENCHMARK_TRANSPORT_TYPES ${_pkg})
+    endif()
+  endforeach()
+  if(ZED_BENCHMARK_TRANSPORT_TYPES)
+    message(STATUS
+      "* ${PROJECT_NAME}: extra transport types ENABLED for "
+      "${ZED_BENCHMARK_TRANSPORT_TYPES}")
+  else()
+    message(STATUS
+      "* ${PROJECT_NAME}: no extra transport packages found; only the "
+      "sensor_msgs transports are typed")
+  endif()
+  ###############################################################################
+
+  ###############################################################################
   # Optional ZED type-adapted (zero-copy) subscription path.
   #
   # Only a typed subscription can take the intra-process path, and only one
@@ -176,6 +212,12 @@ if(ZED_BENCHMARK_BUILD)
   )
   zed_link_ros_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
 
+  if(ZED_BENCHMARK_TRANSPORT_DEFINES)
+    target_compile_definitions(${PROJECT_NAME}
+      PRIVATE ${ZED_BENCHMARK_TRANSPORT_DEFINES}
+    )
+  endif()
+
   if(ZED_BENCHMARK_ZERO_COPY)
     target_compile_definitions(${PROJECT_NAME}
       PRIVATE "ZED_BENCHMARK_HAS_SL_ADAPTER"
@@ -234,6 +276,10 @@ if(ZED_BENCHMARK_BUILD)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include)
     zed_link_ros_dependencies(test_typed_subscriber ${DEPENDENCIES})
     target_link_libraries(test_typed_subscriber ${PROJECT_NAME})
+    if(ZED_BENCHMARK_TRANSPORT_DEFINES)
+      target_compile_definitions(test_typed_subscriber
+        PRIVATE ${ZED_BENCHMARK_TRANSPORT_DEFINES})
+    endif()
     if(ZED_BENCHMARK_ZERO_COPY)
       target_compile_definitions(test_typed_subscriber
         PRIVATE "ZED_BENCHMARK_HAS_SL_ADAPTER")

@@ -22,6 +22,23 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <utility>
 
+// ----> Optional transport message types
+// image_transport and point_cloud_transport publish a topic once per transport
+// plugin, each with its own message type. Every one of those types is supported
+// here, but only when its package is present at build time: the transports are
+// separate, individually installable packages and the benchmark must not
+// require them all.
+#ifdef ZED_BENCHMARK_HAS_THEORA
+#include <theora_image_transport/msg/packet.hpp>
+#endif
+#ifdef ZED_BENCHMARK_HAS_FFMPEG
+#include <ffmpeg_image_transport_msgs/msg/ffmpeg_packet.hpp>
+#endif
+#ifdef ZED_BENCHMARK_HAS_PC_INTERFACES
+#include <point_cloud_interfaces/msg/compressed_point_cloud2.hpp>
+#endif
+// <---- Optional transport message types
+
 #ifdef ZED_BENCHMARK_HAS_SL_ADAPTER
 #include <zed_components/sl_type_adapter.hpp>
 #endif
@@ -68,6 +85,30 @@ size_t sizeBytes(const sensor_msgs::msg::Imu & msg)
          sizeof(msg.linear_acceleration) +
          sizeof(msg.linear_acceleration_covariance);
 }
+
+#ifdef ZED_BENCHMARK_HAS_THEORA
+size_t sizeBytes(const theora_image_transport::msg::Packet & msg)
+{
+  return msg.data.size();
+}
+#endif
+
+#ifdef ZED_BENCHMARK_HAS_FFMPEG
+size_t sizeBytes(const ffmpeg_image_transport_msgs::msg::FFMPEGPacket & msg)
+{
+  return msg.data.size();
+}
+#endif
+
+#ifdef ZED_BENCHMARK_HAS_PC_INTERFACES
+size_t sizeBytes(const point_cloud_interfaces::msg::CompressedPointCloud2 & msg)
+{
+  // The compressed payload, which is what a draco/zlib/zstd transport actually
+  // moves. The uncompressed size is deliberately not used: it would overstate
+  // the transported volume by the whole compression ratio.
+  return msg.compressed_data.size();
+}
+#endif
 // <---- Message content size, per supported type
 
 /// @brief Build a Sample from a message carrying a std_msgs/Header.
@@ -112,15 +153,48 @@ using Factory = std::function<TypedSubscription(
       const SampleSink &)>;
 
 /// @brief Registry of every message type a typed subscription exists for.
+///
+/// This covers all the transports of image_transport and point_cloud_transport.
+/// Each of those publishes the same image/cloud once per plugin, on its own
+/// sub-topic and with its own message type:
+///
+///   image_transport         <base>                  sensor_msgs/Image
+///                           <base>/compressed       sensor_msgs/CompressedImage
+///                           <base>/compressedDepth  sensor_msgs/CompressedImage
+///                           <base>/zstd             sensor_msgs/CompressedImage
+///                           <base>/theora           theora_image_transport/Packet
+///                           <base>/ffmpeg           ffmpeg_image_transport_msgs/FFMPEGPacket
+///   point_cloud_transport   <base>                  sensor_msgs/PointCloud2
+///                           <base>/draco            point_cloud_interfaces/CompressedPointCloud2
+///                           <base>/zlib             point_cloud_interfaces/CompressedPointCloud2
+///                           <base>/zstd             point_cloud_interfaces/CompressedPointCloud2
 const std::map<std::string, Factory> & factories()
 {
   static const std::map<std::string, Factory> kFactories = {
+    // image_transport: raw
     {"sensor_msgs/msg/Image", makeTyped<sensor_msgs::msg::Image>},
+    // image_transport: compressed, compressedDepth and zstd all use this type
     {"sensor_msgs/msg/CompressedImage",
       makeTyped<sensor_msgs::msg::CompressedImage>},
+    // point_cloud_transport: raw
     {"sensor_msgs/msg/PointCloud2", makeTyped<sensor_msgs::msg::PointCloud2>},
     {"sensor_msgs/msg/CameraInfo", makeTyped<sensor_msgs::msg::CameraInfo>},
     {"sensor_msgs/msg/Imu", makeTyped<sensor_msgs::msg::Imu>},
+#ifdef ZED_BENCHMARK_HAS_THEORA
+    // image_transport: theora
+    {"theora_image_transport/msg/Packet",
+      makeTyped<theora_image_transport::msg::Packet>},
+#endif
+#ifdef ZED_BENCHMARK_HAS_FFMPEG
+    // image_transport: ffmpeg
+    {"ffmpeg_image_transport_msgs/msg/FFMPEGPacket",
+      makeTyped<ffmpeg_image_transport_msgs::msg::FFMPEGPacket>},
+#endif
+#ifdef ZED_BENCHMARK_HAS_PC_INTERFACES
+    // point_cloud_transport: draco, zlib, zstd
+    {"point_cloud_interfaces/msg/CompressedPointCloud2",
+      makeTyped<point_cloud_interfaces::msg::CompressedPointCloud2>},
+#endif
   };
   return kFactories;
 }

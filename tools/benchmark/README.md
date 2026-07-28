@@ -181,7 +181,26 @@ So a generic subscription always receives through the middleware, even inside th
 
 `auto` is chosen so that an ordinary separate-process run keeps the historical generic subscription, and therefore keeps reporting wire-accurate bandwidth exactly as before, while a composed run with IPC enabled automatically gets a subscription that can actually use it.
 
-Supported types for `typed`: `sensor_msgs/msg/Image`, `sensor_msgs/msg/CompressedImage`, `sensor_msgs/msg/PointCloud2`, `sensor_msgs/msg/CameraInfo`, `sensor_msgs/msg/Imu`. Any other type falls back to `generic`, with a warning saying so.
+### Supported message types
+
+`image_transport` and `point_cloud_transport` publish the same image or cloud once per transport plugin, each on its own sub-topic and with its own message type. All of them are supported:
+
+| Transport | Topic | Message type | Reported size |
+| --- | --- | --- | --- |
+| `image_transport` raw | `<base>` | `sensor_msgs/msg/Image` | `data` |
+| `image_transport` compressed | `<base>/compressed` | `sensor_msgs/msg/CompressedImage` | `data` |
+| `image_transport` compressedDepth | `<base>/compressedDepth` | `sensor_msgs/msg/CompressedImage` | `data` |
+| `image_transport` zstd | `<base>/zstd` | `sensor_msgs/msg/CompressedImage` | `data` |
+| `image_transport` theora | `<base>/theora` | `theora_image_transport/msg/Packet` | `data` |
+| `image_transport` ffmpeg | `<base>/ffmpeg` | `ffmpeg_image_transport_msgs/msg/FFMPEGPacket` | `data` |
+| `point_cloud_transport` raw | `<base>` | `sensor_msgs/msg/PointCloud2` | `data` |
+| `point_cloud_transport` draco / zlib / zstd | `<base>/<transport>` | `point_cloud_interfaces/msg/CompressedPointCloud2` | `compressed_data` |
+| — | — | `sensor_msgs/msg/CameraInfo` | matrices + distortion |
+| — | — | `sensor_msgs/msg/Imu` | fixed fields |
+
+For a compressed cloud the **compressed** payload is reported, not the uncompressed geometry: the latter would overstate the transported volume by the whole compression ratio.
+
+The transport plugins are separate, individually installable packages, so `theora_image_transport`, `ffmpeg_image_transport_msgs` and `point_cloud_interfaces` are **optional build dependencies** — each type is compiled in only when its package is present, and the build logs which ones it enabled. A type that is not compiled in, or any type not in this table, falls back to `generic` with a warning saying so. Note that `sensor_msgs/msg/CompressedImage` covers three image transports and needs no extra package at all.
 
 ### Two tiers of typed delivery
 
