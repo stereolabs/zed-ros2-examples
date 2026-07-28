@@ -298,8 +298,9 @@ rclcpp::QoS TopicBenchmarkComponent::buildSubscriberQos()
   // two requests can silently yield no data at all. Say so up front rather than
   // leaving the user with an empty report and no explanation.
   //
-  // Note on the ZED wrapper specifically: it publishes with rclcpp::QoS(1),
-  // i.e. the default profile, which is Reliable + Volatile. So `reliable` is
+  // Note on the ZED wrapper specifically: it publishes with
+  // rclcpp::QoS(QOS_QUEUE_SIZE), QOS_QUEUE_SIZE being 10, i.e. the default
+  // profile at depth 10 - Reliable, Volatile, KEEP_LAST(10). So `reliable` is
   // compatible with it, while `transient_local` is not.
   if (qos.reliability() == rclcpp::ReliabilityPolicy::Reliable) {
     RCLCPP_INFO(

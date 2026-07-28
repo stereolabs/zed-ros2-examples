@@ -32,7 +32,7 @@ Launch arguments:
 * `disable_tf`: disable TF broadcasting for all cameras. [Default: `False`]
 * `use_ipc`: load the benchmark nodes as components in the camera container, with intra-process comms enabled, instead of starting them as separate processes. [Default: `True`] The benchmark nodes are given `subscription_mode:=typed`, which is what makes the intra-process path usable — see [Measuring Intra Process Communication](../README.md#measuring-intra-process-communication).
 * `subscription_mode`: subscription path used by the benchmark nodes: `auto`, `generic` or `typed`. Applied to both branches so that `use_ipc:=True` and `use_ipc:=False` are directly comparable. [Default: `typed`]
-* `qos_reliability`: subscriber QoS reliability, `best_effort` or `reliable`. [Default: `best_effort`] A `Reliable` subscriber cannot match a `Best Effort` publisher, which is how ZED image and cloud topics are published, so `reliable` on those yields no messages.
+* `qos_reliability`: subscriber QoS reliability, `best_effort` or `reliable`. [Default: `best_effort`] Both work on ZED topics, which are published `Reliable`. A `Reliable` subscriber only fails against a `Best Effort` publisher, so keep the default when benchmarking a topic from some other node whose reliability you have not checked.
 * `qos_durability`: subscriber QoS durability, `volatile` or `transient_local`. [Default: `volatile`]
 * `qos_history`: subscriber QoS history, `keep_last` or `keep_all`. [Default: `keep_last`]
 * `qos_depth`: subscriber QoS depth, used by `keep_last`. [Default: `1`]

@@ -172,7 +172,7 @@ An unrecognised value is replaced by the default **and reported as a warning** �
 
 > **Warning — an incompatible QoS request yields no messages at all.** DDS only delivers when the subscriber's request is *no stronger* than what the publisher offers, so:
 >
-> * `qos.reliability:=reliable` needs a `Reliable` publisher. The ZED wrapper publishes with `rclcpp::QoS(1)`, i.e. the default profile, which **is** `Reliable`/`Volatile`/`KEEP_LAST(1)` — so `reliable` works on ZED topics. Verified on a Jetson AGX Orin: 40/40 messages received.
+> * `qos.reliability:=reliable` needs a `Reliable` publisher. The ZED wrapper publishes with `rclcpp::QoS(QOS_QUEUE_SIZE)` where `QOS_QUEUE_SIZE` is 10, i.e. the default profile at depth 10, so its topics **are** `Reliable`, `Volatile`, `KEEP_LAST(10)` — and `reliable` works on them. Confirmed by `ros2 topic info -v` on a ZED 2i for `rgb/color/rect/image`, `depth/depth_registered` and `point_cloud/cloud_registered` alike, and on a Jetson AGX Orin by receiving 40/40 messages.
 > * `qos.durability:=transient_local` needs a `Transient Local` publisher. The ZED wrapper is `Volatile`, so this request is **incompatible and delivers nothing**. Verified: 0 messages, with the ZED node logging *"requesting incompatible QoS ... Last incompatible policy: DURABILITY_QOS_POLICY"*.
 >
 > When it happens the report pairs the QoS it requested with `No message received`, so the cause is visible rather than mysterious, and `ros2 topic info -v <topic>` shows the publisher's side for comparison.

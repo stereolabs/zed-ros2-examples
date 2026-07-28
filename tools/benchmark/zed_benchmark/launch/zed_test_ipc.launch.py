@@ -203,9 +203,9 @@ def generate_launch_description():
                 'qos_reliability',
                 default_value='best_effort',
                 description='Subscriber QoS reliability: `best_effort` or '
-                            '`reliable`. Note that a Reliable subscriber '
-                            'cannot match a Best Effort publisher, which is '
-                            'how ZED image and cloud topics are published.'),
+                            '`reliable`. Both work on ZED topics, which are '
+                            'published Reliable. A Reliable subscriber only '
+                            'fails against a Best Effort publisher.'),
             DeclareLaunchArgument(
                 'qos_durability',
                 default_value='volatile',
