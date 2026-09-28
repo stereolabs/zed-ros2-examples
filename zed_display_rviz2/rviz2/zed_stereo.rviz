@@ -418,7 +418,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /zed/plane_marker
+            Value: /zed/zed_node/plane_marker
           Value: true
         - Alpha: 1
           Autocompute Intensity Bounds: true
