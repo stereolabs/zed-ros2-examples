@@ -53,9 +53,13 @@ def launch_setup(context, *args, **kwargs):
         camera_model_val == 'zed2i' or
         camera_model_val == 'zedx' or
         camera_model_val == 'zedxm' or
+        camera_model_val == 'zedxnano' or
+        camera_model_val == 'zedxhdr' or
+        camera_model_val == 'zedxhdrmini' or
+        camera_model_val == 'zedxhdrmax' or
             camera_model_val == 'virtual'):
         camera_type = 'stereo'
-    else:  # 'zedxonegs' or 'zedxone4k')
+    else:  # 'zedxonegs', 'zedxone4k' or 'zedxonehdr'
         camera_type = 'mono'
 
     # RVIZ2 Configurations to be loaded by ZED Node
