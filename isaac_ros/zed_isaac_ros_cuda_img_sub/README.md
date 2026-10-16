@@ -11,7 +11,7 @@ For each phase it reports the subscription frequency, the latency, and the CPU a
 
 ## Requirements
 
-- ROS 2 Lyrical with the `rmw_fastrtps_cpp` middleware (NVIDIA Isaac ROS 5 environment)
+- ROS 2 Lyrical with the `rmw_fastrtps_cpp` or the `rmw_zenoh_cpp` (v0.10.5 or newer) middleware (NVIDIA Isaac ROS 5 environment)
 - ZED ROS 2 Wrapper v5.6.0 or newer, built with the `cuda_buffer` package
 - The `cuda_buffer_backend` plugin
 

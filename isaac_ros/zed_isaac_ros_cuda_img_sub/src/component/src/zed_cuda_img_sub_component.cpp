@@ -410,7 +410,8 @@ void ZedCudaImgSubComponent::sub_callback(
       get_logger(), *get_clock(), 5000,
       "Receiving CPU data while accepting the CUDA backend: the zero-copy transport is "
       "not available. Check that the 'cuda_buffer_backend' package is installed, that the "
-      "RMW is 'rmw_fastrtps_cpp', and that the ZED node runs on the same host and GPU.");
+      "RMW is 'rmw_fastrtps_cpp' or 'rmw_zenoh_cpp' (v0.10.5 or newer), and that the ZED "
+      "node runs on the same host and GPU.");
   }
 
   // Access the image on the GPU, as an accelerated node would do

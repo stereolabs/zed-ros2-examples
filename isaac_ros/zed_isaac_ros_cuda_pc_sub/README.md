@@ -11,7 +11,7 @@ For each received point cloud it prints the X, Y, and Z coordinates, in meters, 
 
 ## Requirements
 
-- ROS 2 Lyrical with the `rmw_fastrtps_cpp` middleware (NVIDIA Isaac ROS 5 environment)
+- ROS 2 Lyrical with the `rmw_fastrtps_cpp` or the `rmw_zenoh_cpp` (v0.10.5 or newer) middleware (NVIDIA Isaac ROS 5 environment)
 - ZED ROS 2 Wrapper v5.6.0 or newer, built with the `cuda_buffer` package
 - The `cuda_buffer_backend` plugin
 
