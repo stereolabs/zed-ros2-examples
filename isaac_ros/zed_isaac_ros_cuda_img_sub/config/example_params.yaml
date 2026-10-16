@@ -14,7 +14,7 @@
             tot_samples: 300 # Number of samples to process for each benchmark phase (CPU data, then CUDA zero-copy) before exiting
             cpu_gpu_load_period: 10 # Period in milliseconds to retrieve CPU and GPU load statistics
             cpu_gpu_load_avg_wnd_size: 5 # Number of samples to use to compute the average CPU and GPU load average
-            csv_log_file: 'zed_cuda_benchmark.csv' # If not empty, log the benchmark results in a CSV file with the specified name
+            csv_log_file: 'zed_cuda_img_benchmark.csv' # If not empty, log the benchmark results in a CSV file with the specified name
 
         debug:
             debug_cuda: false # Enable the debug information of the example (e.g. the value of the central pixel of each image)

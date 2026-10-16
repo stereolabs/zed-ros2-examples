@@ -44,7 +44,7 @@ def launch_setup(context, *args, **kwargs):
 
     # Get the path to the example configuration file
     example_params_file = os.path.join(
-        get_package_share_directory('zed_isaac_ros_cuda_sub'),
+        get_package_share_directory('zed_isaac_ros_cuda_img_sub'),
         'config',
         'example_params.yaml'
     )
@@ -94,9 +94,9 @@ def launch_setup(context, *args, **kwargs):
 
     # Define the CUDA zero-copy subscriber component
     cuda_sub_node = ComposableNode(
-        package='zed_isaac_ros_cuda_sub',
-        plugin='stereolabs::ZedCudaSubComponent',
-        name='zed_cuda_sub_component',
+        package='zed_isaac_ros_cuda_img_sub',
+        plugin='stereolabs::ZedCudaImgSubComponent',
+        name='zed_cuda_img_sub_component',
         namespace=namespace_val,
         remappings=[
             ('image', topic_name)

@@ -1,4 +1,4 @@
-# ZED CUDA Zero-Copy Subscriber Example
+# ZED CUDA Zero-Copy Image Subscriber Example
 
 This example subscribes to a ZED camera image topic using the CUDA zero-copy transport of ROS 2 Lyrical (`rosidl::Buffer` with the `cuda` buffer backend) and displays communication benchmarks.
 
@@ -20,11 +20,11 @@ Details about the example, the installation, and the usage are available in the 
 ## Usage
 
 ```bash
-ros2 launch zed_isaac_ros_cuda_sub zed_cuda_sub_example.launch.py camera_model:=<camera_model>
+ros2 launch zed_isaac_ros_cuda_img_sub zed_cuda_img_sub_example.launch.py camera_model:=<camera_model>
 ```
 
 Use the `topic_name` launch argument to select another ZED image topic, for example the depth map:
 
 ```bash
-ros2 launch zed_isaac_ros_cuda_sub zed_cuda_sub_example.launch.py camera_model:=<camera_model> topic_name:=/zed_isaac/zed/depth/depth_registered
+ros2 launch zed_isaac_ros_cuda_img_sub zed_cuda_img_sub_example.launch.py camera_model:=<camera_model> topic_name:=/zed_isaac/zed/depth/depth_registered
 ```

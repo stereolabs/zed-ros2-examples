@@ -1,0 +1,22 @@
+# config/example_params.yaml
+
+---
+/**:
+    ros__parameters:
+        general:
+            grab_resolution: 'AUTO' # The native camera grab resolution. 'HD1200', 'HD2K', 'HD1080', 'HD720', 'SVGA', 'VGA', 'AUTO'
+            buffer_backend: 'cuda' # Publish the point cloud with the CUDA zero-copy transport. Set to 'cpu' to always publish CPU data
+
+        depth:
+            point_cloud_freq: 30.0 # [DYNAMIC] Frequency of the pointcloud publishing. This value must be <= the camera framerate. The differences between the CPU and the CUDA transports are clearer at high rates
+            point_cloud_res: 'COMPACT' # The resolution used for point cloud publishing - 'COMPACT'-Standard resolution. Optimizes processing and bandwidth - 'REDUCED'-Half resolution. Low processing and bandwidth requirements - 'PUB'-Same resolution as the images (e.g. 1280x720), larger clouds show larger benefits of the CUDA transport
+
+        benchmark:
+            tot_samples: 300 # Number of samples to process for each benchmark phase (CPU data, then CUDA zero-copy) before exiting
+            cpu_gpu_load_period: 10 # Period in milliseconds to retrieve CPU and GPU load statistics
+            cpu_gpu_load_avg_wnd_size: 5 # Number of samples to use to compute the average CPU and GPU load average
+            csv_log_file: 'zed_cuda_pc_benchmark.csv' # If not empty, log the benchmark results in a CSV file with the specified name
+
+        debug:
+            debug_cuda: false # Enable the debug information of the example
+            use_pub_timestamps: true # Used to measure the real communication latency.

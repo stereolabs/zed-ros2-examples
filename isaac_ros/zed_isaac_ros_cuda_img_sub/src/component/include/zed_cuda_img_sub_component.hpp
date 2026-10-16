@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ZED_CUDA_SUB__COMPONENT_HPP_
-#define ZED_CUDA_SUB__COMPONENT_HPP_
+#ifndef ZED_CUDA_IMG_SUB__COMPONENT_HPP_
+#define ZED_CUDA_IMG_SUB__COMPONENT_HPP_
 
 #include <cuda_runtime_api.h>
 
@@ -26,7 +26,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 
-#include "cuda_sub_visibility_control.hpp"
+#include "cuda_img_sub_visibility_control.hpp"
 
 namespace stereolabs
 {
@@ -57,13 +57,13 @@ struct TransportBenchmark
 // the CUDA buffer backend
 enum class Phase { CPU, CUDA };
 
-class ZedCudaSubComponent : public rclcpp::Node
+class ZedCudaImgSubComponent : public rclcpp::Node
 {
 public:
-  ZED_CUDA_SUB_COMPONENT_PUBLIC
-  explicit ZedCudaSubComponent(const rclcpp::NodeOptions & options);
+  ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC
+  explicit ZedCudaImgSubComponent(const rclcpp::NodeOptions & options);
 
-  virtual ~ZedCudaSubComponent();
+  virtual ~ZedCudaImgSubComponent();
 
 protected:
   // Read the parameters from the parameter server
@@ -153,4 +153,4 @@ private:
 
 }  // namespace stereolabs
 
-#endif  // ZED_CUDA_SUB__COMPONENT_HPP_
+#endif  // ZED_CUDA_IMG_SUB__COMPONENT_HPP_

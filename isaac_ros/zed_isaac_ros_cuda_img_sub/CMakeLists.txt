@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(zed_isaac_ros_cuda_sub)
+project(zed_isaac_ros_cuda_img_sub)
 
 ## Generate symbols for IDE indexer
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -62,15 +62,15 @@ if(cuda_buffer_FOUND)
   # SOURCES
 
   set(INC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cuda_sub_visibility_control.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/cuda_img_sub_visibility_control.hpp
   )
 
   set(INC_COMP
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_cuda_sub_component.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/include/zed_cuda_img_sub_component.hpp
   )
 
   set(SRC_COMP
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_cuda_sub_component.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/component/src/zed_cuda_img_sub_component.cpp
   )
 
   ###############################################################################
@@ -83,7 +83,7 @@ if(cuda_buffer_FOUND)
     ${SRC_COMP}
   )
   target_compile_definitions(${PROJECT_NAME}_component
-    PRIVATE "ZED_CUDA_SUB_COMPONENT_BUILDING_DLL"
+    PRIVATE "ZED_CUDA_IMG_SUB_COMPONENT_BUILDING_DLL"
   )
   target_link_libraries(${PROJECT_NAME}_component
     rclcpp::rclcpp
@@ -94,7 +94,7 @@ if(cuda_buffer_FOUND)
     ${CMAKE_DL_LIBS}
   )
 
-  rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedCudaSubComponent")
+  rclcpp_components_register_nodes(${PROJECT_NAME}_component "stereolabs::ZedCudaImgSubComponent")
 
   # Install components
   install(TARGETS ${PROJECT_NAME}_component

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CUDA_SUB_VISIBILITY_CONTROL_HPP_
-#define CUDA_SUB_VISIBILITY_CONTROL_HPP_
+#ifndef CUDA_IMG_SUB_VISIBILITY_CONTROL_HPP_
+#define CUDA_IMG_SUB_VISIBILITY_CONTROL_HPP_
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
@@ -26,30 +26,30 @@ extern "C" {
 
 #if defined _WIN32 || defined __CYGWIN__
 #ifdef __GNUC__
-#define ZED_CUDA_SUB_COMPONENT_EXPORT __attribute__((dllexport))
-#define ZED_CUDA_SUB_COMPONENT_IMPORT __attribute__((dllimport))
+#define ZED_CUDA_IMG_SUB_COMPONENT_EXPORT __attribute__((dllexport))
+#define ZED_CUDA_IMG_SUB_COMPONENT_IMPORT __attribute__((dllimport))
 #else
-#define ZED_CUDA_SUB_COMPONENT_EXPORT __declspec(dllexport)
-#define ZED_CUDA_SUB_COMPONENT_IMPORT __declspec(dllimport)
+#define ZED_CUDA_IMG_SUB_COMPONENT_EXPORT __declspec(dllexport)
+#define ZED_CUDA_IMG_SUB_COMPONENT_IMPORT __declspec(dllimport)
 #endif
-#ifdef ZED_CUDA_SUB_COMPONENT_BUILDING_DLL
-#define ZED_CUDA_SUB_COMPONENT_PUBLIC ZED_CUDA_SUB_COMPONENT_EXPORT
+#ifdef ZED_CUDA_IMG_SUB_COMPONENT_BUILDING_DLL
+#define ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC ZED_CUDA_IMG_SUB_COMPONENT_EXPORT
 #else
-#define ZED_CUDA_SUB_COMPONENT_PUBLIC ZED_CUDA_SUB_COMPONENT_IMPORT
+#define ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC ZED_CUDA_IMG_SUB_COMPONENT_IMPORT
 #endif
-#define ZED_CUDA_SUB_COMPONENT_PUBLIC_TYPE ZED_CUDA_SUB_COMPONENT_PUBLIC
-#define ZED_CUDA_SUB_COMPONENT_LOCAL
+#define ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC_TYPE ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC
+#define ZED_CUDA_IMG_SUB_COMPONENT_LOCAL
 #else
-#define ZED_CUDA_SUB_COMPONENT_EXPORT __attribute__((visibility("default")))
-#define ZED_CUDA_SUB_COMPONENT_IMPORT
+#define ZED_CUDA_IMG_SUB_COMPONENT_EXPORT __attribute__((visibility("default")))
+#define ZED_CUDA_IMG_SUB_COMPONENT_IMPORT
 #if __GNUC__ >= 4
-#define ZED_CUDA_SUB_COMPONENT_PUBLIC __attribute__((visibility("default")))
-#define ZED_CUDA_SUB_COMPONENT_LOCAL __attribute__((visibility("hidden")))
+#define ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC __attribute__((visibility("default")))
+#define ZED_CUDA_IMG_SUB_COMPONENT_LOCAL __attribute__((visibility("hidden")))
 #else
-#define ZED_CUDA_SUB_COMPONENT_PUBLIC
-#define ZED_CUDA_SUB_COMPONENT_LOCAL
+#define ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC
+#define ZED_CUDA_IMG_SUB_COMPONENT_LOCAL
 #endif
-#define ZED_CUDA_SUB_COMPONENT_PUBLIC_TYPE
+#define ZED_CUDA_IMG_SUB_COMPONENT_PUBLIC_TYPE
 #endif
 
 /* *INDENT-OFF* */
@@ -58,4 +58,4 @@ extern "C" {
 #endif
 /* *INDENT-ON* */
 
-#endif  // CUDA_SUB_VISIBILITY_CONTROL_HPP_
+#endif  // CUDA_IMG_SUB_VISIBILITY_CONTROL_HPP_

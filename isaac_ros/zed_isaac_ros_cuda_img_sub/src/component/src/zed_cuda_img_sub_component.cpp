@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "zed_cuda_sub_component.hpp"
+#include "zed_cuda_img_sub_component.hpp"
 
 #include <dlfcn.h>
 
@@ -45,11 +45,11 @@ using NvmlGetHandleFn = int (*)(unsigned int, void **);
 using NvmlGetUtilizationFn = int (*)(void *, NvmlUtilization *);
 }  // namespace
 
-ZedCudaSubComponent::ZedCudaSubComponent(const rclcpp::NodeOptions & options)
-: Node("zed_cuda_sub_component", options), _defaultQoS(10)
+ZedCudaImgSubComponent::ZedCudaImgSubComponent(const rclcpp::NodeOptions & options)
+: Node("zed_cuda_img_sub_component", options), _defaultQoS(10)
 {
   RCLCPP_INFO(get_logger(), "======================================");
-  RCLCPP_INFO(get_logger(), " ZED CUDA Zero-Copy Subscriber Component");
+  RCLCPP_INFO(get_logger(), " ZED CUDA Zero-Copy Image Subscriber");
   RCLCPP_INFO(get_logger(), "======================================");
   RCLCPP_INFO(get_logger(), " * namespace: %s", get_namespace());
   RCLCPP_INFO(get_logger(), " * node name: %s", get_name());
@@ -79,13 +79,13 @@ ZedCudaSubComponent::ZedCudaSubComponent(const rclcpp::NodeOptions & options)
   initialize_benchmark_results();
 
   // Create the thread to periodically retrieve CPU and GPU load
-  _cpuGpuLoadThread = std::thread(&ZedCudaSubComponent::cpu_gpu_load_callback, this);
+  _cpuGpuLoadThread = std::thread(&ZedCudaImgSubComponent::cpu_gpu_load_callback, this);
 
   // Start the example and perform the benchmark with standard CPU data
   create_subscriber(Phase::CPU);
 }
 
-ZedCudaSubComponent::~ZedCudaSubComponent()
+ZedCudaImgSubComponent::~ZedCudaImgSubComponent()
 {
   _cpuGpuLoadThreadRunning = false;
   if (_cpuGpuLoadThread.joinable()) {
@@ -101,7 +101,7 @@ ZedCudaSubComponent::~ZedCudaSubComponent()
   }
 }
 
-void ZedCudaSubComponent::initialize_benchmark_results()
+void ZedCudaImgSubComponent::initialize_benchmark_results()
 {
   // Initialize the reference time
   _lastMsgTime = rclcpp::Time(0, 0, RCL_ROS_TIME);
@@ -128,7 +128,7 @@ void ZedCudaSubComponent::initialize_benchmark_results()
   init_stat(_cudaResults.gpu_load, "CUDA Subscriber GPU Load", "%");
 }
 
-void ZedCudaSubComponent::update_benchmark_stats(
+void ZedCudaImgSubComponent::update_benchmark_stats(
   BenchmarkTest & benchmark, double new_value)
 {
   benchmark.values.push_back(new_value);
@@ -137,7 +137,7 @@ void ZedCudaSubComponent::update_benchmark_stats(
   benchmark.max_val = std::max(benchmark.max_val, new_value);
 }
 
-void ZedCudaSubComponent::calculate_benchmark_results(BenchmarkTest & benchmark)
+void ZedCudaImgSubComponent::calculate_benchmark_results(BenchmarkTest & benchmark)
 {
   if (benchmark.values.empty()) {
     RCLCPP_WARN(
@@ -185,7 +185,7 @@ void ZedCudaSubComponent::calculate_benchmark_results(BenchmarkTest & benchmark)
   }
 }
 
-void ZedCudaSubComponent::compare_benchmark_results(
+void ZedCudaImgSubComponent::compare_benchmark_results(
   const BenchmarkTest & benchmark1,
   const BenchmarkTest & benchmark2)
 {
@@ -227,7 +227,7 @@ void ZedCudaSubComponent::compare_benchmark_results(
   if (csv_file.is_open()) {csv_file.close();}
 }
 
-void ZedCudaSubComponent::read_parameters()
+void ZedCudaImgSubComponent::read_parameters()
 {
   RCLCPP_INFO(get_logger(), "--------------------");
   RCLCPP_INFO(get_logger(), " Example Parameters");
@@ -289,7 +289,7 @@ void ZedCudaSubComponent::read_parameters()
   }
 }
 
-void ZedCudaSubComponent::create_subscriber(Phase phase)
+void ZedCudaImgSubComponent::create_subscriber(Phase phase)
 {
   _phase = phase;
   _sampleCount = 0;
@@ -310,11 +310,11 @@ void ZedCudaSubComponent::create_subscriber(Phase phase)
 
   _sub = this->create_subscription<sensor_msgs::msg::Image>(
     "image", _defaultQoS,
-    std::bind(&ZedCudaSubComponent::sub_callback, this, std::placeholders::_1),
+    std::bind(&ZedCudaImgSubComponent::sub_callback, this, std::placeholders::_1),
     sub_opts);
 }
 
-bool ZedCudaSubComponent::process_on_gpu(
+bool ZedCudaImgSubComponent::process_on_gpu(
   const sensor_msgs::msg::Image & img,
   std::vector<uint8_t> & pixel)
 {
@@ -383,7 +383,7 @@ bool ZedCudaSubComponent::process_on_gpu(
   return process(_devBuffer);
 }
 
-void ZedCudaSubComponent::sub_callback(
+void ZedCudaImgSubComponent::sub_callback(
   const sensor_msgs::msg::Image::ConstSharedPtr & img)
 {
   auto now = this->now();
@@ -493,7 +493,7 @@ void ZedCudaSubComponent::sub_callback(
   rclcpp::shutdown();
 }
 
-void ZedCudaSubComponent::print_benchmark_results()
+void ZedCudaImgSubComponent::print_benchmark_results()
 {
   if (!_csvLogFile.empty()) {
     std::ofstream csv_file;
@@ -549,7 +549,7 @@ void ZedCudaSubComponent::print_benchmark_results()
   RCLCPP_INFO(this->get_logger(), "-----------------------------------");
 }
 
-double ZedCudaSubComponent::get_cpu_load()
+double ZedCudaImgSubComponent::get_cpu_load()
 {
   std::ifstream file("/proc/stat");
   std::string line;
@@ -573,7 +573,7 @@ double ZedCudaSubComponent::get_cpu_load()
   return 100.0 * (1.0 - diffIdle / diffTotal);
 }
 
-double ZedCudaSubComponent::get_gpu_load()
+double ZedCudaImgSubComponent::get_gpu_load()
 {
   // Jetson Orin: the GPU load is exposed in sysfs, as percentage * 10
   std::ifstream file("/sys/devices/platform/gpu.0/load");
@@ -614,7 +614,7 @@ double ZedCudaSubComponent::get_gpu_load()
   return 0.0;
 }
 
-void ZedCudaSubComponent::cpu_gpu_load_callback()
+void ZedCudaImgSubComponent::cpu_gpu_load_callback()
 {
   std::deque<double> cpu_queue, gpu_queue;
 
@@ -641,4 +641,4 @@ void ZedCudaSubComponent::cpu_gpu_load_callback()
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable
 // when its library is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::ZedCudaSubComponent)
+RCLCPP_COMPONENTS_REGISTER_NODE(stereolabs::ZedCudaImgSubComponent)
