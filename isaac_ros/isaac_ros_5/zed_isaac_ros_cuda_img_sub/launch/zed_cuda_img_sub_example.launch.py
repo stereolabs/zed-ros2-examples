@@ -56,27 +56,30 @@ def launch_setup(context, *args, **kwargs):
     camera_model = LaunchConfiguration('camera_model')
     topic_name = LaunchConfiguration('topic_name')
 
-    # ROS 2 Component Container
+    # ROS 2 Component Containers
+    # The ZED node and the subscriber run in two different containers: the ZED
+    # data are shared with the subscriber through cross-process CUDA IPC.
+    # The same-process CUDA IPC path of `cuda_buffer_backend` can deliver a
+    # buffer already reused by the ZED node, which stops the container.
     container_name = 'zed_container'
-    info = '* Starting Composable node container: ' +\
-        namespace_val + '/' + container_name
-    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    sub_container_name = 'cuda_sub_container'
 
-    zed_container = ComposableNodeContainer(
-        name=container_name,
-        namespace=namespace_val,
-        package='rclcpp_components',
-        executable='component_container_mt',
-        arguments=['--ros-args', '--log-level', 'info'],
-        output='screen',
-    )
-    actions.append(zed_container)
+    for name in [container_name, sub_container_name]:
+        info = '* Starting Composable node container: ' + namespace_val + '/' + name
+        actions.append(LogInfo(msg=TextSubstitution(text=info)))
+        actions.append(ComposableNodeContainer(
+            name=name,
+            namespace=namespace_val,
+            package='rclcpp_components',
+            executable='component_container_mt',
+            arguments=['--ros-args', '--log-level', 'info'],
+            output='screen',
+        ))
 
     # ZED Wrapper launch file
     # Note: rclcpp Intra-Process Communication delivers the messages without
     # the buffer backend negotiation, so the ZED node publishes CPU data to the
-    # intra-process subscribers. IPC is disabled to let the subscriber of this
-    # example receive the CUDA buffers, even if it runs in the same container.
+    # intra-process subscribers. IPC is disabled to always publish CUDA buffers.
     zed_wrapper_launch = IncludeLaunchDescription(
         launch_description_source=PythonLaunchDescriptionSource([
             get_package_share_directory('zed_wrapper'),
@@ -103,14 +106,13 @@ def launch_setup(context, *args, **kwargs):
         ],
         parameters=[
             example_params_file
-        ],
-        extra_arguments=[{'use_intra_process_comms': False}]
+        ]
     )
 
-    # Create the full name of the container
-    container_full_name = namespace_val + '/' + container_name
+    # Create the full name of the subscriber container
+    container_full_name = namespace_val + '/' + sub_container_name
 
-    # Load the subscriber node into the container
+    # Load the subscriber node into its container
     load_sub_node = LoadComposableNodes(
         composable_node_descriptions=[cuda_sub_node],
         target_container=container_full_name
