@@ -68,7 +68,7 @@ Install the Isaac ROS packages used by the example, the tool to download the RT-
 cd ${ISAAC_ROS_WS}
 sudo apt-get update
 rosdep update
-rosdep install --from-paths src/zed-ros2-examples/isaac_ros/zed_isaac_ros_object_detection --ignore-src -r -y
+rosdep install --from-paths src/zed-ros2-examples/isaac_ros/isaac_ros_5/zed_isaac_ros_object_detection --ignore-src -r -y
 sudo apt-get install -y ros-lyrical-isaac-ros-rtdetr-models-install ros-lyrical-foxglove-bridge
 ```
 
