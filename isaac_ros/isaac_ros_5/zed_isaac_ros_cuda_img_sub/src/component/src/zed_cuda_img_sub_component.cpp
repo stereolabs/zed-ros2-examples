@@ -46,7 +46,7 @@ using NvmlGetUtilizationFn = int (*)(void *, NvmlUtilization *);
 }  // namespace
 
 ZedCudaImgSubComponent::ZedCudaImgSubComponent(const rclcpp::NodeOptions & options)
-: Node("zed_cuda_img_sub_component", options), _defaultQoS(10)
+: Node("zed_cuda_img_sub_component", options), _defaultQoS(1)
 {
   RCLCPP_INFO(get_logger(), "======================================");
   RCLCPP_INFO(get_logger(), " ZED CUDA Zero-Copy Image Subscriber");

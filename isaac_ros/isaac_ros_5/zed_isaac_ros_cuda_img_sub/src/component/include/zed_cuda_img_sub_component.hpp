@@ -110,6 +110,9 @@ protected:
 
 private:
   // QoS parameters
+  // Keep only the latest message: the `cuda` buffer backend can reuse the GPU
+  // memory of a message about 100 ms after it is published, so a message taken
+  // from a longer queue by a slow subscriber can no longer be read.
   rclcpp::QoS _defaultQoS;
 
   // Parameters

@@ -25,6 +25,8 @@ ZED node ─► Resize ─► Pad ─► BGR to RGB ─► Image to tensor ─�
 
 The ZED node runs in the `/zed_isaac/zed_container` component container, and the Isaac ROS nodes in the `/zed_isaac/object_detection/object_detection_container` component container. The ZED images are shared between the two processes through CUDA IPC, without copies. The ZED node and the Isaac ROS nodes are not loaded in the same container: with `cuda_buffer_backend` 0.1.2, the same-process CUDA IPC path can deliver an image buffer already reused by the ZED node, which stops the container.
 
+The Isaac ROS `ResizeNode`, which receives the ZED images, uses `input_queue_size: 1` to always take the latest image: the `cuda` buffer backend can reuse the GPU memory of an image about 100 ms after it is published, so an image taken late from a longer queue could no longer be read. This queue depth does not replace the two containers: in our tests on a Jetson AGX Orin, with all the nodes in the ZED container and `input_queue_size: 1`, the container stopped in 9 of 16 runs (Docker and Bare Metal), while no error occurred in 18 runs with two containers.
+
 ## Requirements
 
 - A Jetson Thor or Orin device with JetPack 7.2, or an x86_64 machine with an NVIDIA GPU (Ampere or newer), Ubuntu 24.04 and CUDA 13.2
