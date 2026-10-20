@@ -155,30 +155,32 @@ def launch_setup(context, *args, **kwargs):
     zed_image_topic = zed_topic_root + 'rgb/color/rect/image'
     zed_camera_info_topic = zed_topic_root + 'rgb/color/rect/camera_info'
 
-    # ROS 2 Component Container
+    # ROS 2 Component Containers
+    # The ZED node and the Isaac ROS nodes run in two different containers: the
+    # ZED images are shared with the Isaac ROS nodes through cross-process CUDA IPC.
+    # The same-process CUDA IPC path of `cuda_buffer_backend` can deliver an image
+    # block already recycled by the ZED node, which stops the container.
     container_name = 'zed_container'
-    info = '* Starting Composable node container: ' +\
-        namespace_val + '/' + container_name
-    actions.append(LogInfo(msg=TextSubstitution(text=info)))
+    od_container_name = 'object_detection_container'
 
     # Note: It is crucial that the 'executable' field is set to be 'component_container_mt'
     #  so that the created nodes can be started and communicated correctly within the same process.
-
-    zed_container = ComposableNodeContainer(
-        name=container_name,
-        namespace=namespace_val,
-        package='rclcpp_components',
-        executable='component_container_mt',
-        arguments=['--ros-args', '--log-level', 'info'],
-        output='screen',
-    )
-    actions.append(zed_container)
+    for name, ns in [(container_name, namespace_val), (od_container_name, od_namespace)]:
+        info = '* Starting Composable node container: ' + ns + '/' + name
+        actions.append(LogInfo(msg=TextSubstitution(text=info)))
+        actions.append(ComposableNodeContainer(
+            name=name,
+            namespace=ns,
+            package='rclcpp_components',
+            executable='component_container_mt',
+            arguments=['--ros-args', '--log-level', 'info'],
+            output='screen',
+        ))
 
     # ZED Wrapper launch file
     # Note: rclcpp Intra-Process Communication delivers the messages without
     # the buffer backend negotiation, so the ZED node publishes CPU data to the
-    # intra-process subscribers. IPC is disabled to let the Isaac ROS nodes
-    # receive the CUDA buffers, even if they run in the same container.
+    # intra-process subscribers. IPC is disabled to always publish CUDA buffers.
     zed_wrapper_launch = IncludeLaunchDescription(
         launch_description_source=PythonLaunchDescriptionSource([
             get_package_share_directory('zed_wrapper'),
@@ -363,7 +365,7 @@ def launch_setup(context, *args, **kwargs):
         ]
     # <---- Model specific nodes
 
-    # Load the Isaac ROS nodes into the ZED container
+    # Load the Isaac ROS nodes into the object detection container
     load_od_nodes = LoadComposableNodes(
         composable_node_descriptions=[
             resize_node,
@@ -374,7 +376,7 @@ def launch_setup(context, *args, **kwargs):
             reshape_node,
             tensor_rt_node
         ] + model_nodes,
-        target_container=namespace_val + '/' + container_name
+        target_container=od_namespace + '/' + od_container_name
     )
     actions.append(load_od_nodes)
 

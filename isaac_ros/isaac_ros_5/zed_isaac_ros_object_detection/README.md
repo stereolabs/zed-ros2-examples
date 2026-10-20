@@ -23,7 +23,7 @@ ZED node ─► Resize ─► Pad ─► BGR to RGB ─► Image to tensor ─�
                                                               NVIDIA visualizer ─► processed_image
 ```
 
-All the C++ nodes run in the same component container as the ZED node.
+The ZED node runs in the `/zed_isaac/zed_container` component container, and the Isaac ROS nodes in the `/zed_isaac/object_detection/object_detection_container` component container. The ZED images are shared between the two processes through CUDA IPC, without copies. The ZED node and the Isaac ROS nodes are not loaded in the same container: with `cuda_buffer_backend` 0.1.2, the same-process CUDA IPC path can deliver an image buffer already reused by the ZED node, which stops the container.
 
 ## Requirements
 
@@ -68,11 +68,11 @@ Install the Isaac ROS packages used by the example, the tool to download the RT-
 cd ${ISAAC_ROS_WS}
 sudo apt-get update
 rosdep update
-rosdep install --from-paths src/zed-ros2-examples/isaac_ros/isaac_ros_5/zed_isaac_ros_object_detection --ignore-src -r -y
+rosdep install --from-paths src/zed-ros2-wrapper src/zed-ros2-examples/isaac_ros/isaac_ros_5/zed_isaac_ros_object_detection --ignore-src -r -y
 sudo apt-get install -y ros-lyrical-isaac-ros-rtdetr-models-install ros-lyrical-foxglove-bridge
 ```
 
-`rosdep` installs the Isaac ROS image processing, tensor processing, TensorRT, RT-DETR and YOLOv8 packages, `vision_msgs` and `foxglove_msgs`.
+`rosdep` installs the Isaac ROS image processing, tensor processing, TensorRT, RT-DETR and YOLOv8 packages, `vision_msgs` and `foxglove_msgs`. The ZED ROS 2 Wrapper folder is listed so that `rosdep` uses the wrapper built in your workspace, instead of looking for its Debian packages.
 
 **Docker**: the packages installed with `apt-get` in the container are lost when the container is removed, for example after rebuilding the image with `isaac-ros activate --build-local`, and you must repeat this step. To keep them, add them to a custom image layer, as you did for the ZED SDK:
 
