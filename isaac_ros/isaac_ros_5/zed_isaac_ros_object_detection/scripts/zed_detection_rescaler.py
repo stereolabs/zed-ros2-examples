@@ -29,6 +29,7 @@ the ZED image, using the image size from the ZED `camera_info` topic, and publis
 
 import numpy as np
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 
@@ -151,8 +152,13 @@ def main():
     node = ZedDetectionRescaler()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
+    except Exception:
+        # A SIGTERM shuts down the context while the executor is waiting: the
+        # executor can then raise an RCLError instead of ExternalShutdownException
+        if rclpy.ok():
+            raise
     finally:
         node.destroy_node()
         rclpy.try_shutdown()
