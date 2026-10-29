@@ -441,10 +441,13 @@ void ZedCudaPcSubComponent::sub_callback(
     _cpuFallbackCount++;
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), 5000,
-      "Receiving CPU data while accepting the CUDA backend: the zero-copy transport is "
-      "not available. Check that the 'cuda_buffer_backend' package is installed, that the "
-      "RMW is 'rmw_fastrtps_cpp' or 'rmw_zenoh_cpp' (v0.10.5 or newer), and that the ZED "
-      "node runs on the same host and GPU.");
+      "Receiving CPU data while accepting the CUDA backend: the ZED node does not publish "
+      "CUDA buffers. Check the 'Buffer transport' line in the log of the ZED node. Possible "
+      "causes: the 'cuda_buffer_backend' plugin is not built in the workspace, the RMW is not "
+      "'rmw_fastrtps_cpp' or 'rmw_zenoh_cpp' (v0.10.5 or newer), 'general.buffer_backend' is "
+      "'cpu', a subscriber of the same topic runs in the process of the ZED node with "
+      "Intra-Process Communication, the topic uses the TRANSIENT_LOCAL durability, or the ZED "
+      "node runs on another host or GPU.");
   }
 
   // Access the point cloud on the GPU, as an accelerated node would do, and
