@@ -163,7 +163,7 @@ def launch_setup(context, *args, **kwargs):
     container_name = 'zed_container'
     od_container_name = 'object_detection_container'
 
-    # Note: It is crucial that the 'executable' field is set to be 'component_container_mt'
+    # Note: It is crucial that the containers use the multi-threaded executor
     #  so that the created nodes can be started and communicated correctly within the same process.
     for name, ns in [(container_name, namespace_val), (od_container_name, od_namespace)]:
         info = '* Starting Composable node container: ' + ns + '/' + name
@@ -172,9 +172,10 @@ def launch_setup(context, *args, **kwargs):
             name=name,
             namespace=ns,
             package='rclcpp_components',
-            executable='component_container_mt',
+            executable='component_container',
             # The buffer typesupport logs several INFO lines for each CUDA buffer message
-            arguments=['--ros-args', '--log-level', 'info',
+            arguments=['--executor-type', 'multi-threaded',
+                       '--ros-args', '--log-level', 'info',
                        '--log-level', 'serialize_buffer_with_endpoint:=warn',
                        '--log-level', 'deserialize_buffer_with_endpoint:=warn'],
             output='screen',
