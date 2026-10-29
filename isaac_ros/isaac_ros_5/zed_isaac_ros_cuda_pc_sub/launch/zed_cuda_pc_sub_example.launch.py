@@ -72,7 +72,10 @@ def launch_setup(context, *args, **kwargs):
             namespace=namespace_val,
             package='rclcpp_components',
             executable='component_container_mt',
-            arguments=['--ros-args', '--log-level', 'info'],
+            # The buffer typesupport logs several INFO lines for each CUDA buffer message
+            arguments=['--ros-args', '--log-level', 'info',
+                       '--log-level', 'serialize_buffer_with_endpoint:=warn',
+                       '--log-level', 'deserialize_buffer_with_endpoint:=warn'],
             output='screen',
         ))
 
