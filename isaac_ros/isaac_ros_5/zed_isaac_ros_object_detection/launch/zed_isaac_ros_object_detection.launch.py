@@ -210,14 +210,16 @@ def launch_setup(context, *args, **kwargs):
         plugin='nvidia::isaac_ros::image_proc::ResizeNode',
         name='resize_node',
         namespace=od_namespace,
-        # `input_queue_size: 1`: keep only the latest ZED image. The `cuda` buffer
-        # backend can reuse the GPU memory of an image about 100 ms after it is
+        # `input_qos_depth: 1` (subscription queue) and `input_queue_size: 1` (image and
+        # camera info synchronization queue): keep only the latest ZED image. The `cuda`
+        # buffer backend can reuse the GPU memory of an image about 100 ms after it is
         # published, so an image taken late from a longer queue can no longer be read.
         parameters=[{
             'output_width': NETWORK_IMAGE_SIZE,
             'output_height': NETWORK_IMAGE_SIZE,
             'keep_aspect_ratio': True,
             'disable_padding': True,
+            'input_qos_depth': 1,
             'input_queue_size': 1
         }],
         remappings=[
