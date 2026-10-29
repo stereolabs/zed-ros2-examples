@@ -247,7 +247,23 @@ void ZedCudaImgSubComponent::read_parameters()
       range.from_value = min;
       range.to_value = max;
       desc.integer_range.push_back(range);
-      this->declare_parameter(name, rclcpp::ParameterValue(value), desc);
+      // A value out of range or of a wrong type makes declare_parameter throw:
+      // declare the parameter again ignoring the override, to use the default value
+      auto use_default = [&](const std::exception & e) {
+          RCLCPP_WARN_STREAM(
+            get_logger(),
+            "The parameter '" << name << "' is not valid (range: [" << min << ", " << max
+                              << "]), using the default value: " << value << ". Error: "
+                              << e.what());
+          this->declare_parameter(name, rclcpp::ParameterValue(value), desc, true);
+        };
+      try {
+        this->declare_parameter(name, rclcpp::ParameterValue(value), desc);
+      } catch (const rclcpp::exceptions::InvalidParameterValueException & e) {
+        use_default(e);
+      } catch (const rclcpp::exceptions::InvalidParameterTypeException & e) {
+        use_default(e);
+      }
       if (!this->get_parameter(name, value)) {
         RCLCPP_WARN_STREAM(
           get_logger(),
