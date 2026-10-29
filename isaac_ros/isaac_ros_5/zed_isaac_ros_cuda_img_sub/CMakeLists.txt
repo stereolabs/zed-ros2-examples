@@ -25,12 +25,16 @@ ament_auto_find_build_dependencies()
 find_package(cuda_buffer QUIET)
 
 if(cuda_buffer_FOUND)
+  # Used to check that the 'cuda' buffer backend plugin is installed
+  find_package(rosidl_buffer_backend_registry REQUIRED)
+
   set(DEPENDENCIES_COMP
     rclcpp
     rclcpp_components
     rcutils
     sensor_msgs
     cuda_buffer
+    rosidl_buffer_backend_registry
   )
 
   find_package(rcutils REQUIRED)
@@ -90,6 +94,7 @@ if(cuda_buffer_FOUND)
     rclcpp_components::component
     ${sensor_msgs_TARGETS}
     cuda_buffer::cuda_buffer
+    rosidl_buffer_backend_registry::rosidl_buffer_backend_registry
     CUDA::cudart
     ${CMAKE_DL_LIBS}
   )

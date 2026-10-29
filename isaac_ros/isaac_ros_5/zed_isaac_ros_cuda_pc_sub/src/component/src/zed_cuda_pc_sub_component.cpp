@@ -16,6 +16,7 @@
 
 #include <dlfcn.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <deque>
@@ -27,6 +28,9 @@
 // User-facing API of the CUDA buffer backend: `from_input_buffer` gives
 // read-only access to the GPU memory of a CUDA-backed `rosidl::Buffer`
 #include <cuda_buffer/cuda_buffer_api.hpp>
+
+// Lists the buffer backend plugins installed for this process
+#include <rosidl_buffer_backend_registry/buffer_backend_registry.hpp>
 
 namespace stereolabs
 {
@@ -80,6 +84,29 @@ ZedCudaPcSubComponent::ZedCudaPcSubComponent(const rclcpp::NodeOptions & options
 
   // Create the thread to periodically retrieve CPU and GPU load
   _cpuGpuLoadThread = std::thread(&ZedCudaPcSubComponent::cpu_gpu_load_callback, this);
+
+  // Without the 'cuda' buffer backend plugin in this process, a subscription
+  // that accepts the 'cuda' backend receives no messages at all, not even CPU data
+  std::vector<std::string> backends;
+  try {
+    backends = rosidl_buffer_backend_registry::BufferBackendRegistry().get_backend_names();
+  } catch (const std::exception & e) {
+    RCLCPP_WARN(get_logger(), "Cannot list the buffer backend plugins: %s", e.what());
+  }
+  if (std::find(backends.begin(), backends.end(), "cuda") == backends.end()) {
+    std::string list;
+    for (const auto & name : backends) {
+      list += (list.empty() ? "" : ", ") + name;
+    }
+    RCLCPP_ERROR_STREAM(
+      get_logger(),
+      "The 'cuda' buffer backend plugin is not installed for this node (installed backends: ["
+        << list << "]): the CUDA zero-copy subscription would receive no messages. Build the "
+        "'cuda_buffer_backend' package from source in your workspace "
+        "(https://github.com/ros2/rosidl_buffer_backends) and source the workspace. Exiting.");
+    rclcpp::shutdown();
+    return;
+  }
 
   // Start the example and perform the benchmark with standard CPU data
   create_subscriber(Phase::CPU);

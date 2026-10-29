@@ -19,6 +19,7 @@
     <depend>rcutils</depend>
     <depend>sensor_msgs</depend>
     <depend condition="$ROS_DISTRO >= lyrical">cuda_buffer</depend>
+    <depend condition="$ROS_DISTRO >= lyrical">rosidl_buffer_backend_registry</depend>
     <depend>zed_components</depend>
 
     <exec_depend>launch_ros</exec_depend>
