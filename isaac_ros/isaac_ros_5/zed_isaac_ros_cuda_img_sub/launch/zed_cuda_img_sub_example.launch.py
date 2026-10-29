@@ -55,6 +55,7 @@ def launch_setup(context, *args, **kwargs):
     namespace_val = 'zed_isaac'
     camera_model = LaunchConfiguration('camera_model')
     topic_name = LaunchConfiguration('topic_name')
+    svo_path = LaunchConfiguration('svo_path')
 
     # ROS 2 Component Containers
     # The ZED node and the subscriber run in two different containers: the ZED
@@ -92,6 +93,7 @@ def launch_setup(context, *args, **kwargs):
             'camera_model': camera_model,
             'container_name': container_name,
             'namespace': namespace_val,
+            'svo_path': svo_path,
             'enable_ipc': 'false',
             'ros_params_override_path': example_params_file
         }.items()
@@ -136,6 +138,10 @@ def generate_launch_description():
                 'topic_name',
                 default_value='/zed_isaac/zed/rgb/color/rect/image',
                 description='Image topic to subscribe to. All the ZED image topics are supported, including the depth map (32FC1).'),
+            DeclareLaunchArgument(
+                'svo_path',
+                default_value=TextSubstitution(text='live'),
+                description='Path to an input SVO file, to run the example without a camera.'),
             OpaqueFunction(function=launch_setup)
         ]
     )
