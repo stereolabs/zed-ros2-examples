@@ -1,28 +1,17 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!-- Package format 3 according to http://www.ros.org/reps/rep-0149.html -->
 <package format="3">
-    <name>zed_isaac_ros_nitros_sub</name>
-    <version>5.5.0</version>
-    <description>Contains an example to subscribe to ZED camera topics using NITROS and display communication benchmarks.</description>
+    <name>zed_isaac_ros_multi_camera</name>
+    <version>5.6.0</version>
+    <description> This package is a tutorial showing how to configure a multi-camera system.</description>
     <maintainer email="support@stereolabs.com">STEREOLABS</maintainer>
     <license>Apache License 2.0</license>
     <url type="website">https://www.stereolabs.com/</url>
     <url type="repository">https://github.com/stereolabs/zed-ros2-wrapper</url>
     <url type="bugtracker">https://github.com/stereolabs/zed-ros2-wrapper/issues</url>
-
     <buildtool_depend>ament_cmake</buildtool_depend>
-
     <build_depend>ament_cmake_auto</build_depend>
-    
-    <depend>rclcpp</depend>
-    <depend>rclcpp_components</depend>
-    <depend>rcutils</depend>
-    <depend>builtin_interfaces</depend>
-    <depend>sensor_msgs</depend>
-    <depend>zed_components</depend>
-
-    <exec_depend>launch_ros</exec_depend>
-    
+    <depend>zed_wrapper</depend>
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_lint_common</test_depend>
     <test_depend>ament_cmake_clang_format</test_depend>

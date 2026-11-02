@@ -1,0 +1,18 @@
+# config/zed_params.yaml
+# Stereolabs ZED camera parameters override file
+# This file is used to override the default parameters of the ZED camera (stereo and monocular models).
+
+---
+/**:
+    ros__parameters:
+        general:
+            pub_resolution: 'CUSTOM' # The resolution used for image publishing. 'NATIVE' to use the same `general.grab_resolution` - `CUSTOM` to apply the `general.pub_downscale_factor` downscale factory to reduce bandwidth in transmission
+            pub_downscale_factor: 2.0 # rescale factor used to rescale image before publishing when 'pub_resolution' is 'CUSTOM'. The images are resized to the network input size (640x640) before inference.
+            pub_frame_rate: 30.0 # [DYNAMIC] Frequency of publishing of the visual images. Set to 0 for no limit (= grab_frame_rate).
+            buffer_backend: 'cuda' # Publish the images with the CUDA zero-copy transport, so that the Isaac ROS nodes read them directly from GPU memory. Set to 'cpu' to always publish CPU data
+
+        video:
+            enable_24bit_output: true # Publish BGR 24-bit images ('bgr8'), the format expected by the Isaac ROS image processing nodes, instead of BGRA 32-bit ('bgra8')
+
+        depth:
+            depth_mode: 'NONE' # [Stereo cameras only] Object detection runs on the left color image: depth processing is not required and is disabled to save GPU resources
