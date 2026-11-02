@@ -29,7 +29,7 @@
   <xacro:include filename="$(find scout_description)/urdf/scout_mini.xacro" />
 
   <!-- Load the ZED xacro macro --> 
-  <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
+<xacro:include filename="$(find zed_description)/urdf/zed_macro.urdf.xacro" />
   <!-- Add the first ZED Camera -->  
   <xacro:zed_camera name="$(arg camera_name_1)" model="$(arg camera_model_1)" />
   <!-- Add the second ZED Camera -->

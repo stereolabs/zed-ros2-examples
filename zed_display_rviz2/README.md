@@ -34,10 +34,18 @@ Install the [zed-ros2-examples](https://github.com/stereolabs/zed-ros2-examples)
 Use the following launch command to start the ZED ROS2 Wrapper node and RVIZ2 with the default setting for the camera that you are using:
 
 ```bash
-$ ros2 launch zed_display_rviz2 display_zed_cam.launch.py camera_model:=<camera_model>
+ros2 launch zed_display_rviz2 display_zed_cam.launch.py camera_model:=<camera_model>
 ```
 
-Replace `<camera_model>` with the model of the camera that you are using: `'zed'`, `'zedm'`, `'zed2'`, `'zed2i'`, `'zedx'`, `'zedxm'`, `'virtual'`.
+Replace `<camera_model>` with the model of the camera that you are using: `'zed'`, `'zedm'`, `'zed2'`, `'zed2i'`, `'zedx'`, `'zedxm'`, `'zedxnano'`, `'zedxhdrmini'`, `'zedxhdr'`, `'zedxhdrmax'`, `'virtual'`,`'zedxonegs'`,`'zedxone4k'`,`'zedxonehdr'`,`'zedxonecore'`.
+
+The `camera_name`, `namespace` and `node_name` launch arguments follow the same rules as the ZED Wrapper launch file, and the RVIZ2 topics and TF frames are adapted to them automatically. All the other ZED Wrapper launch arguments (e.g. `serial_number`, `svo_path`, `ros_params_override_path`) are forwarded to the ZED node:
+
+```bash
+ros2 launch zed_display_rviz2 display_zed_cam.launch.py camera_model:=zedxm camera_name:=front serial_number:=<serial_number>
+```
+
+Use `start_zed_node:=false` to start only RVIZ2 when a ZED node is already running.
 
 ![ZED rendering on Rviz](images/depthcloud-RGB.jpg)
 ![ZED rendering on Rviz](images/ZEDM-Rviz.jpg)
