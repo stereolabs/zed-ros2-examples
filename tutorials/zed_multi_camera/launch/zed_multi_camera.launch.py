@@ -66,12 +66,18 @@ def launch_setup(context, *args, **kwargs):
     ids = LaunchConfiguration('cam_ids')
 
     disable_tf = LaunchConfiguration('disable_tf')
+    sim_mode = LaunchConfiguration('sim_mode')
+    sim_address = LaunchConfiguration('sim_address')
+    sim_ports = LaunchConfiguration('sim_ports')
+    use_sim_time = LaunchConfiguration('use_sim_time')
 
     names_arr = parse_array_param(names.perform(context))
     models_arr = parse_array_param(models.perform(context))
     serials_arr = parse_array_param(serials.perform(context))
     ids_arr = parse_array_param(ids.perform(context))
     disable_tf_val = disable_tf.perform(context)
+    sim_mode_val = sim_mode.perform(context).lower() == 'true'
+    sim_ports_arr = parse_array_param(sim_ports.perform(context))
 
     num_cams = len(names_arr)
 
@@ -81,7 +87,15 @@ def launch_setup(context, *args, **kwargs):
                 text='The `cam_models` array argument must match the size of the `cam_names` array argument.'))
         ]
 
-    if ((num_cams != len(serials_arr)) and (num_cams != len(ids_arr))):
+    if sim_mode_val:
+        # Each simulated camera is streamed by the simulator on its own port
+        if num_cams != len(sim_ports_arr):
+            return [
+                LogInfo(msg=TextSubstitution(
+                    text='In simulation mode the `sim_ports` array argument must match '
+                         'the size of the `cam_names` array argument.'))
+            ]
+    elif ((num_cams != len(serials_arr)) and (num_cams != len(ids_arr))):
         return [
             LogInfo(msg=TextSubstitution(
                 text='The `cam_serials` or `cam_ids` array argument must match the size of the `cam_names` array argument.'))
@@ -129,7 +143,9 @@ def launch_setup(context, *args, **kwargs):
 
         info = '* Starting a ZED ROS2 node for camera ' + name +\
             ' (' + model
-        if (serial != '0'):
+        if sim_mode_val:
+            info += ', simulation port: ' + sim_ports_arr[cam_idx]
+        elif (serial != '0'):
             info += ', serial: ' + serial
         elif (id != '-1'):
             info += ', id: ' + id
@@ -161,7 +177,11 @@ def launch_setup(context, *args, **kwargs):
                 'camera_id': id,
                 'publish_tf': publish_tf,
                 'publish_map_tf': publish_tf,
-                'namespace': namespace_val
+                'namespace': namespace_val,
+                'sim_mode': 'true' if sim_mode_val else 'false',
+                'sim_address': sim_address.perform(context),
+                'sim_port': sim_ports_arr[cam_idx] if sim_mode_val else '30000',
+                'use_sim_time': use_sim_time.perform(context)
             }.items()
         )
         actions.append(zed_wrapper_launch)
@@ -221,6 +241,25 @@ def generate_launch_description():
                 'cam_ids',
                 default_value=[],
                 description='An array containing the ID number of the cameras, e.g. [0,1]'),
+            DeclareLaunchArgument(
+                'sim_mode',
+                default_value='false',
+                description='Enable simulation mode: the cameras are streamed by a simulator '
+                            '(e.g. NVIDIA Isaac Sim). `sim_ports` replaces `cam_serials` and '
+                            '`cam_ids`.'),
+            DeclareLaunchArgument(
+                'sim_address',
+                default_value='127.0.0.1',
+                description='The connection address of the simulation server.'),
+            DeclareLaunchArgument(
+                'sim_ports',
+                default_value='[]',
+                description='In simulation mode, an array containing the streaming port of '
+                            'each simulated camera, e.g. [30000,30002].'),
+            DeclareLaunchArgument(
+                'use_sim_time',
+                default_value='false',
+                description='Use the simulation time from the `/clock` topic.'),
             DeclareLaunchArgument(
                 'disable_tf',
                 default_value='False',

@@ -40,9 +40,13 @@ All the parameter arrays must have the same size:
 * `cam_models`: {REQUIRED} An array containing the model of the cameras, e.g. `'[zed2i,zed2]'`
 * `cam_serials`: An array containing the serial number of the cameras, e.g. `[3001234,2001234]`
 * `cam_ids`: An array containing the ID number of the cameras, e.g. `[0,1]`
+* `sim_mode`: set it to `true` when the cameras are streamed by a simulator, such as NVIDIA® Isaac™ Sim. `sim_ports` then replaces `cam_serials` and `cam_ids`.
+* `sim_ports`: in simulation mode, an array containing the streaming port of each simulated camera, e.g. `'[30000,30002]'`.
+* `sim_address`: the address of the simulation server, `127.0.0.1` by default.
+* `use_sim_time`: use the simulation time from the `/clock` topic.
 * `disable_tf`: Only the first camera is configured to broadcast the TF `map` -> `odom` -> `camera_link` to avoid TF conflicts. The TF broadcasting can be disabled by setting this parameter to `false`. This is required if an external Kalman filter that fuses different odometry sources is used.
 
-> :pushpin: **Note**: One of `cam_serials` or `cam_ids` argument is required to uniquely identify the cameras of the system.
+> :pushpin: **Note**: One of `cam_serials` or `cam_ids` argument is required to uniquely identify the cameras of the system, except in simulation mode where `sim_ports` is used.
 
 ## Run the example
 
@@ -69,6 +73,16 @@ ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,z
 ```
 
 > :pushpin: **Note**: For multi-GMSL2 camera setups, it's advisable to use camera IDs rather than Serial Numbers. Each camera ID linked to a GMSL2 wire remains consistent during reboots, unlike USB3 cameras, which may change.
+
+### Simulated cameras
+
+Since v5.6.0 of the ROS 2 Wrapper, the example also starts several cameras streamed by a simulator, such as NVIDIA® Isaac™ Sim with the ZED extension: set `sim_mode:=true` and give the streaming port of each simulated camera in `sim_ports`:
+
+```bash
+ros2 launch zed_multi_camera zed_multi_camera.launch.py cam_names:='[zed_front,zed_rear]' cam_models:='[zedx,zedx]' sim_mode:=true sim_ports:='[30000,30002]'
+```
+
+With ZED SDK >= 5.6 on both the simulator and the ROS 2 side, any number of simulated cameras is supported: each one has its own serial number and calibration, so no serial number or calibration file has to be configured. See [Using the ZED with ROS 2 in Isaac™ Sim](https://docs.stereolabs.com/docs/integrations/isaac-sim/using-the-zed-with-ros-2-in-isaac-sim) to set up the simulated cameras.
 
 ### The Multi-Camera URDF
 
