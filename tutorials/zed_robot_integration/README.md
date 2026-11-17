@@ -75,7 +75,7 @@ You can use other links as a reference, but it's important that you respect the 
 To use a ZED camera we must include the `xacro` file that describes the links and joints of a ZED camera. The file is available in the `zed_wrapper` package of the [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper/tree/master/zed_wrapper) repository.
 
 ```xml
-  <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
+  <xacro:include filename="$(find zed_description)/urdf/zed_macro.urdf.xacro" />
 ```
 
 Next we can add one ZED camera of type `camera_model` with name `camera_name`, as defined with the correspondent xacro arguments:
@@ -168,7 +168,7 @@ You can add additional lines to define `camera_name_N` and `camera_model_N` for 
 To use a ZED camera we must include the `xacro` file that describes the links and joints of a ZED camera. The file is available in the `zed_wrapper` package of the [zed-ros2-wrapper](https://github.com/stereolabs/zed-ros2-wrapper/tree/master/zed_wrapper) repository.
 
 ```xml
-  <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
+  <xacro:include filename="$(find zed_description)/urdf/zed_macro.urdf.xacro" />
 ```
 
 we must now add an instance of each camera, specifying the **unique** name and the model:

@@ -26,7 +26,7 @@
   <xacro:include filename="$(find scout_description)/urdf/scout_mini.xacro" />
 
   <!-- Add one ZED Camera -->
-  <xacro:include filename="$(find zed_wrapper)/urdf/zed_macro.urdf.xacro" />
+<xacro:include filename="$(find zed_description)/urdf/zed_macro.urdf.xacro" />
   <xacro:zed_camera name="$(arg camera_name)" model="$(arg camera_model)" baseline="$(arg baseline)"/>
 
   <!-- Add a joint to connect the ZED Camera to the robot -->
